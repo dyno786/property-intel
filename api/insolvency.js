@@ -1,111 +1,94 @@
 // api/insolvency.js
-// The Gazette insolvency notices — uses their linked data API (not RSS)
-// Free, Crown Copyright, Open Government Licence
+// Uses Companies House API to find companies in liquidation/administration
+// in Yorkshire postcodes — free, reliable, no blocking issues
+// COMPANIES_HOUSE_API_KEY required in Vercel env vars
 
-const GAZETTE_BASE = 'https://www.thegazette.co.uk';
+const CH_BASE = 'https://api.company-information.service.gov.uk';
 
-const REGION_SEARCH = {
-  leeds:        'leeds',
-  bradford:     'bradford',
-  wakefield:    'wakefield',
-  sheffield:    'sheffield',
-  huddersfield: 'huddersfield'
+const REGION_POSTCODES = {
+  leeds:        'LS',
+  bradford:     'BD',
+  wakefield:    'WF',
+  sheffield:    'S',
+  huddersfield: 'HD'
 };
+
+const INSOLVENCY_STATUSES = ['liquidation', 'administration', 'receivership', 'voluntary-arrangement'];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
-  const region = (req.query.region || 'leeds').toLowerCase();
-  const searchTerm = REGION_SEARCH[region] || 'leeds';
+  const region  = (req.query.region || 'leeds').toLowerCase();
+  const apiKey  = process.env.COMPANIES_HOUSE_API_KEY;
+  const postcode = REGION_POSTCODES[region] || 'LS';
+
+  if (!apiKey) {
+    return res.status(200).json({
+      success: false,
+      error: 'COMPANIES_HOUSE_API_KEY not set in Vercel environment variables',
+      data: [], setupRequired: true
+    });
+  }
+
+  const auth = Buffer.from(`${apiKey}:`).toString('base64');
+  const headers = {
+    'Authorization': `Basic ${auth}`,
+    'Accept': 'application/json'
+  };
 
   try {
-    // Use The Gazette's linked data search API — returns JSON-LD
-    // This endpoint is public and free
-    const url = `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2100,2150,2160&format=json`;
+    const allResults = [];
 
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json, application/ld+json, */*',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+    // Fetch companies in each insolvency status for this region
+    for (const status of INSOLVENCY_STATUSES) {
+      try {
+        const url = `${CH_BASE}/advanced-search/companies?company_status=${status}&location=${postcode}&items_per_page=20`;
+        const r = await fetch(url, { headers });
+        if (!r.ok) continue;
+        const json = await r.json();
+        const items = json.items || [];
+
+        for (const c of items) {
+          const addr = c.registered_office_address || {};
+          const fullAddr = [addr.address_line_1, addr.locality, addr.postal_code]
+            .filter(Boolean).join(', ');
+
+          allResults.push({
+            title:       c.company_name,
+            description: `${status.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} — ${c.company_type || 'Limited Company'}`,
+            address:     fullAddr || `${postcode} area`,
+            ref:         `Co. No: ${c.company_number}`,
+            date:        c.date_of_cessation || c.date_of_creation || '—',
+            category:    status.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase()),
+            link:        `https://find-and-update.company-information.service.gov.uk/company/${c.company_number}`,
+            source:      'Companies House'
+          });
+        }
+      } catch(e) { continue; }
+    }
+
+    // Deduplicate by company name
+    const seen = new Set();
+    const unique = allResults.filter(r => {
+      if (seen.has(r.title)) return false;
+      seen.add(r.title);
+      return true;
     });
 
-    // If JSON endpoint fails, try the search page API
-    if (!response.ok) {
-      // Fallback: use Gazette search with location filter
-      const fallbackUrl = `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2100&format=json&start-publish-date=${getDateDaysAgo(30)}`;
-      const fb = await fetch(fallbackUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json, */*' }
-      });
-
-      if (!fb.ok) {
-        return res.status(200).json({
-          success: false,
-          error: `Gazette returned ${response.status} — their RSS may be geo-blocking Vercel IPs. Try The Gazette directly: https://www.thegazette.co.uk/insolvency`,
-          data: [],
-          gazetteBlocked: true,
-          workaround: 'Visit https://www.thegazette.co.uk/insolvency and search manually for ' + searchTerm
-        });
-      }
-
-      const fbText = await fb.text();
-      return res.status(200).json({
-        success: false,
-        error: 'Gazette primary endpoint unavailable — using fallback',
-        raw: fbText.substring(0, 500),
-        data: []
-      });
-    }
-
-    const text = await response.text();
-
-    // Try parse as JSON
-    let notices = [];
-    try {
-      const json = JSON.parse(text);
-      // Handle various Gazette JSON formats
-      const items = json['@graph'] || json.items || json.notices || json.results || [];
-      notices = items.slice(0, 20).map(item => ({
-        title:       item.title || item['schema:name'] || item.name || 'Insolvency Notice',
-        description: (item.description || item['schema:description'] || item.content || '').replace(/<[^>]+>/g,'').substring(0,300),
-        link:        item['@id'] || item.url || item.link || `${GAZETTE_BASE}/insolvency`,
-        date:        item.publishedDate || item['schema:datePublished'] || item.date || '—',
-        category:    item.noticeType || item.type || 'Corporate Insolvency',
-        source:      'The Gazette'
-      }));
-    } catch(e) {
-      // If not JSON, it's probably HTML or XML — Gazette is blocking
-      return res.status(200).json({
-        success: false,
-        error: 'Gazette returned non-JSON response — their API may be blocking server requests',
-        gazetteBlocked: true,
-        responsePreview: text.substring(0, 200),
-        data: [],
-        workaround: `Visit https://www.thegazette.co.uk/insolvency and search for "${searchTerm}" manually`
-      });
-    }
+    // Sort by most recently active
+    unique.sort((a, b) => (b.date > a.date ? 1 : -1));
 
     res.status(200).json({
-      success: true, region, searchTerm,
-      count: notices.length,
-      totalFetched: notices.length,
-      data: notices,
+      success: true, region, postcode,
+      count: unique.length,
+      totalFetched: allResults.length,
+      data: unique.slice(0, 25),
+      source: 'Companies House',
       fetchedAt: new Date().toISOString()
     });
 
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message,
-      gazetteBlocked: true,
-      data: [],
-      workaround: `The Gazette may be blocking automated requests. Visit https://www.thegazette.co.uk/insolvency directly.`
-    });
+    res.status(500).json({ success: false, error: err.message, data: [] });
   }
-}
-
-function getDateDaysAgo(days) {
-  const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  return d.toISOString().split('T')[0];
 }
