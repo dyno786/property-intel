@@ -764,9 +764,79 @@ function openModal() { document.getElementById('modalOverlay').classList.add('op
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
 
+// ── DEBUG ──
+const debugLog = [];
+
+function dbLog(label, url, status, data) {
+  debugLog.push({ time: new Date().toLocaleTimeString('en-GB'), label, url, status, data: JSON.stringify(data, null, 2) });
+  renderDebug();
+}
+
+function renderDebug() {
+  const out = document.getElementById('debug-output');
+  if (!out) return;
+  out.textContent = debugLog.length === 0 ? 'Waiting for API calls...' :
+    debugLog.map(e => `[${e.time}] ${e.label}\nURL: ${e.url}\nStatus: ${e.status}\nResponse: ${e.data}\n${'─'.repeat(60)}`).join('\n\n');
+}
+
+function copyDebug() {
+  const text = debugLog.map(e =>
+    `[${e.time}] ${e.label}\nURL: ${e.url}\nStatus: ${e.status}\nResponse: ${e.data}\n${'─'.repeat(60)}`
+  ).join('\n\n');
+  navigator.clipboard.writeText(text || 'No debug data yet').then(() => {
+    const btn = document.getElementById('debug-copy-btn');
+    btn.textContent = 'Copied! ✓';
+    setTimeout(() => btn.textContent = 'Copy All', 2000);
+  });
+}
+
+function toggleDebug() {
+  const body = document.getElementById('debug-body');
+  const btn  = document.getElementById('debug-toggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '▼ Show' : '▲ Hide';
+}
+
+// Override apiFetch to capture all responses
+async function apiFetch(path) {
+  const fullUrl = window.location.origin + path;
+  const label = path.split('?')[0].replace('/api/','').toUpperCase();
+  try {
+    const r = await fetch(path);
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text.substring(0, 500) }; }
+    dbLog(label, fullUrl, r.ok ? `✅ ${r.status} OK` : `❌ ${r.status} ERROR`, data);
+    return data;
+  } catch(e) {
+    dbLog(label, fullUrl, `❌ FETCH FAILED`, { error: e.message });
+    return { success: false, error: e.message, data: [] };
+  }
+}
+
 // ── INIT ──
 loadAll();
 renderSaved();
 </script>
+
+<!-- DEBUG PANEL -->
+<div style="border-top:2px solid var(--border2);background:var(--surface);position:relative;z-index:1;margin-top:0">
+  <div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:10px">
+      <span style="color:var(--accent)">⬡</span> API Debug Console
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);font-weight:400">every API call + full response</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button id="debug-copy-btn" onclick="copyDebug()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:5px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">Copy All</button>
+      <button onclick="loadAll()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--accent);padding:5px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">↻ Re-run APIs</button>
+      <button id="debug-toggle" onclick="toggleDebug()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:5px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">▲ Hide</button>
+    </div>
+  </div>
+  <div id="debug-body">
+    <pre id="debug-output" style="padding:20px 24px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.8;color:var(--muted);white-space:pre-wrap;word-break:break-all;max-height:500px;overflow-y:auto;background:var(--bg)">Waiting for API calls...</pre>
+  </div>
+</div>
+
 </body>
 </html>
