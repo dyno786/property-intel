@@ -1,18 +1,18 @@
 // api/insolvency.js
-// Companies House — searches for insolvent companies by town name
-// Free API, no blocking issues
+// Companies House — finds companies in insolvency in Yorkshire
+// Uses /search endpoint which works reliably
 
 const CH_BASE = 'https://api.company-information.service.gov.uk';
 
-const REGION_TOWNS = {
-  leeds:        ['Leeds', 'Horsforth', 'Morley', 'Pudsey', 'Garforth', 'Wetherby', 'Otley'],
-  bradford:     ['Bradford', 'Shipley', 'Keighley', 'Bingley', 'Ilkley'],
-  wakefield:    ['Wakefield', 'Castleford', 'Pontefract', 'Ossett', 'Dewsbury'],
-  sheffield:    ['Sheffield', 'Rotherham', 'Doncaster', 'Barnsley'],
-  huddersfield: ['Huddersfield', 'Halifax', 'Brighouse', 'Mirfield']
+const REGION_CONFIG = {
+  leeds:        { terms: ['Leeds'], postcodes: ['LS1','LS2','LS3','LS6','LS7','LS8','LS9','LS10','LS11','LS12'] },
+  bradford:     { terms: ['Bradford'], postcodes: ['BD1','BD2','BD3','BD4','BD5'] },
+  wakefield:    { terms: ['Wakefield'], postcodes: ['WF1','WF2','WF3','WF4','WF5'] },
+  sheffield:    { terms: ['Sheffield'], postcodes: ['S1','S2','S3','S6','S10','S11'] },
+  huddersfield: { terms: ['Huddersfield'], postcodes: ['HD1','HD2','HD3','HD4','HD5'] }
 };
 
-const INSOLVENCY_STATUSES = ['liquidation', 'administration', 'receivership'];
+const INSOLVENCY_STATUSES = new Set(['liquidation','administration','receivership','voluntary-arrangement','insolvency-proceedings']);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,12 +20,11 @@ export default async function handler(req, res) {
 
   const region = (req.query.region || 'leeds').toLowerCase();
   const apiKey = process.env.COMPANIES_HOUSE_API_KEY;
-  const towns  = REGION_TOWNS[region] || REGION_TOWNS.leeds;
+  const cfg    = REGION_CONFIG[region] || REGION_CONFIG.leeds;
 
   if (!apiKey) {
     return res.status(200).json({
-      success: false,
-      error: 'COMPANIES_HOUSE_API_KEY not set',
+      success: false, error: 'COMPANIES_HOUSE_API_KEY not set',
       data: [], setupRequired: true
     });
   }
@@ -35,59 +34,62 @@ export default async function handler(req, res) {
 
   try {
     const allResults = [];
+    const seen = new Set();
 
-    // Search each insolvency status for the primary town
-    for (const status of INSOLVENCY_STATUSES) {
-      try {
-        // Use company search with status filter — searches across all registered companies
-        const url = `${CH_BASE}/advanced-search/companies?company_status=${status}&location=${encodeURIComponent(towns[0])}&items_per_page=25`;
-        const r = await fetch(url, { headers });
-        if (!r.ok) {
-          // Try basic search if advanced fails
-          const basicUrl = `${CH_BASE}/search/companies?q=${encodeURIComponent(towns[0])}&items_per_page=20`;
-          const rb = await fetch(basicUrl, { headers });
-          if (!rb.ok) continue;
-          const jb = await rb.json();
-          const items = (jb.items || []).filter(c => c.company_status === status);
-          for (const c of items) {
-            pushResult(allResults, c, status);
-          }
-          continue;
-        }
-        const json = await r.json();
-        for (const c of (json.items || [])) {
-          pushResult(allResults, c, status);
-        }
-      } catch(e) { continue; }
+    // Strategy: search for "Leeds liquidation", "Leeds administration" etc
+    const searchTerms = [];
+    for (const town of cfg.terms) {
+      searchTerms.push(`${town} liquidation`);
+      searchTerms.push(`${town} administration`);
+      searchTerms.push(`${town} insolvency`);
     }
 
-    // Also do a general insolvency search for the region
-    try {
-      for (const town of towns.slice(0, 3)) {
-        const url = `${CH_BASE}/search/companies?q=${encodeURIComponent(town + ' liquidation')}&items_per_page=10`;
+    for (const term of searchTerms) {
+      try {
+        const url = `${CH_BASE}/search/companies?q=${encodeURIComponent(term)}&items_per_page=20`;
         const r = await fetch(url, { headers });
         if (!r.ok) continue;
         const json = await r.json();
         for (const c of (json.items || [])) {
-          if (['liquidation','administration','receivership','voluntary-arrangement'].includes(c.company_status)) {
-            pushResult(allResults, c, c.company_status);
+          if (seen.has(c.company_number)) continue;
+          // Include if company is in an insolvency status OR name contains insolvency keywords
+          const isInsolvent = INSOLVENCY_STATUSES.has(c.company_status);
+          const nameHint = /liquidat|administ|receiv|insolv/i.test(c.title || '');
+          if (isInsolvent || nameHint) {
+            seen.add(c.company_number);
+            allResults.push(formatCompany(c));
           }
         }
-      }
-    } catch(e) {}
+      } catch(e) { continue; }
+    }
 
-    // Deduplicate by company number
-    const seen = new Set();
-    const unique = allResults.filter(r => {
-      if (seen.has(r.ref)) return false;
-      seen.add(r.ref);
-      return true;
+    // Also do a broader search for any company in these postcodes that's in liquidation
+    for (const pc of cfg.postcodes.slice(0,4)) {
+      try {
+        const url = `${CH_BASE}/search/companies?q=${encodeURIComponent(pc)}&items_per_page=20`;
+        const r = await fetch(url, { headers });
+        if (!r.ok) continue;
+        const json = await r.json();
+        for (const c of (json.items || [])) {
+          if (seen.has(c.company_number)) continue;
+          if (INSOLVENCY_STATUSES.has(c.company_status)) {
+            seen.add(c.company_number);
+            allResults.push(formatCompany(c));
+          }
+        }
+      } catch(e) { continue; }
+    }
+
+    // Sort — active insolvencies first
+    allResults.sort((a,b) => {
+      const order = { 'Administration': 0, 'Liquidation': 1, 'Receivership': 2 };
+      return (order[a.category]||9) - (order[b.category]||9);
     });
 
     res.status(200).json({
       success: true, region,
-      count: unique.length,
-      data: unique.slice(0, 30),
+      count: allResults.length,
+      data: allResults.slice(0,30),
       source: 'Companies House',
       fetchedAt: new Date().toISOString()
     });
@@ -97,26 +99,22 @@ export default async function handler(req, res) {
   }
 }
 
-function pushResult(arr, c, status) {
-  const addr = c.address || c.registered_office_address || {};
-  const fullAddr = [
-    addr.address_line_1 || addr.addressLine1,
-    addr.locality || addr.town,
-    addr.postal_code || addr.postcode
-  ].filter(Boolean).join(', ');
-
-  arr.push({
-    title:       c.title || c.company_name,
-    description: `${formatStatus(status)} — ${c.company_type || 'Ltd'}`,
-    address:     fullAddr || '—',
-    ref:         c.company_number,
+function formatCompany(c) {
+  const addr = c.address || {};
+  const parts = [addr.address_line_1, addr.address_line_2, addr.locality, addr.postal_code].filter(Boolean);
+  return {
+    title:       c.title || c.company_name || '—',
+    description: `${formatStatus(c.company_status)} · ${c.company_type || 'Ltd'}`,
+    address:     parts.join(', ') || '—',
+    ref:         `Co. No: ${c.company_number}`,
     date:        c.date_of_cessation || c.date_of_creation || '—',
-    category:    formatStatus(status),
+    category:    formatStatus(c.company_status),
     link:        `https://find-and-update.company-information.service.gov.uk/company/${c.company_number}`,
     source:      'Companies House'
-  });
+  };
 }
 
 function formatStatus(s) {
+  if (!s) return 'Insolvency';
   return s.replace(/-/g,' ').replace(/\b\w/g, l => l.toUpperCase());
 }
