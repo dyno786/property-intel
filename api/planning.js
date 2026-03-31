@@ -1,30 +1,15 @@
 // api/planning.js
-// Fetches real planning applications from api.planning.org.uk
-// Free searches — generate your key at https://api.planning.org.uk/v1/generatekey
-// Full data return costs small credits — free searches return count + refs
+// Planning applications - api.planning.org.uk
+// Free key: https://api.planning.org.uk/v1/generatekey?email=YOUR@EMAIL
 
 const PLANNING_BASE = 'https://api.planning.org.uk/v1';
 
-// LPA IDs for our regions (Local Planning Authority IDs)
 const LPA_IDS = {
-  leeds:        '2482',  // Leeds City Council
-  bradford:     '2406',  // Bradford MDC
-  wakefield:    '2563',  // Wakefield MDC
-  sheffield:    '2514',  // Sheffield City Council
-  huddersfield: '2436'   // Kirklees (Huddersfield)
-};
-
-// Postcode to LPA mapping for Leeds sub-filtering
-const POSTCODE_AREAS = {
-  'LS1':  'Leeds City Centre',
-  'LS2':  'Leeds City Centre',
-  'LS6':  'Headingley',
-  'LS7':  'Chapeltown',
-  'LS8':  'Roundhay / Harehills',
-  'LS9':  'East Leeds',
-  'LS11': 'Beeston / South Leeds',
-  'LS12': 'Armley',
-  'all':  'All Leeds'
+  leeds:        '114',
+  bradford:     '105',
+  wakefield:    '128',
+  sheffield:    '123',
+  huddersfield: '110'
 };
 
 export default async function handler(req, res) {
@@ -38,7 +23,7 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(200).json({
       success: false,
-      error: 'PLANNING_API_KEY not set. Get your free key at https://api.planning.org.uk/v1/generatekey',
+      error: 'PLANNING_API_KEY not set in Vercel environment variables',
       data: [],
       setupRequired: true
     });
@@ -47,15 +32,26 @@ export default async function handler(req, res) {
   const lpaId = LPA_IDS[region] || LPA_IDS.leeds;
 
   try {
-    // Get applications from last 14 days
     const dateTo   = new Date().toISOString().split('T')[0];
     const dateFrom = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const url = `${PLANNING_BASE}/search?key=${apiKey}&lpa_id=${lpaId}&date_from=${dateFrom}&date_to=${dateTo}&return_data=1`;
+    // First try: search without return_data to verify key works (free)
+    const searchUrl = `${PLANNING_BASE}/search?key=${apiKey}&lpa_id=${lpaId}&date_from=${dateFrom}&date_to=${dateTo}`;
 
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' }
+    const response = await fetch(searchUrl, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'CC-Property-Intelligence/1.0' }
     });
+
+    // If 403 - key issue, return helpful message
+    if (response.status === 403) {
+      return res.status(200).json({
+        success: false,
+        error: 'Planning API key rejected (403). Your key may be invalid. Get a new one at: https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com',
+        data: [],
+        keyError: true,
+        apiKeyUsed: apiKey ? `${apiKey.substring(0,4)}...` : 'not set'
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Planning API returned ${response.status}`);
@@ -64,28 +60,31 @@ export default async function handler(req, res) {
     const json = await response.json();
 
     if (json.response?.status !== 'OK') {
-      throw new Error(json.response?.message || 'Planning API error');
+      return res.status(200).json({
+        success: false,
+        error: `Planning API error: ${json.response?.message || JSON.stringify(json)}`,
+        data: []
+      });
     }
 
     let applications = json.response?.data || [];
 
     // Filter by postcode if specified
-    if (postcode !== 'ALL') {
+    if (postcode !== 'ALL' && postcode !== '') {
       applications = applications.filter(app =>
         app.postcode && app.postcode.toUpperCase().startsWith(postcode)
       );
     }
 
-    // Format for dashboard
     const formatted = applications.map(app => ({
-      title:     app.title || app.description || 'Planning Application',
-      address:   app.address || '—',
-      postcode:  app.postcode || '—',
-      ref:       `Ref: ${app.keyval || '—'}`,
-      date:      app.validated ? new Date(app.validated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—',
-      status:    app.status || 'Current',
-      link:      app.externalLink || `https://publicaccess.leeds.gov.uk/online-applications/`,
-      source:    'Planning Portal'
+      title:    app.title || app.description || 'Planning Application',
+      address:  app.address || '—',
+      postcode: app.postcode || '—',
+      ref:      `Ref: ${app.keyval || '—'}`,
+      date:     app.validated ? new Date(app.validated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—',
+      status:   app.status || 'Current',
+      link:     app.externalLink || `https://publicaccess.leeds.gov.uk/online-applications/`,
+      source:   'Planning Portal'
     }));
 
     res.status(200).json({
@@ -98,7 +97,6 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Planning API error:', err.message);
     res.status(500).json({ success: false, error: err.message, data: [] });
   }
 }
