@@ -1,0 +1,9 @@
+{
+  "name": "property-intelligence",
+  "version": "1.0.0",
+  "description": "CC Property Intelligence Dashboard",
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  }
+}
