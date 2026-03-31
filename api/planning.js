@@ -1,6 +1,6 @@
 // api/planning.js
-// Planning applications via api.planning.org.uk
-// Dynamically looks up LPA IDs by name to avoid hardcoding errors
+// Uses return_data=0 (FREE - no credits needed) to get application counts
+// Links directly to council portal for full details
 
 const PLANNING_BASE = 'https://api.planning.org.uk/v1';
 
@@ -12,7 +12,14 @@ const REGION_NAMES = {
   huddersfield: 'kirklees'
 };
 
-// Cache LPA IDs in memory during function lifetime
+const PORTAL_LINKS = {
+  leeds:        'https://publicaccess.leeds.gov.uk/online-applications/search.do?action=weeklyList',
+  bradford:     'https://planning.bradford.gov.uk/online-applications/search.do?action=weeklyList',
+  wakefield:    'https://www.wakefield.gov.uk/planning-and-building/planning-applications',
+  sheffield:    'https://planningregister.sheffield.gov.uk',
+  huddersfield: 'https://www.kirklees.gov.uk/beta/planning-applications'
+};
+
 let lpaCache = null;
 
 async function getLpaId(regionName, apiKey) {
@@ -28,10 +35,8 @@ async function getLpaId(regionName, apiKey) {
     const match = lpaCache.find(lpa =>
       lpa.name && lpa.name.toLowerCase().includes(regionName.toLowerCase())
     );
-    return match ? match.id : null;
-  } catch(e) {
-    return null;
-  }
+    return match ? { id: match.id, name: match.name, count: match.application_count } : null;
+  } catch(e) { return null; }
 }
 
 export default async function handler(req, res) {
@@ -45,93 +50,73 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(200).json({
       success: false,
-      error: 'PLANNING_API_KEY not set in Vercel environment variables',
+      error: 'PLANNING_API_KEY not set',
       data: [], setupRequired: true
     });
   }
 
-  try {
-    // Step 1: Look up LPA ID dynamically
-    const regionName = REGION_NAMES[region] || region;
-    const lpaId = await getLpaId(regionName, apiKey);
+  const regionName  = REGION_NAMES[region] || region;
+  const portalLink  = PORTAL_LINKS[region] || PORTAL_LINKS.leeds;
 
-    if (!lpaId) {
+  try {
+    const lpa = await getLpaId(regionName, apiKey);
+
+    if (!lpa) {
       return res.status(200).json({
-        success: false,
-        error: `Could not find LPA ID for region: ${regionName}. The planning API may not cover this council.`,
-        data: [],
-        lpaLookupFailed: true
+        success: true, region,
+        count: 0, data: [],
+        message: 'LPA not found in planning API',
+        portalLink,
+        fetchedAt: new Date().toISOString()
       });
     }
 
-    // Step 2: Search for applications in last 14 days
+    // return_data=0 is FREE — gives application count only, no credits used
     const dateTo   = new Date().toISOString().split('T')[0];
     const dateFrom = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const url = `${PLANNING_BASE}/search?key=${apiKey}&lpa_id=${lpa.id}&date_from=${dateFrom}&date_to=${dateTo}&return_data=0`;
 
-    // return_data=0 is free, gives count only
-    // return_data=1 costs credits but gives full data
-    const searchUrl = `${PLANNING_BASE}/search?key=${apiKey}&lpa_id=${lpaId}&date_from=${dateFrom}&date_to=${dateTo}&return_data=1`;
-
-    const response = await fetch(searchUrl, {
+    const r = await fetch(url, {
       headers: { 'Accept': 'application/json', 'User-Agent': 'CC-Property-Intelligence/1.0' }
     });
 
-    if (response.status === 403) {
-      return res.status(200).json({
-        success: false,
-        error: 'Planning API key rejected (403). Get a new key at: https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com',
-        data: [], keyError: true
+    if (!r.ok) {
+      throw new Error(`Planning API returned ${r.status}`);
+    }
+
+    const json = await r.json();
+    const appCount = json.response?.application_count || 0;
+
+    // Since we can't get full data for free, return summary cards that link to portal
+    // Generate date-range summary entries as placeholder cards
+    const weeks = [];
+    for (let i = 0; i < 2; i++) {
+      const weekEnd   = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
+      const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+      weeks.push({
+        title:    `${appCount > 0 ? appCount : 'New'} Planning Applications — ${lpa.name}`,
+        address:  `Week of ${weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${weekEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+        postcode: region.toUpperCase(),
+        ref:      `LPA: ${lpa.name} (${lpa.id})`,
+        date:     weekEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status:   'Current',
+        link:     portalLink,
+        note:     'Click View to see full list on council portal',
+        source:   'Planning Portal API'
       });
     }
-
-    if (!response.ok) {
-      throw new Error(`Planning API returned ${response.status}`);
-    }
-
-    const json = await response.json();
-
-    if (json.response?.status !== 'OK') {
-      // No results is fine — not an error
-      if (json.response?.message?.includes('No matching')) {
-        return res.status(200).json({
-          success: true, region, postcode, lpaId,
-          count: 0, data: [],
-          fetchedAt: new Date().toISOString()
-        });
-      }
-      return res.status(200).json({
-        success: false,
-        error: `Planning API: ${json.response?.message || JSON.stringify(json.response)}`,
-        data: []
-      });
-    }
-
-    let applications = json.response?.data || [];
-
-    // Filter by postcode prefix if specified
-    if (postcode !== 'ALL' && postcode !== '') {
-      applications = applications.filter(app =>
-        app.postcode && app.postcode.toUpperCase().startsWith(postcode)
-      );
-    }
-
-    const formatted = applications.map(app => ({
-      title:    app.title || app.description || 'Planning Application',
-      address:  app.address || '—',
-      postcode: app.postcode || '—',
-      ref:      `Ref: ${app.keyval || '—'}`,
-      date:     app.validated
-        ? new Date(app.validated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        : '—',
-      status:   app.status || 'Current',
-      link:     app.externalLink || '#',
-      source:   'Planning Portal'
-    }));
 
     res.status(200).json({
-      success: true, region, postcode, lpaId,
-      count: formatted.length,
-      data: formatted,
+      success: true, region, postcode,
+      lpaId: lpa.id,
+      lpaName: lpa.name,
+      count: appCount,
+      data: appCount > 0 ? weeks : [],
+      freeMode: true,
+      portalLink,
+      message: appCount > 0
+        ? `${appCount} applications found in last 14 days — click View to see full list on council portal`
+        : 'No applications found in last 14 days',
       fetchedAt: new Date().toISOString()
     });
 
