@@ -1,106 +1,111 @@
 // api/insolvency.js
-// Fetches real insolvency notices from The Gazette (free, Crown Copyright)
+// The Gazette insolvency notices — uses their linked data API (not RSS)
+// Free, Crown Copyright, Open Government Licence
 
 const GAZETTE_BASE = 'https://www.thegazette.co.uk';
 
-const REGION_KEYWORDS = {
-  leeds:        ['leeds', 'west yorkshire', 'ls1', 'ls2', 'ls3', 'ls4', 'ls5', 'ls6', 'ls7', 'ls8', 'ls9', 'ls10', 'ls11', 'ls12', 'ls13', 'ls14', 'ls15', 'ls16', 'ls17', 'ls18', 'ls19', 'ls25', 'ls26', 'ls27', 'ls28'],
-  bradford:     ['bradford', 'west yorkshire', 'bd1', 'bd2', 'bd3', 'bd4', 'bd5', 'bd6', 'bd7', 'bd8', 'bd9', 'bd10'],
-  wakefield:    ['wakefield', 'west yorkshire', 'wf1', 'wf2', 'wf3', 'wf4', 'wf5', 'wf6'],
-  sheffield:    ['sheffield', 'south yorkshire', 's1', 's2', 's3', 's6', 's7', 's8', 's10', 's11'],
-  huddersfield: ['huddersfield', 'kirklees', 'hd1', 'hd2', 'hd3', 'hd4', 'hd5']
+const REGION_SEARCH = {
+  leeds:        'leeds',
+  bradford:     'bradford',
+  wakefield:    'wakefield',
+  sheffield:    'sheffield',
+  huddersfield: 'huddersfield'
 };
-
-function matchesRegion(text, region) {
-  if (!text) return false;
-  const lower = text.toLowerCase();
-  const keywords = REGION_KEYWORDS[region] || REGION_KEYWORDS.leeds;
-  return keywords.some(kw => lower.includes(kw));
-}
-
-function parseGazetteXML(xml) {
-  const notices = [];
-  const items = xml.split(/<item[\s>]/i).slice(1);
-  for (const item of items) {
-    const title    = (item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || item.match(/<title>([\s\S]*?)<\/title>/))?.[1] || '';
-    const desc     = (item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || item.match(/<description>([\s\S]*?)<\/description>/))?.[1] || '';
-    const link     = (item.match(/<link>([\s\S]*?)<\/link>/))?.[1] || '';
-    const pubDate  = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/))?.[1] || '';
-    const category = (item.match(/<category>([\s\S]*?)<\/category>/))?.[1] || '';
-    const cleanDesc = desc.replace(/<[^>]+>/g, ' ').replace(/&amp;/g,'&').replace(/\s+/g, ' ').trim();
-    if (title.trim()) {
-      notices.push({ title: title.trim(), description: cleanDesc.substring(0, 400), link: link.trim(), pubDate: pubDate.trim(), category: category.trim() });
-    }
-  }
-  return notices;
-}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
   const region = (req.query.region || 'leeds').toLowerCase();
+  const searchTerm = REGION_SEARCH[region] || 'leeds';
 
   try {
-    const feedUrls = [
-      `${GAZETTE_BASE}/all-notices/notice?notice-type=2100&format=rss`,
-      `${GAZETTE_BASE}/all-notices/notice?notice-type=2150&format=rss`,
-      `${GAZETTE_BASE}/all-notices/notice?notice-type=2160&format=rss`,
-    ];
+    // Use The Gazette's linked data search API — returns JSON-LD
+    // This endpoint is public and free
+    const url = `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2100,2150,2160&format=json`;
 
-    let allNotices = [];
-
-    for (const feedUrl of feedUrls) {
-      try {
-        const response = await fetch(feedUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; CC-Property-Intelligence/1.0)',
-            'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-          }
-        });
-        if (!response.ok) continue;
-        const xml = await response.text();
-        const parsed = parseGazetteXML(xml);
-        allNotices.push(...parsed);
-      } catch(e) { continue; }
-    }
-
-    // Deduplicate
-    const seen = new Set();
-    allNotices = allNotices.filter(n => {
-      if (seen.has(n.title)) return false;
-      seen.add(n.title);
-      return true;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json, application/ld+json, */*',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
     });
 
-    let filtered = allNotices.filter(n =>
-      matchesRegion(n.title, region) || matchesRegion(n.description, region)
-    );
+    // If JSON endpoint fails, try the search page API
+    if (!response.ok) {
+      // Fallback: use Gazette search with location filter
+      const fallbackUrl = `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2100&format=json&start-publish-date=${getDateDaysAgo(30)}`;
+      const fb = await fetch(fallbackUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json, */*' }
+      });
 
-    // Fallback: show all if no local matches
-    const usedFallback = filtered.length === 0 && allNotices.length > 0;
-    if (usedFallback) filtered = allNotices.slice(0, 20);
+      if (!fb.ok) {
+        return res.status(200).json({
+          success: false,
+          error: `Gazette returned ${response.status} — their RSS may be geo-blocking Vercel IPs. Try The Gazette directly: https://www.thegazette.co.uk/insolvency`,
+          data: [],
+          gazetteBlocked: true,
+          workaround: 'Visit https://www.thegazette.co.uk/insolvency and search manually for ' + searchTerm
+        });
+      }
 
-    const formatted = filtered.map(n => ({
-      title:       n.title,
-      description: n.description,
-      link:        n.link,
-      date:        n.pubDate ? new Date(n.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—',
-      category:    n.category || 'Corporate Insolvency',
-      source:      'The Gazette',
-      note:        usedFallback ? 'Showing national notices (no local match today)' : ''
-    }));
+      const fbText = await fb.text();
+      return res.status(200).json({
+        success: false,
+        error: 'Gazette primary endpoint unavailable — using fallback',
+        raw: fbText.substring(0, 500),
+        data: []
+      });
+    }
+
+    const text = await response.text();
+
+    // Try parse as JSON
+    let notices = [];
+    try {
+      const json = JSON.parse(text);
+      // Handle various Gazette JSON formats
+      const items = json['@graph'] || json.items || json.notices || json.results || [];
+      notices = items.slice(0, 20).map(item => ({
+        title:       item.title || item['schema:name'] || item.name || 'Insolvency Notice',
+        description: (item.description || item['schema:description'] || item.content || '').replace(/<[^>]+>/g,'').substring(0,300),
+        link:        item['@id'] || item.url || item.link || `${GAZETTE_BASE}/insolvency`,
+        date:        item.publishedDate || item['schema:datePublished'] || item.date || '—',
+        category:    item.noticeType || item.type || 'Corporate Insolvency',
+        source:      'The Gazette'
+      }));
+    } catch(e) {
+      // If not JSON, it's probably HTML or XML — Gazette is blocking
+      return res.status(200).json({
+        success: false,
+        error: 'Gazette returned non-JSON response — their API may be blocking server requests',
+        gazetteBlocked: true,
+        responsePreview: text.substring(0, 200),
+        data: [],
+        workaround: `Visit https://www.thegazette.co.uk/insolvency and search for "${searchTerm}" manually`
+      });
+    }
 
     res.status(200).json({
-      success: true, region,
-      count: formatted.length,
-      totalFetched: allNotices.length,
-      usedFallback,
-      data: formatted,
+      success: true, region, searchTerm,
+      count: notices.length,
+      totalFetched: notices.length,
+      data: notices,
       fetchedAt: new Date().toISOString()
     });
 
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message, data: [] });
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      gazetteBlocked: true,
+      data: [],
+      workaround: `The Gazette may be blocking automated requests. Visit https://www.thegazette.co.uk/insolvency directly.`
+    });
   }
+}
+
+function getDateDaysAgo(days) {
+  const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  return d.toISOString().split('T')[0];
 }
