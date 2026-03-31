@@ -4,197 +4,185 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CC Property Intelligence</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #0a0c0f;
-    --surface:  #111318;
-    --surface2: #181c23;
-    --border:   #1e2330;
-    --border2:  #252c3a;
-    --accent:   #c8f04d;
-    --red:      #f04d7a;
-    --green:    #4df0a0;
-    --amber:    #f0a04d;
-    --blue:     #4da8f0;
-    --text:     #e8eaf0;
+    --bg:       #f8f9fb;
+    --white:    #ffffff;
+    --border:   #e5e8ef;
+    --border2:  #d0d5e0;
+    --accent:   #1a3a5c;
+    --accent2:  #2563eb;
+    --red:      #dc2626;
+    --green:    #059669;
+    --amber:    #d97706;
+    --blue:     #2563eb;
+    --text:     #0f1623;
+    --text2:    #374151;
     --muted:    #6b7280;
-    --muted2:   #4a5060;
+    --muted2:   #9ca3af;
+    --surface:  #ffffff;
+    --surface2: #f3f5f8;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    min-height: 100vh;
-  }
-  body::before {
-    content:'';
-    position:fixed; inset:0;
-    background-image:
-      linear-gradient(rgba(200,240,77,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(200,240,77,0.015) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events:none; z-index:0;
-  }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; min-height:100vh; }
 
   /* HEADER */
   header {
     position:sticky; top:0; z-index:100;
-    background:rgba(10,12,15,0.96);
-    backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
-    padding:0 24px;
+    background:var(--accent);
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    padding:0 28px;
     display:flex; align-items:center; justify-content:space-between;
-    height:56px;
+    height:58px;
+    box-shadow:0 2px 12px rgba(26,58,92,0.15);
   }
-  .logo {
-    font-family:'Syne',sans-serif; font-weight:800; font-size:16px;
-    letter-spacing:-0.5px; display:flex; align-items:center; gap:10px;
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-mark {
+    width:32px; height:32px; background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.25); border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Playfair Display',serif; font-weight:700; font-size:14px; color:#fff;
   }
-  .logo-dot {
-    width:8px; height:8px; background:var(--accent);
-    border-radius:50%; box-shadow:0 0 8px var(--accent);
-    animation:pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
-  .header-right { display:flex; align-items:center; gap:12px; }
-  .last-updated { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
-  .btn-sm {
-    background:var(--surface2); border:1px solid var(--border2);
-    color:var(--text); padding:6px 14px; border-radius:6px;
+  .logo-text { font-family:'Playfair Display',serif; font-weight:700; font-size:16px; color:#fff; letter-spacing:-0.3px; }
+  .logo-sub { font-size:11px; color:rgba(255,255,255,0.5); font-weight:300; margin-top:1px; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .last-updated { font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,255,255,0.5); }
+  .btn-ghost {
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+    color:#fff; padding:6px 14px; border-radius:5px;
     font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all 0.2s;
   }
-  .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
-  .btn-accent {
-    background:var(--accent); border:none; color:#0a0c0f;
-    padding:6px 14px; border-radius:6px;
-    font-family:'DM Mono',monospace; font-size:11px; font-weight:500;
+  .btn-ghost:hover { background:rgba(255,255,255,0.2); }
+  .btn-white {
+    background:#fff; border:none; color:var(--accent);
+    padding:6px 16px; border-radius:5px;
+    font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600;
     cursor:pointer; transition:all 0.2s;
   }
-  .btn-accent:hover { background:#d4f56a; }
+  .btn-white:hover { background:#f0f4f8; }
 
   /* REGION TABS */
   .region-bar {
-    position:sticky; top:56px; z-index:90;
-    background:rgba(10,12,15,0.96); backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
-    padding:0 24px; display:flex; gap:2px;
-    overflow-x:auto; scrollbar-width:none;
+    background:var(--white); border-bottom:1px solid var(--border);
+    padding:0 28px; display:flex; gap:0; overflow-x:auto; scrollbar-width:none;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
   }
   .region-bar::-webkit-scrollbar { display:none; }
   .region-tab {
-    font-family:'Syne',sans-serif; font-weight:600; font-size:12px;
-    letter-spacing:0.5px; text-transform:uppercase;
+    font-family:'DM Sans',sans-serif; font-weight:500; font-size:13px;
     padding:14px 18px; cursor:pointer; color:var(--muted);
     border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.2s;
   }
   .region-tab:hover { color:var(--text); }
-  .region-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .region-tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
 
   /* POSTCODE BAR */
   .postcode-bar {
-    padding:10px 24px; display:flex; gap:8px; flex-wrap:wrap;
-    border-bottom:1px solid var(--border); background:var(--surface);
+    background:var(--surface2); border-bottom:1px solid var(--border);
+    padding:10px 28px; display:flex; gap:6px; flex-wrap:wrap;
   }
   .pc-chip {
     font-family:'DM Mono',monospace; font-size:11px;
-    padding:4px 12px; border-radius:20px;
+    padding:4px 12px; border-radius:4px;
     border:1px solid var(--border2); color:var(--muted);
-    cursor:pointer; transition:all 0.2s; background:transparent;
+    cursor:pointer; transition:all 0.2s; background:var(--white);
   }
   .pc-chip:hover { border-color:var(--accent); color:var(--accent); }
-  .pc-chip.active { background:rgba(200,240,77,0.1); border-color:var(--accent); color:var(--accent); }
+  .pc-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
   /* QUICK LINKS */
   .quicklinks {
-    padding:10px 24px; display:flex; gap:8px; flex-wrap:wrap;
-    border-bottom:1px solid var(--border); background:var(--surface);
+    background:var(--white); border-bottom:1px solid var(--border);
+    padding:10px 28px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;
   }
-  .ql-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted2); align-self:center; }
+  .ql-label { font-size:11px; color:var(--muted2); font-weight:500; margin-right:4px; }
   .ql {
-    font-family:'DM Mono',monospace; font-size:10px;
-    padding:4px 10px; border:1px solid var(--border2);
-    border-radius:4px; color:var(--muted); text-decoration:none; transition:all 0.2s;
+    font-size:11px; padding:4px 10px; border:1px solid var(--border);
+    border-radius:4px; color:var(--text2); text-decoration:none; transition:all 0.2s;
+    background:var(--surface2);
   }
-  .ql:hover { border-color:var(--accent); color:var(--accent); }
+  .ql:hover { border-color:var(--accent2); color:var(--accent2); background:#eff6ff; }
 
   /* STATS */
   .stats-bar {
-    padding:14px 24px; display:grid;
-    grid-template-columns:repeat(4,1fr); gap:12px;
-    border-bottom:1px solid var(--border);
+    padding:16px 28px; display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    background:var(--bg);
   }
   .stat {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:8px; padding:12px 16px; position:relative; overflow:hidden;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:8px; padding:16px 18px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex; align-items:center; gap:14px;
   }
-  .stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-  .stat.s-amber::before { background:var(--amber); }
-  .stat.s-blue::before  { background:var(--blue); }
-  .stat.s-red::before   { background:var(--red); }
-  .stat.s-green::before { background:var(--green); }
-  .stat-lbl { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-  .stat-val { font-family:'Syne',sans-serif; font-size:26px; font-weight:700; line-height:1; }
-  .stat.s-amber .stat-val { color:var(--amber); }
-  .stat.s-blue  .stat-val { color:var(--blue); }
-  .stat.s-red   .stat-val { color:var(--red); }
-  .stat.s-green .stat-val { color:var(--green); }
-  .stat-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+  .stat-icon {
+    width:40px; height:40px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+  }
+  .si-amber { background:#fef3c7; }
+  .si-blue  { background:#dbeafe; }
+  .si-red   { background:#fee2e2; }
+  .si-green { background:#d1fae5; }
+  .stat-info {}
+  .stat-lbl { font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+  .stat-val { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--text); line-height:1; }
+  .stat-sub { font-size:11px; color:var(--muted2); margin-top:2px; }
 
   /* SETUP BANNER */
   .setup-banner {
-    margin:16px 24px; background:rgba(240,160,77,0.08);
-    border:1px solid rgba(240,160,77,0.3); border-radius:8px;
-    padding:14px 18px; display:flex; align-items:flex-start; gap:12px;
+    margin:0 28px 16px; background:#fffbeb;
+    border:1px solid #f59e0b; border-radius:8px;
+    padding:14px 18px; display:flex; gap:12px;
   }
   .setup-banner.hidden { display:none; }
-  .setup-icon { font-size:18px; flex-shrink:0; }
-  .setup-title { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; color:var(--amber); margin-bottom:4px; }
-  .setup-text { font-size:12px; color:var(--muted); line-height:1.6; }
+  .setup-title { font-weight:600; font-size:13px; color:#92400e; margin-bottom:4px; }
+  .setup-text { font-size:12px; color:#78350f; line-height:1.7; }
   .setup-text code {
-    background:var(--surface2); border:1px solid var(--border2);
-    padding:1px 6px; border-radius:3px; font-family:'DM Mono',monospace; font-size:11px; color:var(--text);
+    background:#fde68a; padding:1px 6px; border-radius:3px;
+    font-family:'DM Mono',monospace; font-size:11px;
   }
 
-  /* GRID */
-  .main-grid { display:grid; grid-template-columns:1fr 1fr; position:relative; z-index:1; }
-  .panel { border-right:1px solid var(--border); border-bottom:1px solid var(--border); min-height:360px; }
+  /* MAIN GRID */
+  .main-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .panel {
+    background:var(--white); border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border); min-height:360px;
+  }
   .panel:nth-child(2n) { border-right:none; }
 
   .panel-hdr {
-    padding:12px 18px; border-bottom:1px solid var(--border);
+    padding:14px 20px; border-bottom:1px solid var(--border);
     display:flex; align-items:center; justify-content:space-between;
-    background:var(--surface);
+    background:var(--white);
   }
-  .panel-title { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; display:flex; align-items:center; gap:8px; }
+  .panel-title {
+    font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px;
+    display:flex; align-items:center; gap:8px; color:var(--text);
+  }
   .badge {
     font-family:'DM Mono',monospace; font-size:10px;
     padding:2px 8px; border-radius:10px; font-weight:500;
   }
-  .b-amber { background:rgba(240,160,77,0.15); color:var(--amber); }
-  .b-blue  { background:rgba(77,168,240,0.15); color:var(--blue); }
-  .b-red   { background:rgba(240,77,122,0.15); color:var(--red); }
-  .b-green { background:rgba(77,240,160,0.15); color:var(--green); }
+  .b-amber { background:#fef3c7; color:#92400e; }
+  .b-blue  { background:#dbeafe; color:#1e40af; }
+  .b-red   { background:#fee2e2; color:#991b1b; }
+  .b-green { background:#d1fae5; color:#065f46; }
 
   .panel-links { display:flex; gap:6px; }
   .plink {
-    font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);
-    text-decoration:none; padding:3px 8px; border:1px solid var(--border2);
-    border-radius:4px; transition:all 0.2s;
+    font-size:11px; color:var(--muted); text-decoration:none;
+    padding:3px 8px; border:1px solid var(--border); border-radius:4px; transition:all 0.2s;
   }
-  .plink:hover { color:var(--accent); border-color:var(--accent); }
+  .plink:hover { color:var(--accent2); border-color:var(--accent2); }
 
-  .panel-body { max-height:400px; overflow-y:auto; }
+  .panel-body { max-height:420px; overflow-y:auto; }
 
   /* ITEMS */
   .item {
-    padding:12px 18px; border-bottom:1px solid var(--border);
-    display:flex; gap:10px; align-items:flex-start;
-    transition:background 0.15s; cursor:default;
+    padding:13px 20px; border-bottom:1px solid var(--border);
+    display:flex; gap:10px; align-items:flex-start; transition:background 0.15s;
   }
-  .item:hover { background:var(--surface2); }
+  .item:hover { background:#f8faff; }
   .item:last-child { border-bottom:none; }
   .item-bar { width:3px; border-radius:2px; flex-shrink:0; align-self:stretch; min-height:36px; }
   .bar-amber { background:var(--amber); }
@@ -203,126 +191,118 @@
   .bar-green { background:var(--green); }
 
   .item-body { flex:1; min-width:0; }
-  .item-title { font-weight:500; font-size:13px; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item-title { font-weight:500; font-size:13px; margin-bottom:2px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .item-meta { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; margin-top:3px; }
-  .m-accent { color:var(--accent); }
-  .m-red    { color:var(--red); }
-  .m-amber  { color:var(--amber); }
-  .m-blue   { color:var(--blue); }
-  .m-green  { color:var(--green); }
+  .m-red   { color:var(--red); }
+  .m-amber { color:var(--amber); }
+  .m-blue  { color:var(--blue); }
+  .m-green { color:var(--green); }
+  .m-dark  { color:var(--text2); font-weight:500; }
 
   .item-right { text-align:right; flex-shrink:0; }
-  .item-price { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--accent); }
+  .item-price { font-family:'Playfair Display',serif; font-weight:700; font-size:14px; color:var(--accent); }
   .new-pill {
-    display:inline-block; font-family:'DM Mono',monospace; font-size:9px;
-    padding:1px 5px; background:rgba(200,240,77,0.15); color:var(--accent);
-    border-radius:3px; margin-left:5px; vertical-align:middle;
+    display:inline-block; font-size:9px; padding:1px 5px;
+    background:#dbeafe; color:#1e40af; border-radius:3px; margin-left:5px; vertical-align:middle;
+    font-family:'DM Mono',monospace;
   }
   .save-btn {
-    background:none; border:1px solid var(--border2); color:var(--muted);
-    padding:3px 7px; border-radius:4px; font-size:11px; cursor:pointer; transition:all 0.2s; margin-top:4px;
+    background:none; border:1px solid var(--border); color:var(--muted2);
+    padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer; transition:all 0.2s; margin-top:4px;
   }
-  .save-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .save-btn.saved { border-color:var(--accent); color:var(--accent); background:rgba(200,240,77,0.1); }
+  .save-btn:hover { border-color:var(--amber); color:var(--amber); }
+  .save-btn.saved { border-color:var(--amber); color:var(--amber); background:#fef3c7; }
 
-  /* STATUS STATES */
-  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px 16px; color:var(--muted2); text-align:center; gap:8px; }
-  .empty-icon { font-size:24px; opacity:0.3; }
-  .empty-msg { font-size:12px; }
-  .empty-sub { font-size:11px; color:var(--muted2); }
+  /* STATES */
+  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 16px; color:var(--muted2); text-align:center; gap:8px; }
+  .empty-icon { font-size:28px; opacity:0.3; }
+  .empty-msg { font-size:13px; color:var(--muted); }
+  .empty-sub { font-size:11px; }
 
-  .skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--border2) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:4px; }
+  .skeleton { background:linear-gradient(90deg,#f0f2f5 25%,#e5e8ef 50%,#f0f2f5 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:4px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-  .skel-row { padding:12px 18px; display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border); }
+  .skel-row { padding:13px 20px; display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border); }
 
   .api-note {
-    margin:8px 18px 12px; background:rgba(77,168,240,0.06);
-    border:1px solid rgba(77,168,240,0.2); border-radius:6px;
-    padding:10px 12px; font-size:11px; color:var(--muted);
-    font-family:'DM Mono',monospace; line-height:1.6;
+    margin:10px 20px 4px; background:#eff6ff;
+    border:1px solid #bfdbfe; border-radius:6px;
+    padding:10px 12px; font-size:11px; color:#1e40af; line-height:1.6;
   }
-  .api-note a { color:var(--blue); }
+  .api-note a { color:var(--accent2); }
 
   /* SAVED */
-  .saved-section { border-top:1px solid var(--border); }
+  .saved-section { background:var(--bg); border-top:2px solid var(--border); }
   .saved-hdr {
-    padding:12px 24px; background:var(--surface); border-bottom:1px solid var(--border);
+    padding:14px 28px; background:var(--white); border-bottom:1px solid var(--border);
     display:flex; align-items:center; justify-content:space-between;
   }
-  .saved-title { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; display:flex; align-items:center; gap:8px; }
-  .saved-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; padding:14px 24px; }
+  .saved-title { font-family:'Playfair Display',serif; font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; }
+  .saved-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; padding:16px 28px; }
   .saved-card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:8px; padding:12px; position:relative;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:8px; padding:14px; position:relative;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04); transition:box-shadow 0.2s;
   }
-  .sc-type { font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
-  .sc-addr { font-weight:500; font-size:13px; margin-bottom:3px; }
-  .sc-price { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:var(--accent); }
+  .saved-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+  .sc-type { font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; color:var(--muted); }
+  .sc-addr { font-weight:600; font-size:13px; margin-bottom:4px; color:var(--text); }
+  .sc-price { font-family:'Playfair Display',serif; font-weight:700; font-size:16px; color:var(--accent); }
   .sc-notes { font-size:11px; color:var(--muted); margin-top:5px; line-height:1.5; }
-  .sc-rm {
-    position:absolute; top:8px; right:8px; background:none; border:none;
-    color:var(--muted2); cursor:pointer; font-size:13px; transition:color 0.2s;
-  }
+  .sc-rm { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--muted2); cursor:pointer; font-size:14px; transition:color 0.2s; }
   .sc-rm:hover { color:var(--red); }
 
   /* MODAL */
-  .overlay {
-    display:none; position:fixed; inset:0;
-    background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:300;
-    align-items:center; justify-content:center;
-  }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); z-index:300; align-items:center; justify-content:center; }
   .overlay.open { display:flex; }
-  .modal {
-    background:var(--surface); border:1px solid var(--border2);
-    border-radius:12px; width:460px; max-width:94vw; padding:26px;
-  }
-  .modal-title {
-    font-family:'Syne',sans-serif; font-weight:700; font-size:17px;
-    margin-bottom:18px; display:flex; align-items:center; justify-content:space-between;
-  }
+  .modal { background:var(--white); border:1px solid var(--border); border-radius:12px; width:460px; max-width:94vw; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
+  .modal-title { font-family:'Playfair Display',serif; font-weight:700; font-size:18px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; color:var(--text); }
   .modal-close { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
   .fg { margin-bottom:12px; }
-  .flabel { font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:5px; display:block; }
-  .finput, .fselect, .ftextarea {
-    width:100%; background:var(--bg); border:1px solid var(--border2);
-    color:var(--text); padding:8px 11px; border-radius:6px;
-    font-family:'DM Sans',sans-serif; font-size:13px; outline:none; transition:border-color 0.2s;
-  }
-  .finput:focus, .fselect:focus, .ftextarea:focus { border-color:var(--accent); }
-  .ftextarea { resize:vertical; min-height:65px; }
-  .fselect option { background:var(--surface); }
+  .flabel { font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); margin-bottom:5px; display:block; font-weight:500; }
+  .finput, .fselect, .ftextarea { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:13px; outline:none; transition:border-color 0.2s; }
+  .finput:focus, .fselect:focus, .ftextarea:focus { border-color:var(--accent2); background:#fff; }
+  .ftextarea { resize:vertical; min-height:70px; }
   .frow { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .btn-full {
-    width:100%; background:var(--accent); color:#0a0c0f; border:none;
-    padding:10px; border-radius:6px; font-family:'Syne',sans-serif;
-    font-weight:700; font-size:13px; cursor:pointer; margin-top:6px; transition:background 0.2s;
-  }
-  .btn-full:hover { background:#d4f56a; }
+  .btn-full { width:100%; background:var(--accent); color:#fff; border:none; padding:11px; border-radius:6px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:14px; cursor:pointer; margin-top:8px; transition:background 0.2s; }
+  .btn-full:hover { background:#0f2a45; }
 
-  .fab {
-    position:fixed; bottom:26px; right:26px;
-    width:50px; height:50px; background:var(--accent); color:#0a0c0f;
-    border:none; border-radius:50%; font-size:22px; cursor:pointer; z-index:200;
-    box-shadow:0 4px 18px rgba(200,240,77,0.35); transition:all 0.2s;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .fab:hover { transform:scale(1.08); }
+  .fab { position:fixed; bottom:28px; right:28px; width:52px; height:52px; background:var(--accent); color:#fff; border:none; border-radius:50%; font-size:22px; cursor:pointer; z-index:200; box-shadow:0 4px 18px rgba(26,58,92,0.3); transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+  .fab:hover { transform:scale(1.08); background:#0f2a45; }
+
+  /* DEBUG */
+  .debug-panel { border-top:2px solid var(--border); background:var(--white); }
+  .debug-hdr { padding:12px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:var(--surface2); }
+  .debug-title { font-family:'DM Mono',monospace; font-weight:500; font-size:12px; color:var(--text2); display:flex; align-items:center; gap:8px; }
+  .debug-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); }
+  .debug-btns { display:flex; gap:8px; }
+  .dbtn { background:var(--white); border:1px solid var(--border); color:var(--text2); padding:5px 12px; border-radius:5px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all 0.2s; }
+  .dbtn:hover { border-color:var(--accent2); color:var(--accent2); }
+  .dbtn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .dbtn.primary:hover { background:#0f2a45; }
+  #debug-output { padding:20px 28px; font-family:'DM Mono',monospace; font-size:11px; line-height:1.8; color:var(--muted); white-space:pre-wrap; word-break:break-all; max-height:480px; overflow-y:auto; background:#f8f9fb; }
 
   @media(max-width:768px) {
     .main-grid { grid-template-columns:1fr; }
     .panel { border-right:none; }
     .stats-bar { grid-template-columns:1fr 1fr; }
+    .saved-grid { grid-template-columns:1fr; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo"><div class="logo-dot"></div>CC Property Intelligence</div>
+  <div class="logo">
+    <div class="logo-mark">CC</div>
+    <div>
+      <div class="logo-text">Property Intelligence</div>
+      <div class="logo-sub">Yorkshire Market Monitor</div>
+    </div>
+  </div>
   <div class="header-right">
     <span class="last-updated" id="lastUpdated">—</span>
-    <button class="btn-sm" onclick="refreshAll()">↻ Refresh</button>
-    <button class="btn-accent" onclick="sendDigest()">✉ Send Digest</button>
+    <button class="btn-ghost" onclick="refreshAll()">↻ Refresh</button>
+    <button class="btn-white" onclick="sendDigest()">✉ Send Digest</button>
   </div>
 </header>
 
@@ -347,63 +327,81 @@
 </div>
 
 <div class="quicklinks">
-  <span class="ql-label">OPEN →</span>
+  <span class="ql-label">QUICK ACCESS</span>
   <a class="ql" href="https://www.sdlauctions.co.uk/property-auctions/yorkshire/" target="_blank">🔨 SDL Auctions</a>
   <a class="ql" href="https://www.auctionhouse.co.uk/yorkshire" target="_blank">🔨 Auction House</a>
   <a class="ql" href="https://allsop.co.uk/auctions" target="_blank">🔨 Allsop</a>
   <a class="ql" href="https://www.propertylink.estatesgazette.com/search?q=leeds" target="_blank">🏢 EG Propertylink</a>
   <a class="ql" href="https://www.rightmove.co.uk/commercial-property-for-sale/Leeds.html" target="_blank">🏢 RM Commercial</a>
-  <a class="ql" href="https://www.thegazette.co.uk/insolvency" target="_blank">⚠️ Gazette</a>
+  <a class="ql" href="https://www.thegazette.co.uk/insolvency" target="_blank">⚠️ The Gazette</a>
   <a class="ql" href="https://publicaccess.leeds.gov.uk/online-applications/" target="_blank">📋 Leeds Planning</a>
   <a class="ql" href="https://propertydata.co.uk/postcode-data" target="_blank">📊 PropertyData</a>
 </div>
 
 <div class="stats-bar">
-  <div class="stat s-amber"><div class="stat-lbl">Auction Lots</div><div class="stat-val" id="sv-auction">—</div><div class="stat-sub">This month</div></div>
-  <div class="stat s-blue"><div class="stat-lbl">Planning Apps</div><div class="stat-val" id="sv-planning">—</div><div class="stat-sub">Last 14 days</div></div>
-  <div class="stat s-red"><div class="stat-lbl">Insolvencies</div><div class="stat-val" id="sv-insolvency">—</div><div class="stat-sub">Live notices</div></div>
-  <div class="stat s-green"><div class="stat-lbl">Live Listings</div><div class="stat-val" id="sv-listings">—</div><div class="stat-sub">For sale now</div></div>
+  <div class="stat">
+    <div class="stat-icon si-amber">🔨</div>
+    <div class="stat-info">
+      <div class="stat-lbl">Auction Lots</div>
+      <div class="stat-val" id="sv-auction">—</div>
+      <div class="stat-sub">Check manually</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon si-blue">📋</div>
+    <div class="stat-info">
+      <div class="stat-lbl">Planning Apps</div>
+      <div class="stat-val" id="sv-planning">—</div>
+      <div class="stat-sub">Last 14 days</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon si-red">⚠️</div>
+    <div class="stat-info">
+      <div class="stat-lbl">Insolvencies</div>
+      <div class="stat-val" id="sv-insolvency">—</div>
+      <div class="stat-sub">Live notices</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon si-green">🏠</div>
+    <div class="stat-info">
+      <div class="stat-lbl">Live Listings</div>
+      <div class="stat-val" id="sv-listings">—</div>
+      <div class="stat-sub">For sale now</div>
+    </div>
+  </div>
 </div>
 
-<div id="setupBanner" class="setup-banner">
-  <div class="setup-icon">⚙️</div>
+<div id="setupBanner" class="setup-banner hidden">
+  <div>⚙️</div>
   <div>
     <div class="setup-title">API Keys Required — Add to Vercel Environment Variables</div>
-    <div class="setup-text">
-      Go to your Vercel project → Settings → Environment Variables and add:<br>
-      <code>PROPERTYDATA_API_KEY</code> — from propertydata.co.uk/free-trial<br>
-      <code>PLANNING_API_KEY</code> — from api.planning.org.uk/v1/generatekey (free, instant)<br>
-      <code>COMPANIES_HOUSE_API_KEY</code> — from developer.company-information.service.gov.uk<br>
-      <code>BREVO_API_KEY</code> — from app.brevo.com (for digest emails)<br>
-      <code>DIGEST_EMAIL</code> — your email address for morning digests
-    </div>
+    <div class="setup-text" id="setupText"></div>
   </div>
 </div>
 
 <div class="main-grid">
 
-  <!-- AUCTIONS -->
   <div class="panel">
     <div class="panel-hdr">
-      <div class="panel-title">🔨 Auction Lots <span class="badge b-amber" id="b-auction">—</span></div>
+      <div class="panel-title">🔨 Auction Lots <span class="badge b-amber" id="b-auction">Manual check</span></div>
       <div class="panel-links">
         <a class="plink" href="https://www.sdlauctions.co.uk/property-auctions/yorkshire/" target="_blank">SDL →</a>
         <a class="plink" href="https://www.auctionhouse.co.uk/yorkshire" target="_blank">AH →</a>
-        <a class="plink" href="https://allsop.co.uk/auctions" target="_blank">Allsop →</a>
       </div>
     </div>
     <div class="api-note">
-      📌 Auction catalogues have no public API. Use the links above to check SDL, Auction House Yorkshire and Allsop directly — sign up to their email alerts for new catalogue notifications. Save lots you find using the ★ button or + below.
+      No public API available for auction catalogues. Click SDL or AH above to check the latest Yorkshire lots — sign up to their email alerts. Use the + button below to log any lots you find.
     </div>
     <div class="panel-body" id="p-auction">
-      <div class="empty"><div class="empty-icon">🔨</div><div class="empty-msg">Sign up to SDL & Auction House email alerts</div><div class="empty-sub">Save lots manually using the + button below</div></div>
+      <div class="empty"><div class="empty-icon">🔨</div><div class="empty-msg">Sign up to SDL & Auction House email alerts</div><div class="empty-sub">Log lots manually using + below</div></div>
     </div>
   </div>
 
-  <!-- PLANNING -->
   <div class="panel">
     <div class="panel-hdr">
-      <div class="panel-title">📋 Planning Applications <span class="badge b-blue" id="b-planning">—</span></div>
+      <div class="panel-title">📋 Planning Applications <span class="badge b-blue" id="b-planning">Loading…</span></div>
       <div class="panel-links">
         <a class="plink" href="https://publicaccess.leeds.gov.uk/online-applications/" target="_blank">Portal →</a>
       </div>
@@ -411,22 +409,19 @@
     <div class="panel-body" id="p-planning"></div>
   </div>
 
-  <!-- INSOLVENCY -->
   <div class="panel">
     <div class="panel-hdr">
-      <div class="panel-title">⚠️ Insolvency Notices <span class="badge b-red" id="b-insolvency">—</span></div>
+      <div class="panel-title">⚠️ Insolvency Notices <span class="badge b-red" id="b-insolvency">Loading…</span></div>
       <div class="panel-links">
         <a class="plink" href="https://www.thegazette.co.uk/insolvency" target="_blank">Gazette →</a>
-        <a class="plink" href="https://find-and-update.company-information.service.gov.uk" target="_blank">CH →</a>
       </div>
     </div>
     <div class="panel-body" id="p-insolvency"></div>
   </div>
 
-  <!-- LISTINGS -->
   <div class="panel">
     <div class="panel-hdr">
-      <div class="panel-title">🏠 Live Listings <span class="badge b-green" id="b-listings">—</span></div>
+      <div class="panel-title">🏠 Live Listings <span class="badge b-green" id="b-listings">Loading…</span></div>
       <div class="panel-links">
         <a class="plink" href="https://www.propertylink.estatesgazette.com/search?q=leeds" target="_blank">EG →</a>
         <a class="plink" href="https://www.rightmove.co.uk/commercial-property-for-sale/Leeds.html" target="_blank">RM →</a>
@@ -437,22 +432,37 @@
 
 </div>
 
-<!-- SAVED -->
 <div class="saved-section">
   <div class="saved-hdr">
     <div class="saved-title">⭐ Saved Properties <span class="badge b-amber" id="saved-count">0</span></div>
-    <button class="btn-sm" onclick="clearSaved()">Clear All</button>
+    <button class="dbtn" onclick="clearSaved()">Clear All</button>
   </div>
   <div class="saved-grid" id="saved-grid">
-    <div style="padding:16px 0;color:var(--muted);font-size:12px;font-family:'DM Mono',monospace">
-      Nothing saved yet — use ★ to save items or + to log manually
+    <div style="padding:16px 0;color:var(--muted2);font-size:12px">Nothing saved yet — use ★ to save or + to log manually</div>
+  </div>
+</div>
+
+<!-- DEBUG PANEL -->
+<div class="debug-panel">
+  <div class="debug-hdr">
+    <div class="debug-title">
+      <div class="debug-dot"></div>
+      API Debug Console — live response log
     </div>
+    <div class="debug-btns">
+      <button class="dbtn primary" id="debug-copy-btn" onclick="copyDebug()">Copy All</button>
+      <button class="dbtn" onclick="loadAll()">↻ Re-run</button>
+      <button class="dbtn" id="debug-toggle" onclick="toggleDebug()">▲ Hide</button>
+    </div>
+  </div>
+  <div id="debug-body">
+    <pre id="debug-output">Waiting for API calls...</pre>
   </div>
 </div>
 
 <button class="fab" onclick="openModal()" title="Log a property">+</button>
 
-<!-- LOG MODAL -->
+<!-- MODAL -->
 <div class="overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-title">Log Property <button class="modal-close" onclick="closeModal()">✕</button></div>
@@ -475,17 +485,60 @@
       <div class="fg"><label class="flabel">Source</label><input class="finput" id="f-source" placeholder="e.g. SDL Auctions"></div>
     </div>
     <div class="fg"><label class="flabel">Notes</label><textarea class="ftextarea" id="f-notes" placeholder="Potential, concerns, next steps..."></textarea></div>
-    <button class="btn-full" onclick="logProperty()">Save Property →</button>
+    <button class="btn-full" onclick="logProperty()">Save Property</button>
   </div>
 </div>
 
 <script>
-// ── STATE ──
-let region = 'leeds';
-let postcode = 'all';
+let region = 'leeds', postcode = 'all';
 let saved = JSON.parse(localStorage.getItem('cc_props') || '[]');
+const debugLog = [];
 
-// ── SKELETON ──
+// ── DEBUG ──
+function dbLog(label, url, status, data) {
+  debugLog.push({ time: new Date().toLocaleTimeString('en-GB'), label, url, status, data: JSON.stringify(data, null, 2) });
+  renderDebug();
+}
+function renderDebug() {
+  const out = document.getElementById('debug-output');
+  if (!out) return;
+  out.textContent = debugLog.length === 0 ? 'Waiting for API calls...' :
+    debugLog.map(e => `[${e.time}] ${e.label}\nURL: ${e.url}\nStatus: ${e.status}\nResponse: ${e.data}\n${'─'.repeat(60)}`).join('\n\n');
+}
+function copyDebug() {
+  const text = debugLog.map(e => `[${e.time}] ${e.label}\nURL: ${e.url}\nStatus: ${e.status}\nResponse: ${e.data}\n${'─'.repeat(60)}`).join('\n\n');
+  navigator.clipboard.writeText(text || 'No data').then(() => {
+    const btn = document.getElementById('debug-copy-btn');
+    btn.textContent = 'Copied! ✓';
+    setTimeout(() => btn.textContent = 'Copy All', 2000);
+  });
+}
+function toggleDebug() {
+  const body = document.getElementById('debug-body');
+  const btn  = document.getElementById('debug-toggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '▼ Show' : '▲ Hide';
+}
+
+// ── FETCH (with debug logging) ──
+async function apiFetch(path) {
+  const fullUrl = window.location.origin + path;
+  const label = path.split('?')[0].replace('/api/','').toUpperCase();
+  try {
+    const r = await fetch(path);
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text.substring(0, 600) }; }
+    dbLog(label, fullUrl, r.ok ? `✅ ${r.status} OK` : `❌ ${r.status} ERROR`, data);
+    return data;
+  } catch(e) {
+    dbLog(label, fullUrl, `❌ FETCH FAILED`, { error: e.message });
+    return { success: false, error: e.message, data: [] };
+  }
+}
+
+// ── SKELETONS ──
 function skeletons(n=3) {
   return Array(n).fill(0).map(()=>`
     <div class="skel-row">
@@ -497,21 +550,8 @@ function skeletons(n=3) {
       <div class="skeleton" style="width:55px;height:14px"></div>
     </div>`).join('');
 }
-
 function empty(msg, sub='') {
   return `<div class="empty"><div class="empty-icon">◎</div><div class="empty-msg">${msg}</div>${sub?`<div class="empty-sub">${sub}</div>`:''}</div>`;
-}
-
-// ── FETCH HELPERS ──
-async function apiFetch(path) {
-  try {
-    const r = await fetch(path);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return await r.json();
-  } catch(e) {
-    console.warn('Fetch failed:', path, e.message);
-    return { success: false, error: e.message, data: [] };
-  }
 }
 
 // ── RENDER INSOLVENCY ──
@@ -519,19 +559,14 @@ function renderInsolvency(data) {
   const panel = document.getElementById('p-insolvency');
   const badge = document.getElementById('b-insolvency');
   document.getElementById('sv-insolvency').textContent = data.count ?? '—';
-
-  if (data.setupRequired) {
-    badge.textContent = 'Setup needed';
-    panel.innerHTML = `<div class="api-note">⚙️ Add <strong>PLANNING_API_KEY</strong> and <strong>COMPANIES_HOUSE_API_KEY</strong> to Vercel env vars to enable live insolvency data. See setup banner above.</div>${empty('API keys not yet configured','Add env vars in Vercel → Settings')}`;
-    return;
-  }
   if (!data.data?.length) {
     badge.textContent = '0 notices';
-    panel.innerHTML = empty('No insolvency notices found', `Checked The Gazette for ${region}`);
+    panel.innerHTML = empty('No insolvency notices found today', 'The Gazette is live — try refreshing later');
     return;
   }
   badge.textContent = `${data.count} notices`;
-  panel.innerHTML = data.data.map(item => `
+  const fallbackNote = data.usedFallback ? `<div class="api-note">ℹ️ Showing national notices — no Yorkshire-specific matches found today</div>` : '';
+  panel.innerHTML = fallbackNote + data.data.map(item => `
     <div class="item">
       <div class="item-bar bar-red"></div>
       <div class="item-body">
@@ -541,12 +576,12 @@ function renderInsolvency(data) {
           <span>${item.date}</span>
         </div>
         <div class="item-meta" style="margin-top:2px">
-          <span>${item.description?.substring(0,120) || ''}${item.description?.length>120?'...':''}</span>
+          <span>${(item.description||'').substring(0,120)}${(item.description||'').length>120?'...':''}</span>
         </div>
       </div>
       <div class="item-right">
-        ${item.link ? `<a href="${item.link}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--blue)">View →</a><br>` : ''}
-        <button class="save-btn" onclick="quickSave('insolvency','${esc(item.title)}','—',this)">★</button>
+        ${item.link ? `<a href="${item.link}" target="_blank" style="font-size:11px;color:var(--blue)">View →</a><br>` : ''}
+        <button class="save-btn" onclick="event.stopPropagation();quickSave('insolvency','${esc(item.title)}','—',this)">★ Save</button>
       </div>
     </div>`).join('');
 }
@@ -556,15 +591,18 @@ function renderPlanning(data) {
   const panel = document.getElementById('p-planning');
   const badge = document.getElementById('b-planning');
   document.getElementById('sv-planning').textContent = data.count ?? '—';
-
-  if (data.setupRequired) {
-    badge.textContent = 'Setup needed';
-    panel.innerHTML = `<div class="api-note">⚙️ Add <strong>PLANNING_API_KEY</strong> to Vercel env vars. Get your free key instantly at <a href="https://api.planning.org.uk/v1/generatekey" target="_blank">api.planning.org.uk</a> — no approval needed.</div>${empty('API key not yet configured')}`;
+  if (data.setupRequired || data.keyError) {
+    badge.textContent = 'Key error';
+    const msg = data.keyError
+      ? `Planning API key rejected. <a href="https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com" target="_blank">Get a new key here</a> and update it in Vercel env vars.`
+      : `Add <strong>PLANNING_API_KEY</strong> to Vercel. <a href="https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com" target="_blank">Get free key instantly</a>.`;
+    panel.innerHTML = `<div class="api-note">⚙️ ${msg}</div>${empty('Planning API not configured')}`;
+    showSetup('PLANNING_API_KEY is missing or invalid');
     return;
   }
   if (!data.data?.length) {
     badge.textContent = '0 apps';
-    panel.innerHTML = empty('No planning applications found', `Checked last 14 days for ${region}`);
+    panel.innerHTML = empty('No planning applications found', 'Last 14 days checked');
     return;
   }
   badge.textContent = `${data.count} apps`;
@@ -583,8 +621,8 @@ function renderPlanning(data) {
         </div>
       </div>
       <div class="item-right">
-        ${item.link ? `<a href="${item.link}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--blue)">View →</a><br>` : ''}
-        <button class="save-btn" onclick="quickSave('planning','${esc(item.address)}','—',this)">★</button>
+        ${item.link ? `<a href="${item.link}" target="_blank" style="font-size:11px;color:var(--blue)">View →</a><br>` : ''}
+        <button class="save-btn" onclick="event.stopPropagation();quickSave('planning','${esc(item.address)}','—',this)">★ Save</button>
       </div>
     </div>`).join('');
 }
@@ -594,10 +632,10 @@ function renderListings(data) {
   const panel = document.getElementById('p-listings');
   const badge = document.getElementById('b-listings');
   document.getElementById('sv-listings').textContent = data.count ?? '—';
-
   if (data.setupRequired) {
     badge.textContent = 'Setup needed';
-    panel.innerHTML = `<div class="api-note">⚙️ Add <strong>PROPERTYDATA_API_KEY</strong> to Vercel env vars. Sign up at <a href="https://propertydata.co.uk/free-trial/10" target="_blank">propertydata.co.uk</a> — free trial available (500 credits).</div>${empty('API key not yet configured')}`;
+    panel.innerHTML = `<div class="api-note">⚙️ Add <strong>PROPERTYDATA_API_KEY</strong> to Vercel. <a href="https://propertydata.co.uk/free-trial/10" target="_blank">Start free trial →</a></div>${empty('PropertyData API key required')}`;
+    showSetup('PROPERTYDATA_API_KEY not set');
     return;
   }
   if (!data.data?.length) {
@@ -618,49 +656,44 @@ function renderListings(data) {
         </div>
         <div class="item-meta" style="margin-top:2px">
           <span>Listed ${item.date}</span>
-          <span class="m-accent">${item.postcode}</span>
+          <span class="m-dark">${item.postcode}</span>
         </div>
       </div>
       <div class="item-right">
         <div class="item-price">${item.price}</div>
-        ${item.link && item.link !== '#' ? `<a href="${item.link}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--blue)">View →</a><br>` : ''}
-        <button class="save-btn" onclick="quickSave('residential','${esc(item.address)}','${esc(item.price)}',this)">★</button>
+        ${item.link && item.link !== '#' ? `<a href="${item.link}" target="_blank" style="font-size:11px;color:var(--blue)">View →</a><br>` : ''}
+        <button class="save-btn" onclick="event.stopPropagation();quickSave('residential','${esc(item.address)}','${esc(item.price)}',this)">★ Save</button>
       </div>
     </div>`).join('');
 }
 
-// ── LOAD ALL ──
+// ── SETUP BANNER ──
+const setupMessages = [];
+function showSetup(msg) {
+  if (!setupMessages.includes(msg)) setupMessages.push(msg);
+  const banner = document.getElementById('setupBanner');
+  banner.classList.remove('hidden');
+  document.getElementById('setupText').innerHTML = setupMessages.map(m => `• ${m}`).join('<br>') +
+    `<br><br>Go to: <strong>Vercel → mohammed-adris-projects/property-intel → Settings → Environment Variables</strong>`;
+}
+
+// ── LOAD ──
 async function loadAll() {
-  // Show skeletons
-  ['p-planning','p-insolvency','p-listings'].forEach(id => {
-    document.getElementById(id).innerHTML = skeletons();
-  });
-  ['sv-auction','sv-planning','sv-insolvency','sv-listings'].forEach(id => {
-    document.getElementById(id).textContent = '…';
-  });
-
-  const pc = postcode === 'all' ? 'all' : postcode;
-
+  setupMessages.length = 0;
+  document.getElementById('setupBanner').classList.add('hidden');
+  ['p-planning','p-insolvency','p-listings'].forEach(id => document.getElementById(id).innerHTML = skeletons());
+  ['sv-planning','sv-insolvency','sv-listings'].forEach(id => document.getElementById(id).textContent = '…');
+  const pc = postcode;
   const [insolvency, planning, listings] = await Promise.all([
     apiFetch(`/api/insolvency?region=${region}`),
     apiFetch(`/api/planning?region=${region}&postcode=${pc}`),
     apiFetch(`/api/listings?region=${region}&postcode=${pc}&type=listings`)
   ]);
-
   renderInsolvency(insolvency);
   renderPlanning(planning);
   renderListings(listings);
-
-  // Auction panel stays static (no API)
   document.getElementById('sv-auction').textContent = '—';
-  document.getElementById('b-auction').textContent = 'Check manually';
-
-  document.getElementById('lastUpdated').textContent =
-    'Updated ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-
-  // Check if any setup required — show/hide banner
-  const needsSetup = insolvency.setupRequired || planning.setupRequired || listings.setupRequired;
-  document.getElementById('setupBanner').classList.toggle('hidden', !needsSetup);
+  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 }
 
 // ── NAV ──
@@ -669,93 +702,56 @@ function setRegion(r, el) {
   document.querySelectorAll('.region-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('postcodeBar').style.display = r === 'leeds' ? 'flex' : 'none';
-  document.querySelectorAll('.pc-chip').forEach(c => c.classList.remove('active'));
-  document.querySelector('.pc-chip').classList.add('active');
+  document.querySelectorAll('.pc-chip')[0].classList.add('active');
   loadAll();
 }
-
 function setPostcode(pc, el) {
   postcode = pc;
   document.querySelectorAll('.pc-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   loadAll();
 }
-
-function refreshAll() {
-  const btn = document.querySelector('.btn-sm');
-  btn.textContent = '↻ Refreshing…';
-  loadAll().then(() => btn.textContent = '↻ Refresh');
-}
+function refreshAll() { loadAll(); }
 
 // ── SAVED ──
 function quickSave(type, address, price, btn) {
   saved.push({ id: Date.now(), type, address, price, savedAt: new Date().toLocaleDateString('en-GB') });
   localStorage.setItem('cc_props', JSON.stringify(saved));
-  btn.classList.add('saved'); btn.textContent = '★';
+  btn.classList.add('saved'); btn.textContent = '★ Saved';
   renderSaved();
 }
-
 function logProperty() {
   const address = document.getElementById('f-address').value; if (!address) return;
-  saved.push({
-    id: Date.now(),
-    type:    document.getElementById('f-type').value,
-    address: address + (document.getElementById('f-postcode').value ? ', ' + document.getElementById('f-postcode').value : ''),
-    price:   document.getElementById('f-price').value || '—',
-    source:  document.getElementById('f-source').value,
-    notes:   document.getElementById('f-notes').value,
-    savedAt: new Date().toLocaleDateString('en-GB')
-  });
+  saved.push({ id: Date.now(), type: document.getElementById('f-type').value, address: address + (document.getElementById('f-postcode').value ? ', ' + document.getElementById('f-postcode').value : ''), price: document.getElementById('f-price').value || '—', source: document.getElementById('f-source').value, notes: document.getElementById('f-notes').value, savedAt: new Date().toLocaleDateString('en-GB') });
   localStorage.setItem('cc_props', JSON.stringify(saved));
   renderSaved(); closeModal();
   ['f-address','f-postcode','f-price','f-source','f-notes'].forEach(id => document.getElementById(id).value = '');
 }
-
-function removeSaved(id) {
-  saved = saved.filter(p => p.id !== id);
-  localStorage.setItem('cc_props', JSON.stringify(saved));
-  renderSaved();
-}
-
-function clearSaved() {
-  if (confirm('Clear all saved properties?')) { saved = []; localStorage.setItem('cc_props','[]'); renderSaved(); }
-}
-
-const typeColor = { auction:'amber', commercial:'green', residential:'blue', planning:'blue', insolvency:'red', offmarket:'accent' };
-
+function removeSaved(id) { saved = saved.filter(p => p.id !== id); localStorage.setItem('cc_props', JSON.stringify(saved)); renderSaved(); }
+function clearSaved() { if (confirm('Clear all saved properties?')) { saved = []; localStorage.setItem('cc_props','[]'); renderSaved(); } }
+const typeColor = { auction:'#d97706', commercial:'#059669', residential:'#2563eb', planning:'#2563eb', insolvency:'#dc2626', offmarket:'#6b7280' };
 function renderSaved() {
   const grid = document.getElementById('saved-grid');
   document.getElementById('saved-count').textContent = saved.length;
-  if (!saved.length) {
-    grid.innerHTML = '<div style="padding:16px 0;color:var(--muted);font-size:12px;font-family:\'DM Mono\',monospace">Nothing saved yet</div>';
-    return;
-  }
+  if (!saved.length) { grid.innerHTML = '<div style="padding:16px 0;color:var(--muted2);font-size:12px">Nothing saved yet</div>'; return; }
   grid.innerHTML = saved.map(p => `
     <div class="saved-card">
       <button class="sc-rm" onclick="removeSaved(${p.id})">✕</button>
-      <div class="sc-type" style="color:var(--${typeColor[p.type]||'accent'})">${p.type.toUpperCase()} · ${p.savedAt}</div>
+      <div class="sc-type" style="color:${typeColor[p.type]||'#6b7280'}">${p.type.toUpperCase()} · ${p.savedAt}</div>
       <div class="sc-addr">${p.address}</div>
-      <div class="sc-price">${p.price || '—'}</div>
-      ${p.source ? `<div class="sc-notes">📌 ${p.source}</div>` : ''}
-      ${p.notes ? `<div class="sc-notes">${p.notes}</div>` : ''}
+      <div class="sc-price">${p.price||'—'}</div>
+      ${p.source?`<div class="sc-notes">📌 ${p.source}</div>`:''}
+      ${p.notes?`<div class="sc-notes">${p.notes}</div>`:''}
     </div>`).join('');
 }
 
 // ── DIGEST ──
 async function sendDigest() {
-  const btn = document.querySelector('.btn-accent');
+  const btn = document.querySelector('.btn-white');
   btn.textContent = '✉ Sending…';
   const result = await apiFetch('/api/digest');
-  if (result.success) {
-    btn.textContent = '✉ Sent!';
-    setTimeout(() => btn.textContent = '✉ Send Digest', 3000);
-  } else if (result.setupRequired) {
-    alert('Add BREVO_API_KEY and DIGEST_EMAIL to your Vercel environment variables to enable email digests.');
-    btn.textContent = '✉ Send Digest';
-  } else {
-    alert('Error: ' + result.error);
-    btn.textContent = '✉ Send Digest';
-  }
+  if (result.success) { btn.textContent = '✉ Sent!'; setTimeout(() => btn.textContent = '✉ Send Digest', 3000); }
+  else { alert(result.setupRequired ? 'Add BREVO_API_KEY and DIGEST_EMAIL to Vercel env vars.' : 'Error: ' + result.error); btn.textContent = '✉ Send Digest'; }
 }
 
 // ── UTILS ──
@@ -764,79 +760,8 @@ function openModal() { document.getElementById('modalOverlay').classList.add('op
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
 
-// ── DEBUG ──
-const debugLog = [];
-
-function dbLog(label, url, status, data) {
-  debugLog.push({ time: new Date().toLocaleTimeString('en-GB'), label, url, status, data: JSON.stringify(data, null, 2) });
-  renderDebug();
-}
-
-function renderDebug() {
-  const out = document.getElementById('debug-output');
-  if (!out) return;
-  out.textContent = debugLog.length === 0 ? 'Waiting for API calls...' :
-    debugLog.map(e => `[${e.time}] ${e.label}\nURL: ${e.url}\nStatus: ${e.status}\nResponse: ${e.data}\n${'─'.repeat(60)}`).join('\n\n');
-}
-
-function copyDebug() {
-  const text = debugLog.map(e =>
-    `[${e.time}] ${e.label}\nURL: ${e.url}\nStatus: ${e.status}\nResponse: ${e.data}\n${'─'.repeat(60)}`
-  ).join('\n\n');
-  navigator.clipboard.writeText(text || 'No debug data yet').then(() => {
-    const btn = document.getElementById('debug-copy-btn');
-    btn.textContent = 'Copied! ✓';
-    setTimeout(() => btn.textContent = 'Copy All', 2000);
-  });
-}
-
-function toggleDebug() {
-  const body = document.getElementById('debug-body');
-  const btn  = document.getElementById('debug-toggle');
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  btn.textContent = open ? '▼ Show' : '▲ Hide';
-}
-
-// Override apiFetch to capture all responses
-async function apiFetch(path) {
-  const fullUrl = window.location.origin + path;
-  const label = path.split('?')[0].replace('/api/','').toUpperCase();
-  try {
-    const r = await fetch(path);
-    const text = await r.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = { raw: text.substring(0, 500) }; }
-    dbLog(label, fullUrl, r.ok ? `✅ ${r.status} OK` : `❌ ${r.status} ERROR`, data);
-    return data;
-  } catch(e) {
-    dbLog(label, fullUrl, `❌ FETCH FAILED`, { error: e.message });
-    return { success: false, error: e.message, data: [] };
-  }
-}
-
-// ── INIT ──
 loadAll();
 renderSaved();
 </script>
-
-<!-- DEBUG PANEL -->
-<div style="border-top:2px solid var(--border2);background:var(--surface);position:relative;z-index:1;margin-top:0">
-  <div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:10px">
-      <span style="color:var(--accent)">⬡</span> API Debug Console
-      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);font-weight:400">every API call + full response</span>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button id="debug-copy-btn" onclick="copyDebug()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:5px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">Copy All</button>
-      <button onclick="loadAll()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--accent);padding:5px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">↻ Re-run APIs</button>
-      <button id="debug-toggle" onclick="toggleDebug()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:5px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">▲ Hide</button>
-    </div>
-  </div>
-  <div id="debug-body">
-    <pre id="debug-output" style="padding:20px 24px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.8;color:var(--muted);white-space:pre-wrap;word-break:break-all;max-height:500px;overflow-y:auto;background:var(--bg)">Waiting for API calls...</pre>
-  </div>
-</div>
-
 </body>
 </html>
