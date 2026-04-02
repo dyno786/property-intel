@@ -6,68 +6,119 @@
 <title>CC — EPC Motivated Seller Finder</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--purple:#7c5cbf;--purple-light:#a78bda;--purple-pale:#f0ebff;--purple-bg:#ede8ff;--white:#fff;--bg:#f7f8fc;--border:#e8e4f5;--text:#1a1a2e;--text2:#4a4a6a;--muted:#8888aa;--green:#34c97e;--green-bg:#e8faf2;--amber:#f5a623;--amber-bg:#fff8ec;--red:#e05555;--red-bg:#fdf0f0;--shadow:0 2px 12px rgba(124,92,191,0.08);}
+:root{
+  --purple:#7c5cbf;--purple-light:#a78bda;--purple-pale:#f0ebff;--purple-bg:#ede8ff;
+  --white:#fff;--bg:#f7f8fc;--border:#e8e4f5;--text:#1a1a2e;--text2:#4a4a6a;--muted:#8888aa;
+  --green:#059669;--green-bg:#d1fae5;--amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;--blue:#2563eb;--blue-bg:#dbeafe;
+  --shadow:0 2px 12px rgba(124,92,191,0.08);--shadow2:0 8px 32px rgba(124,92,191,0.15);
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;}
 header{background:var(--purple);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(124,92,191,0.2);}
 .logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;}
 .logo-badge{width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;}
 .back{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:6px;}
-.container{max-width:1100px;margin:32px auto;padding:0 24px;}
-.page-title{font-size:24px;font-weight:700;margin-bottom:6px;}
-.page-sub{color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.container{max-width:1200px;margin:28px auto;padding:0 24px 48px;}
+.page-hdr{margin-bottom:24px;}
+.page-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.page-sub{color:var(--muted);font-size:13px;line-height:1.6;}
 
-.search-bar{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);margin-bottom:20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+/* SEARCH BAR */
+.search-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px 24px;box-shadow:var(--shadow);margin-bottom:20px;}
+.search-title{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.search-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
 .fg{display:flex;flex-direction:column;gap:4px;}
 .flabel{font-size:11px;color:var(--muted);font-weight:500;}
 .finput,.fselect{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
 .finput:focus,.fselect:focus{border-color:var(--purple);background:var(--white);}
-.finput{width:160px;}
-.btn-search{background:var(--purple);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;}
+.finput{width:140px;}
+.fselect{width:170px;}
+.btn-search{background:var(--purple);color:#fff;border:none;padding:9px 24px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;transition:all 0.2s;box-shadow:0 2px 8px rgba(124,92,191,0.3);}
 .btn-search:hover{background:#6a4aad;}
+.btn-search:disabled{opacity:0.6;cursor:not-allowed;}
 
-.pc-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+/* QUICK POSTCODES */
+.pc-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;}
 .pc-chip{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all 0.2s;background:var(--white);}
 .pc-chip:hover,.pc-chip.active{background:var(--purple);border-color:var(--purple);color:#fff;}
 
-.insight-box{background:linear-gradient(135deg,#065f46,#059669);border-radius:12px;padding:18px 22px;margin-bottom:20px;color:#fff;}
-.insight-title{font-size:15px;font-weight:700;margin-bottom:4px;}
-.insight-text{font-size:13px;opacity:0.9;}
-
+/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
 .stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;box-shadow:var(--shadow);}
-.stat-val{font-size:22px;font-weight:700;margin-bottom:2px;}
+.stat-val{font-size:24px;font-weight:700;line-height:1;margin-bottom:3px;}
 .stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
-.rating-a{color:#059669;}.rating-b{color:#10b981;}.rating-c{color:#34d399;}.rating-d{color:#f59e0b;}.rating-e{color:#f97316;}.rating-f{color:#ef4444;}.rating-g{color:#991b1b;}
+.s-red{color:var(--red);} .s-amber{color:var(--amber);} .s-green{color:var(--green);} .s-purple{color:var(--purple);} .s-blue{color:var(--blue);}
 
+/* INSIGHT BOX */
+.insight{background:linear-gradient(135deg,#065f46,#059669);border-radius:12px;padding:16px 22px;margin-bottom:18px;color:#fff;}
+.insight-title{font-size:14px;font-weight:700;margin-bottom:3px;}
+.insight-sub{font-size:12px;opacity:0.85;}
+
+/* TABS */
+.tab-row{display:flex;gap:8px;margin-bottom:16px;}
+.tab{font-size:12px;font-weight:600;padding:7px 16px;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text2);background:var(--white);transition:all 0.2s;}
+.tab.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+/* RESULTS GRID */
 .results-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.results-title{font-size:15px;font-weight:700;}
-.filter-tabs{display:flex;gap:6px;}
-.ftab{font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text2);background:var(--white);transition:all 0.2s;font-family:'Inter',sans-serif;}
-.ftab.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+.results-title{font-size:14px;font-weight:700;}
+.sort-select{font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-family:'Inter',sans-serif;background:var(--white);color:var(--text2);cursor:pointer;outline:none;}
 
-.epc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
-.epc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);transition:all 0.2s;}
-.epc-card:hover{box-shadow:0 4px 20px rgba(124,92,191,0.12);border-color:var(--purple-light);}
-.epc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
-.epc-address{font-size:13px;font-weight:600;color:var(--text);flex:1;margin-right:12px;}
-.epc-rating{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;color:#fff;}
-.er-a,.er-b{background:#059669;}.er-c{background:#34d399;color:#065f46;}.er-d{background:#f59e0b;color:#92400e;}.er-e{background:#f97316;color:#fff;}.er-f,.er-g{background:#ef4444;}
-.epc-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
-.epc-tag{font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;background:var(--bg);color:var(--text2);border:1px solid var(--border);}
-.opportunity-flag{font-size:11px;font-weight:600;padding:6px 10px;border-radius:6px;margin-bottom:8px;}
-.flag-high{background:var(--red-bg);color:var(--red);}
-.flag-medium{background:var(--amber-bg);color:var(--amber);}
-.flag-low{background:var(--green-bg);color:var(--green);}
-.epc-actions{display:flex;gap:8px;}
-.epc-btn{flex:1;font-size:11px;padding:6px 10px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;text-align:center;transition:all 0.2s;text-decoration:none;}
-.epc-btn-primary{background:var(--purple);color:#fff;border:none;}
-.epc-btn-primary:hover{background:#6a4aad;}
-.epc-btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border);}
-.epc-btn-secondary:hover{border-color:var(--purple);color:var(--purple);}
+.epc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;}
 
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--muted);text-align:center;gap:8px;}
-.empty-icon{font-size:36px;opacity:0.3;}
+.epc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);transition:all 0.2s;position:relative;}
+.epc-card:hover{box-shadow:var(--shadow2);border-color:var(--purple-light);}
+.epc-card.commercial{border-top:3px solid var(--blue);}
+.epc-card.domestic{border-top:3px solid var(--purple);}
+
+.epc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:10px;}
+.epc-address{font-size:13px;font-weight:600;color:var(--text);flex:1;line-height:1.4;}
+.epc-postcode{font-size:11px;color:var(--muted);margin-top:2px;}
+.rating-badge{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;color:#fff;}
+.rb-a{background:#059669;} .rb-b{background:#10b981;} .rb-c{background:#34d399;color:#065f46;}
+.rb-d{background:#f59e0b;color:#fff;} .rb-e{background:#f97316;} .rb-f{background:#ef4444;} .rb-g{background:#991b1b;}
+
+.opp-flag{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.of-high{background:var(--red-bg);color:var(--red);}
+.of-med{background:var(--amber-bg);color:var(--amber);}
+.of-low{background:var(--green-bg);color:var(--green);}
+
+.epc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.tag{font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;background:var(--bg);color:var(--text2);border:1px solid var(--border);}
+.tag-red{color:var(--red);border-color:var(--red);background:var(--red-bg);}
+.tag-blue{color:var(--blue);border-color:#bfdbfe;background:var(--blue-bg);}
+.tag-purple{color:var(--purple);border-color:var(--purple-light);background:var(--purple-bg);}
+
+.epc-progress{margin-bottom:10px;}
+.prog-label{font-size:10px;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between;}
+.prog-bar-wrap{background:var(--border);border-radius:10px;height:6px;overflow:hidden;}
+.prog-bar{height:100%;border-radius:10px;transition:width 0.5s;}
+.pb-red{background:var(--red);} .pb-amber{background:var(--amber);} .pb-green{background:var(--green);}
+
+.epc-actions{display:flex;gap:8px;margin-top:2px;}
+.epc-btn{flex:1;font-size:11px;font-weight:500;padding:7px 10px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;text-align:center;transition:all 0.2s;text-decoration:none;display:block;}
+.btn-primary{background:var(--purple);color:#fff;border:none;}
+.btn-primary:hover{background:#6a4aad;}
+.btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--purple);color:var(--purple);}
+
+.motivation-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.mot-label{font-size:10px;color:var(--muted);white-space:nowrap;width:80px;}
+.mot-track{flex:1;background:var(--border);border-radius:10px;height:6px;overflow:hidden;}
+.mot-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));}
+.mot-score{font-size:11px;font-weight:600;color:var(--text2);width:35px;text-align:right;}
+
+/* TYPE BADGE */
+.type-badge{position:absolute;top:10px;right:52px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;}
+.tb-domestic{background:var(--purple-bg);color:var(--purple);}
+.tb-commercial{background:var(--blue-bg);color:var(--blue);}
+
+/* EMPTY/LOADING */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--muted);text-align:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:14px;}
+.empty-icon{font-size:40px;opacity:0.3;}
+.spinner{width:36px;height:36px;border:3px solid var(--purple-pale);border-top-color:var(--purple);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -77,151 +128,263 @@ header{background:var(--purple);padding:0 28px;height:58px;display:flex;align-it
 </header>
 
 <div class="container">
-  <div class="page-title">⚡ EPC Motivated Seller Finder</div>
-  <div class="page-sub">F and G rated properties face mandatory upgrade costs of £8,000–£15,000 by 2028. Many landlords would rather sell than pay. Find them before they list.</div>
-
-  <div class="search-bar">
-    <div class="fg">
-      <div class="flabel">Quick Select Postcode</div>
-      <div class="pc-chips">
-        <div class="pc-chip active" onclick="selectPC('LS7',this)">LS7</div>
-        <div class="pc-chip" onclick="selectPC('LS8',this)">LS8</div>
-        <div class="pc-chip" onclick="selectPC('LS6',this)">LS6</div>
-        <div class="pc-chip" onclick="selectPC('LS9',this)">LS9</div>
-        <div class="pc-chip" onclick="selectPC('LS11',this)">LS11</div>
-        <div class="pc-chip" onclick="selectPC('LS12',this)">LS12</div>
-        <div class="pc-chip" onclick="selectPC('LS1',this)">LS1</div>
-        <div class="pc-chip" onclick="selectPC('LS2',this)">LS2</div>
-      </div>
-    </div>
-    <div class="fg">
-      <div class="flabel">Or enter postcode</div>
-      <input class="finput" id="pc-input" placeholder="e.g. LS7" value="LS7">
-    </div>
-    <div class="fg">
-      <div class="flabel">Filter</div>
-      <select class="fselect" id="filter-select">
-        <option value="poor">Poor ratings (F/G/E) only</option>
-        <option value="all">All ratings</option>
-        <option value="recent">Recent certificates</option>
-      </select>
-    </div>
-    <button class="btn-search" onclick="search()">🔍 Find Motivated Sellers</button>
+  <div class="page-hdr">
+    <div class="page-title">⚡ EPC Motivated Seller Finder</div>
+    <div class="page-sub">Search domestic and commercial EPC certificates by postcode. F/G rated properties face mandatory upgrade costs — many owners prefer to sell. Includes pubs, retail, offices and residential.</div>
   </div>
 
-  <div id="insight-box" style="display:none"></div>
-  <div id="stats-row" style="display:none"></div>
+  <!-- SEARCH -->
+  <div class="search-card">
+    <div class="search-title">🔍 Search EPC Certificates</div>
+    <div class="search-row">
+      <div class="fg">
+        <div class="flabel">Postcode</div>
+        <input class="finput" id="pc-input" placeholder="e.g. LS7" value="LS7">
+      </div>
+      <div class="fg">
+        <div class="flabel">Certificate Type</div>
+        <select class="fselect" id="cert-type">
+          <option value="both">Both — Domestic + Commercial</option>
+          <option value="domestic">Domestic (Houses/Flats)</option>
+          <option value="commercial">Commercial (Shops/Pubs/Offices)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="flabel">Energy Rating Filter</div>
+        <select class="fselect" id="energy-band">
+          <option value="poor">Poor Only (E, F & G)</option>
+          <option value="fg">Worst Only (F & G)</option>
+          <option value="all">All Ratings</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="flabel">Results</div>
+        <select class="fselect" id="result-size" style="width:120px">
+          <option value="50">50 results</option>
+          <option value="100" selected>100 results</option>
+          <option value="250">250 results</option>
+          <option value="500">500 results</option>
+        </select>
+      </div>
+      <button class="btn-search" id="searchBtn" onclick="search()">⚡ Find Properties</button>
+    </div>
 
+    <div style="margin-top:14px">
+      <div class="flabel" style="margin-bottom:6px">Quick select Leeds postcodes:</div>
+      <div class="pc-row">
+        <div class="pc-chip active" onclick="selectPC('LS7',this)">LS7 Chapeltown</div>
+        <div class="pc-chip" onclick="selectPC('LS8',this)">LS8 Roundhay</div>
+        <div class="pc-chip" onclick="selectPC('LS6',this)">LS6 Headingley</div>
+        <div class="pc-chip" onclick="selectPC('LS9',this)">LS9 Harehills</div>
+        <div class="pc-chip" onclick="selectPC('LS11',this)">LS11 Beeston</div>
+        <div class="pc-chip" onclick="selectPC('LS12',this)">LS12 Armley</div>
+        <div class="pc-chip" onclick="selectPC('LS1',this)">LS1 City Centre</div>
+        <div class="pc-chip" onclick="selectPC('LS2',this)">LS2 City</div>
+        <div class="pc-chip" onclick="selectPC('LS13',this)">LS13 Bramley</div>
+        <div class="pc-chip" onclick="selectPC('LS14',this)">LS14 Seacroft</div>
+        <div class="pc-chip" onclick="selectPC('BD1',this)">BD1 Bradford</div>
+        <div class="pc-chip" onclick="selectPC('HD1',this)">HD1 Huddersfield</div>
+        <div class="pc-chip" onclick="selectPC('WF1',this)">WF1 Wakefield</div>
+        <div class="pc-chip" onclick="selectPC('S1',this)">S1 Sheffield</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="stats-row" style="display:none">
+    <div class="stat"><div class="stat-val s-purple" id="st-total">0</div><div class="stat-lbl">Total Found</div></div>
+    <div class="stat"><div class="stat-val s-red" id="st-high">0</div><div class="stat-lbl">High Opportunity</div></div>
+    <div class="stat"><div class="stat-val s-red" id="st-poor">0</div><div class="stat-lbl">F/G Rated</div></div>
+    <div class="stat"><div class="stat-val s-blue" id="st-comm">0</div><div class="stat-lbl">Commercial</div></div>
+    <div class="stat"><div class="stat-val s-purple" id="st-dom">0</div><div class="stat-lbl">Domestic</div></div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div class="insight" id="insight-box" style="display:none">
+    <div class="insight-title" id="insight-title"></div>
+    <div class="insight-sub" id="insight-sub"></div>
+  </div>
+
+  <!-- RESULTS -->
   <div id="results">
     <div class="empty">
       <div class="empty-icon">⚡</div>
       <div style="font-size:14px;font-weight:600;color:var(--text2)">Select a postcode and search</div>
-      <div style="font-size:12px">Find landlords facing upgrade costs who may prefer to sell</div>
+      <div style="font-size:12px">Find properties with poor energy ratings — owners facing upgrade costs are motivated sellers</div>
     </div>
   </div>
 </div>
 
 <script>
-let currentFilter = 'poor';
 let allData = [];
+let currentFilter = 'all';
 
 function selectPC(pc, el) {
-  document.querySelectorAll('.pc-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.pc-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('pc-input').value = pc;
 }
 
 async function search() {
-  const pc = document.getElementById('pc-input').value.trim().toUpperCase();
-  const filter = document.getElementById('filter-select').value;
-  if (!pc) return;
+  const pc       = document.getElementById('pc-input').value.trim().toUpperCase();
+  const certType = document.getElementById('cert-type').value;
+  const band     = document.getElementById('energy-band').value;
+  const size     = document.getElementById('result-size').value;
+  if (!pc) { alert('Please enter a postcode'); return; }
 
-  document.getElementById('results').innerHTML = '<div class="empty"><div class="empty-icon" style="animation:spin 1s linear infinite">⏳</div><div style="font-size:13px;color:var(--muted)">Searching EPC register...</div></div>';
-  document.getElementById('insight-box').style.display = 'none';
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true; btn.textContent = '⏳ Searching...';
+
   document.getElementById('stats-row').style.display = 'none';
+  document.getElementById('insight-box').style.display = 'none';
+  document.getElementById('results').innerHTML = `
+    <div class="empty">
+      <div class="spinner"></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px">Searching EPC register for ${pc}...</div>
+    </div>`;
 
   try {
-    const res = await fetch(`/api/epc?postcode=${encodeURIComponent(pc)}&filter=${filter}`);
+    const url = `/api/epc?postcode=${encodeURIComponent(pc)}&certType=${certType}&band=${band}&size=${size}`;
+    const res  = await fetch(url);
     const data = await res.json();
 
     if (data.setupRequired) {
       document.getElementById('results').innerHTML = `
         <div class="empty">
           <div class="empty-icon">⚙️</div>
-          <div style="font-size:13px;font-weight:600">EPC API Setup Required</div>
-          <div style="font-size:12px;color:var(--muted);max-width:400px;line-height:1.6">${data.error}<br><br>Register free at <a href="https://epc.opendatacommunities.org" target="_blank" style="color:var(--purple)">epc.opendatacommunities.org</a> then add EPC_EMAIL and EPC_API_KEY to Vercel env vars.</div>
+          <div style="font-size:14px;font-weight:600">EPC API Keys Required</div>
+          <div style="font-size:12px;color:var(--muted);max-width:500px;line-height:1.7;margin-top:8px">
+            Add <strong>EPC_EMAIL</strong> and <strong>EPC_API_KEY</strong> to Vercel environment variables.<br>
+            Your email: <strong>ccpropertiesleeds@gmail.com</strong><br>
+            Get key from: <a href="https://epc.opendatacommunities.org" target="_blank" style="color:var(--purple)">epc.opendatacommunities.org</a>
+          </div>
         </div>`;
       return;
     }
 
     if (!data.success) throw new Error(data.error);
     allData = data.data || [];
-
-    // Show insight
-    const ib = document.getElementById('insight-box');
-    ib.style.display = 'block';
-    ib.innerHTML = `<div class="insight-box"><div class="insight-title">💡 ${data.insight}</div><div class="insight-text">Found ${data.filtered} properties in ${pc} matching your filter out of ${data.total} total certificates.</div></div>`;
-
-    // Show stats
-    const sr = document.getElementById('stats-row');
-    sr.style.display = 'grid';
-    const rb = data.ratingBreakdown || {};
-    sr.innerHTML = ['A','B','C','D','E','F','G'].map(r => `
-      <div class="stat">
-        <div class="stat-val rating-${r.toLowerCase()}">${rb[r]||0}</div>
-        <div class="stat-lbl">Rating ${r}</div>
-      </div>`).join('').substring(0, 5*200);
-    sr.innerHTML = `
-      <div class="stat"><div class="stat-val">${data.total}</div><div class="stat-lbl">Total properties</div></div>
-      <div class="stat"><div class="stat-val rating-f">${data.poorRated}</div><div class="stat-lbl">F/G Rated</div></div>
-      ${['E','D','C'].map(r=>`<div class="stat"><div class="stat-val rating-${r.toLowerCase()}">${rb[r]||0}</div><div class="stat-lbl">Rating ${r}</div></div>`).join('')}`;
-
-    renderResults(allData);
+    renderResults(data);
 
   } catch(err) {
-    document.getElementById('results').innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div>${err.message}</div></div>`;
+    document.getElementById('results').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">❌</div>
+        <div style="font-size:13px;font-weight:600">Search Failed</div>
+        <div style="font-size:12px;color:var(--muted)">${err.message}</div>
+      </div>`;
   }
+
+  btn.disabled = false; btn.textContent = '⚡ Find Properties';
 }
 
-function renderResults(items) {
-  const r = document.getElementById('results');
-  if (!items.length) {
-    r.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div style="font-size:13px;font-weight:600">No matching properties found</div><div style="font-size:12px">Try "All ratings" filter or a different postcode</div></div>';
+function renderResults(data) {
+  const pc = document.getElementById('pc-input').value.trim().toUpperCase();
+
+  // Stats
+  document.getElementById('stats-row').style.display = 'grid';
+  document.getElementById('st-total').textContent = data.total;
+  document.getElementById('st-high').textContent  = data.highOpportunity;
+  document.getElementById('st-poor').textContent  = data.poorRated;
+  document.getElementById('st-comm').textContent  = data.commercial;
+  document.getElementById('st-dom').textContent   = data.domestic;
+
+  // Insight
+  const ib = document.getElementById('insight-box');
+  ib.style.display = 'block';
+  document.getElementById('insight-title').textContent = '💡 ' + data.insight;
+  document.getElementById('insight-sub').textContent   = `${data.total} certificates found in ${pc} · ${data.domestic} domestic · ${data.commercial} commercial · Sorted by motivation score`;
+
+  if (!allData.length) {
+    document.getElementById('results').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">✅</div>
+        <div style="font-size:14px;font-weight:600">No matching properties found</div>
+        <div style="font-size:12px">Try "All Ratings" filter or a different postcode</div>
+      </div>`;
     return;
   }
 
+  renderGrid(allData);
+}
+
+function renderGrid(items) {
+  const r = document.getElementById('results');
   r.innerHTML = `
     <div class="results-hdr">
       <div class="results-title">📋 ${items.length} Properties Found</div>
+      <select class="sort-select" onchange="sortResults(this.value)">
+        <option value="motivation">Sort: Motivation Score</option>
+        <option value="rating-worst">Sort: Rating (Worst First)</option>
+        <option value="rating-best">Sort: Rating (Best First)</option>
+        <option value="address">Sort: Address A-Z</option>
+      </select>
     </div>
     <div class="epc-grid">
-      ${items.map(p => `
-        <div class="epc-card">
-          <div class="epc-top">
-            <div class="epc-address">${p.address}, ${p.postcode}</div>
-            <div class="epc-rating er-${p.currentRating.toLowerCase()}">${p.currentRating}</div>
-          </div>
-          <div class="opportunity-flag flag-${p.opportunityFlag?.flag?.includes('HIGH')?'high':p.opportunityFlag?.flag?.includes('MED')?'medium':'low'}">
-            ${p.opportunityFlag?.flag} — ${p.opportunityFlag?.reason}
-          </div>
-          <div class="epc-meta">
-            <span class="epc-tag">${p.propertyType}</span>
-            <span class="epc-tag">${p.tenure||'Unknown tenure'}</span>
-            ${p.floorArea ? `<span class="epc-tag">${p.floorArea}m²</span>` : ''}
-            ${p.estimatedUpgradeCost ? `<span class="epc-tag" style="color:var(--red);border-color:var(--red)">Est. upgrade: £${p.estimatedUpgradeCost.toLocaleString()}</span>` : ''}
-          </div>
-          <div class="epc-meta">
-            <span class="epc-tag">Potential: ${p.potentialRating}</span>
-            <span class="epc-tag">Cert: ${p.lodgementDate||'—'}</span>
-            <span class="epc-tag">Motivation: ${p.motivationScore}/100</span>
-          </div>
-          <div class="epc-actions">
-            <a class="epc-btn epc-btn-primary" href="/outreach.html?type=landlord&address=${encodeURIComponent(p.address)}&postcode=${encodeURIComponent(p.postcode)}">✉ Generate Outreach</a>
-            <a class="epc-btn epc-btn-secondary" href="${p.link}" target="_blank">View EPC →</a>
-          </div>
-        </div>`).join('')}
+      ${items.map(p => renderCard(p)).join('')}
     </div>`;
 }
+
+function renderCard(p) {
+  const ratingClass = `rb-${p.currentRating.toLowerCase()}`;
+  const flagClass   = p.opportunityFlag?.flag?.includes('HIGH') ? 'of-high' : p.opportunityFlag?.flag?.includes('MED') ? 'of-med' : 'of-low';
+  const typeClass   = p.type === 'commercial' ? 'commercial' : 'domestic';
+  const typeBadge   = p.type === 'commercial' ? 'tb-commercial' : 'tb-domestic';
+  const progClass   = p.motivationScore >= 60 ? 'pb-red' : p.motivationScore >= 30 ? 'pb-amber' : 'pb-green';
+
+  const pc = (p.postcode||'').replace("'","");
+  const addr = (p.address||'').replace(/'/g,'').replace(/"/g,'');
+
+  return `
+    <div class="epc-card ${typeClass}">
+      <span class="type-badge ${typeBadge}">${p.type}</span>
+      <div class="epc-top">
+        <div>
+          <div class="epc-address">${p.address||'—'}</div>
+          <div class="epc-postcode">${p.postcode||'—'} ${p.propertyType ? '· '+p.propertyType : ''}</div>
+        </div>
+        <div class="rating-badge ${ratingClass}">${p.currentRating}</div>
+      </div>
+
+      <div class="opp-flag ${flagClass}">
+        ${p.opportunityFlag?.flag} — ${p.opportunityFlag?.reason}
+      </div>
+
+      <div class="motivation-bar">
+        <div class="mot-label">Motivation</div>
+        <div class="mot-track"><div class="mot-fill ${progClass}" style="width:${p.motivationScore}%"></div></div>
+        <div class="mot-score">${p.motivationScore}/100</div>
+      </div>
+
+      <div class="epc-tags">
+        ${p.potentialRating ? `<span class="tag">Potential: ${p.potentialRating}</span>` : ''}
+        ${p.floorArea ? `<span class="tag">${p.floorArea}m²</span>` : ''}
+        ${p.tenure ? `<span class="tag">${p.tenure}</span>` : ''}
+        ${p.lodgementDate ? `<span class="tag">Cert: ${p.lodgementDate}</span>` : ''}
+        ${p.estimatedUpgradeCost ? `<span class="tag tag-red">Est. upgrade: £${p.estimatedUpgradeCost.toLocaleString()}</span>` : ''}
+        ${p.type==='commercial' ? `<span class="tag tag-blue">Commercial</span>` : ''}
+      </div>
+
+      <div class="epc-actions">
+        <a class="epc-btn btn-primary" href="/outreach.html?type=${p.type==='commercial'?'commercial':'landlord'}&address=${encodeURIComponent(addr)}&postcode=${encodeURIComponent(pc)}">✉ Generate Outreach</a>
+        <a class="epc-btn btn-secondary" href="${p.link}" target="_blank">View EPC →</a>
+      </div>
+    </div>`;
+}
+
+function sortResults(by) {
+  let sorted = [...allData];
+  if (by === 'motivation')   sorted.sort((a,b) => b.motivationScore - a.motivationScore);
+  if (by === 'rating-worst') sorted.sort((a,b) => (b.currentRating||'').localeCompare(a.currentRating||''));
+  if (by === 'rating-best')  sorted.sort((a,b) => (a.currentRating||'').localeCompare(b.currentRating||''));
+  if (by === 'address')      sorted.sort((a,b) => (a.address||'').localeCompare(b.address||''));
+  renderGrid(sorted);
+}
+
+// Auto search LS7 on load
+window.addEventListener('load', () => {
+  setTimeout(search, 300);
+});
 </script>
 </body>
 </html>
