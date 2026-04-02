@@ -434,7 +434,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
     <div class="panel">
       <div class="panel-hdr">
         <div class="panel-title">⚠️ Insolvency <span class="badge badge-red" id="b-insolvency">Loading…</span></div>
-        <div class="panel-links">
+        <div style="display:flex;align-items:center;gap:6px">
+          <select id="insolvency-months" onchange="reloadInsolvency()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Inter',sans-serif;background:var(--white);color:var(--text2);cursor:pointer;outline:none;">
+            <option value="1">This month</option>
+            <option value="2">2 months</option>
+            <option value="3" selected>3 months</option>
+            <option value="6">6 months</option>
+          </select>
           <a class="plink" href="https://find-and-update.company-information.service.gov.uk" target="_blank">CH →</a>
           <a class="plink" href="https://www.thegazette.co.uk/insolvency" target="_blank">Gazette →</a>
         </div>
@@ -616,6 +622,14 @@ function renderPlanning(data){
     </div>`).join('');
 }
 
+async function reloadInsolvency(){
+  const months = document.getElementById('insolvency-months')?.value || '3';
+  document.getElementById('p-insolvency').innerHTML = skeletons(3);
+  const data = await apiFetch(`/api/insolvency?region=${region}&months=${months}&breakdown=true`);
+  insolvencyAreaFilter = 'all';
+  renderInsolvency(data);
+}
+
 // ── RENDER INSOLVENCY ──
 let insolvencyAreaFilter = 'all';
 
@@ -646,6 +660,9 @@ function renderInsolvency(data){
 
   badge.textContent=`${count} notices`;
 
+  // Show date range
+  const dateInfo = data.dateRange ? `<div class="info-note" style="margin:8px 16px 0">📅 Showing notices from <strong>${data.dateRange.from}</strong> to <strong>${data.dateRange.to}</strong> · ${count} total found</div>` : '';
+
   // Build area filter tabs if we have breakdown data
   const breakdown=data.areaBreakdown||{};
   const hasBreakdown=Object.keys(breakdown).length>0;
@@ -670,7 +687,7 @@ function renderInsolvency(data){
     ? data.data
     : (breakdown[insolvencyAreaFilter]||[]);
 
-  panel.innerHTML=areaTabs+`
+  panel.innerHTML=areaTabs+dateInfo+`
     ${catPills?`<div style="padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)">${catPills}</div>`:''}
     <div id="insolvency-items">
       ${renderInsolvencyItems(items,data.gazetteLinks)}
@@ -749,8 +766,9 @@ async function loadAll(){
   ['p-planning','p-insolvency','p-listings'].forEach(id=>document.getElementById(id).innerHTML=skeletons());
   ['sv-planning','sv-insolvency','sv-listings','sv-auction'].forEach(id=>document.getElementById(id).textContent='…');
   const pc=postcode;
+  const months = document.getElementById('insolvency-months')?.value || '3';
   const[insolvency,planning,listings]=await Promise.all([
-    apiFetch(`/api/insolvency?region=${region}&breakdown=true`),
+    apiFetch(`/api/insolvency?region=${region}&months=${months}&breakdown=true`),
     apiFetch(`/api/planning?region=${region}&postcode=${pc}`),
     apiFetch(`/api/listings?region=${region}&postcode=${pc}&type=listings`)
   ]);
