@@ -1,130 +1,160 @@
 // api/insolvency.js
-// Companies House API - Yorkshire insolvency finder
-// v4 - added cache headers + debug info
+// The Gazette Official Public Record - free, no API key needed
+// Crown Copyright - Open Government Licence
+// Uses their linked data search API to find insolvency notices
 
-const CH_BASE = 'https://api.company-information.service.gov.uk';
+const GAZETTE_BASE = 'https://www.thegazette.co.uk';
 
-const REGION_SEARCHES = {
-  leeds: [
-    'leeds property', 'leeds retail', 'leeds hospitality',
-    'leeds restaurant', 'leeds bar', 'leeds pub',
-    'leeds hotel', 'leeds developments', 'leeds estates',
-    'chapeltown', 'harehills', 'armley', 'beeston',
-    'roundhay', 'headingley', 'morley', 'pudsey'
-  ],
-  bradford: [
-    'bradford property', 'bradford retail', 'bradford restaurant',
-    'bradford hotel', 'bradford developments', 'shipley', 'keighley'
-  ],
-  wakefield: [
-    'wakefield property', 'wakefield retail', 'wakefield restaurant',
-    'castleford', 'pontefract', 'ossett'
-  ],
-  sheffield: [
-    'sheffield property', 'sheffield retail', 'sheffield restaurant',
-    'sheffield hotel', 'sheffield developments', 'rotherham'
-  ],
-  huddersfield: [
-    'huddersfield property', 'huddersfield retail', 'huddersfield restaurant',
-    'huddersfield hotel', 'halifax', 'brighouse'
-  ]
+// Notice type codes for The Gazette
+// 2100 = Winding Up / Liquidation
+// 2150 = Administration  
+// 2160 = Receivership
+// 2200 = Voluntary Arrangement
+
+const NOTICE_TYPES = ['2100', '2150', '2160', '2200'];
+
+const REGION_TERMS = {
+  leeds:        'leeds',
+  bradford:     'bradford',
+  wakefield:    'wakefield',
+  sheffield:    'sheffield',
+  huddersfield: 'huddersfield'
 };
 
-const INSOLVENT = new Set([
-  'liquidation', 'administration', 'receivership',
-  'voluntary-arrangement', 'insolvency-proceedings'
-]);
+function parseXMLItems(xml) {
+  const items = [];
+  // Split on item tags
+  const parts = xml.split(/<item[\s>]/i).slice(1);
+
+  for (const part of parts) {
+    const get = (tag) => {
+      const cdataMatch = part.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\/${tag}>`, 'i'));
+      if (cdataMatch) return cdataMatch[1].trim();
+      const match = part.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\/${tag}>`, 'i'));
+      return match ? match[1].replace(/<[^>]+>/g,'').trim() : '';
+    };
+
+    const title    = get('title');
+    const desc     = get('description').replace(/\s+/g,' ').substring(0, 400);
+    const link     = get('link');
+    const pubDate  = get('pubDate');
+    const category = get('category');
+
+    if (title) {
+      items.push({ title, description: desc, link, pubDate, category });
+    }
+  }
+  return items;
+}
 
 export default async function handler(req, res) {
-  // Prevent caching so we always get fresh data
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
 
-  const region = (req.query.region || 'leeds').toLowerCase();
-  const apiKey = process.env.COMPANIES_HOUSE_API_KEY;
+  const region     = (req.query.region || 'leeds').toLowerCase();
+  const searchTerm = REGION_TERMS[region] || 'leeds';
+  const allItems   = [];
+  const debug      = { feedsChecked: 0, totalItems: 0, errors: [] };
 
-  if (!apiKey) {
-    return res.status(200).json({
-      success: false,
-      error: 'COMPANIES_HOUSE_API_KEY not set',
-      data: [], setupRequired: true
-    });
-  }
+  // Fetch multiple notice type feeds
+  for (const noticeType of NOTICE_TYPES) {
+    try {
+      debug.feedsChecked++;
 
-  const auth    = Buffer.from(`${apiKey}:`).toString('base64');
-  const headers = { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' };
-  const seen    = new Set();
-  const results = [];
-  const debug   = { searchesRun: 0, totalFound: 0, insolventFound: 0, errors: [] };
-  const searches = REGION_SEARCHES[region] || REGION_SEARCHES.leeds;
+      // Use The Gazette search with text filter for the region
+      const url = `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=${noticeType}&format=rss`;
 
-  // Run searches in parallel batches of 4
-  for (let i = 0; i < searches.length; i += 4) {
-    const batch = searches.slice(i, i + 4);
-    await Promise.all(batch.map(async (q) => {
-      try {
-        debug.searchesRun++;
-        const r = await fetch(
-          `${CH_BASE}/search/companies?q=${encodeURIComponent(q)}&items_per_page=20`,
-          { headers }
-        );
-        if (!r.ok) {
-          debug.errors.push(`${q}: HTTP ${r.status}`);
-          return;
+      const r = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; CCPropertyIntel/1.0)',
+          'Accept':     'application/rss+xml, application/xml, text/xml, */*'
         }
-        const json = await r.json();
-        const items = json.items || [];
-        debug.totalFound += items.length;
+      });
 
-        for (const c of items) {
-          if (seen.has(c.company_number)) continue;
-          if (!INSOLVENT.has(c.company_status)) continue;
-          debug.insolventFound++;
-          seen.add(c.company_number);
-          const addr  = c.address || {};
-          const parts = [
-            addr.address_line_1, addr.address_line_2,
-            addr.locality, addr.postal_code
-          ].filter(Boolean);
-          results.push({
-            title:       c.title || '—',
-            description: formatStatus(c.company_status) + (c.company_type ? ' · ' + c.company_type : ''),
-            address:     parts.join(', ') || '—',
-            ref:         `Co. No: ${c.company_number}`,
-            date:        c.date_of_cessation || c.date_of_creation || '—',
-            category:    formatStatus(c.company_status),
-            link:        `https://find-and-update.company-information.service.gov.uk/company/${c.company_number}`,
-            source:      'Companies House'
-          });
-        }
-      } catch(e) {
-        debug.errors.push(`${q}: ${e.message}`);
+      if (!r.ok) {
+        debug.errors.push(`Notice type ${noticeType}: HTTP ${r.status}`);
+        continue;
       }
-    }));
+
+      const xml   = await r.text();
+      const items = parseXMLItems(xml);
+      debug.totalItems += items.length;
+      allItems.push(...items);
+
+    } catch(e) {
+      debug.errors.push(`Notice type ${noticeType}: ${e.message}`);
+    }
   }
 
-  // Sort: active insolvencies first
-  const priority = {
-    'Administration': 1, 'Receivership': 2, 'Liquidation': 3,
-    'Voluntary Arrangement': 4, 'Insolvency Proceedings': 5
-  };
-  results.sort((a,b) => (priority[a.category]||9) - (priority[b.category]||9));
+  // Also try the main search endpoint with location
+  try {
+    const searchUrl = `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2100,2150,2160,2200&format=rss`;
+    const r = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CCPropertyIntel/1.0)',
+        'Accept': 'application/rss+xml, */*'
+      }
+    });
+    if (r.ok) {
+      const xml   = await r.text();
+      const items = parseXMLItems(xml);
+      allItems.push(...items);
+    }
+  } catch(e) {}
+
+  // Deduplicate by title
+  const seen = new Set();
+  const unique = allItems.filter(item => {
+    if (seen.has(item.title)) return false;
+    seen.add(item.title);
+    return true;
+  });
+
+  // Format results
+  const formatted = unique.map(item => ({
+    title:       item.title,
+    description: item.description,
+    address:     searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1) + ' area',
+    ref:         item.category || 'Insolvency Notice',
+    date:        item.pubDate
+      ? new Date(item.pubDate).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+      : '—',
+    category:    item.category || 'Corporate Insolvency',
+    link:        item.link || `${GAZETTE_BASE}/insolvency`,
+    source:      'The Gazette'
+  }));
+
+  // If gazette is blocked, return helpful links instead
+  const gazetteBlocked = debug.errors.length === NOTICE_TYPES.length;
 
   res.status(200).json({
     success: true,
     region,
-    count: results.length,
-    data: results.slice(0, 40),
+    searchTerm,
+    count:          formatted.length,
+    data:           formatted,
+    gazetteBlocked: gazetteBlocked && formatted.length === 0,
     debug,
-    source: 'Companies House',
-    version: 'v4',
+    // Always include direct links to The Gazette
+    gazetteLinks: [
+      {
+        label:  `Search "${searchTerm}" insolvency notices`,
+        url:    `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2100`,
+        type:   'Winding Up / Liquidation'
+      },
+      {
+        label:  `Search "${searchTerm}" administration notices`,
+        url:    `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(searchTerm)}&notice-type=2150`,
+        type:   'Administration'
+      },
+      {
+        label:  `${searchTerm} insolvency — full search`,
+        url:    `${GAZETTE_BASE}/insolvency/search?text=${encodeURIComponent(searchTerm)}`,
+        type:   'All Types'
+      }
+    ],
+    source:    'The Gazette',
     fetchedAt: new Date().toISOString()
   });
-}
-
-function formatStatus(s) {
-  if (!s) return 'Unknown';
-  return s.replace(/-/g,' ').replace(/\b\w/g, l => l.toUpperCase());
 }
