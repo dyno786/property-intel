@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC — EPC Motivated Seller Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#7c5cbf;--purple-light:#a78bda;--purple-pale:#f0ebff;--purple-bg:#ede8ff;--white:#fff;--bg:#f7f8fc;--border:#e8e4f5;--text:#1a1a2e;--text2:#4a4a6a;--muted:#8888aa;--green:#34c97e;--green-bg:#e8faf2;--amber:#f5a623;--amber-bg:#fff8ec;--red:#e05555;--red-bg:#fdf0f0;--shadow:0 2px 12px rgba(124,92,191,0.08);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;}
+header{background:var(--purple);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(124,92,191,0.2);}
+.logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;}
+.logo-badge{width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;}
+.back{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:6px;}
+.container{max-width:1100px;margin:32px auto;padding:0 24px;}
+.page-title{font-size:24px;font-weight:700;margin-bottom:6px;}
+.page-sub{color:var(--muted);margin-bottom:24px;line-height:1.6;}
+
+.search-bar{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);margin-bottom:20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.flabel{font-size:11px;color:var(--muted);font-weight:500;}
+.finput,.fselect{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.finput:focus,.fselect:focus{border-color:var(--purple);background:var(--white);}
+.finput{width:160px;}
+.btn-search{background:var(--purple);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;}
+.btn-search:hover{background:#6a4aad;}
+
+.pc-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.pc-chip{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all 0.2s;background:var(--white);}
+.pc-chip:hover,.pc-chip.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+.insight-box{background:linear-gradient(135deg,#065f46,#059669);border-radius:12px;padding:18px 22px;margin-bottom:20px;color:#fff;}
+.insight-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.insight-text{font-size:13px;opacity:0.9;}
+
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;box-shadow:var(--shadow);}
+.stat-val{font-size:22px;font-weight:700;margin-bottom:2px;}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.rating-a{color:#059669;}.rating-b{color:#10b981;}.rating-c{color:#34d399;}.rating-d{color:#f59e0b;}.rating-e{color:#f97316;}.rating-f{color:#ef4444;}.rating-g{color:#991b1b;}
+
+.results-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.results-title{font-size:15px;font-weight:700;}
+.filter-tabs{display:flex;gap:6px;}
+.ftab{font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text2);background:var(--white);transition:all 0.2s;font-family:'Inter',sans-serif;}
+.ftab.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+.epc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
+.epc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);transition:all 0.2s;}
+.epc-card:hover{box-shadow:0 4px 20px rgba(124,92,191,0.12);border-color:var(--purple-light);}
+.epc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.epc-address{font-size:13px;font-weight:600;color:var(--text);flex:1;margin-right:12px;}
+.epc-rating{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;color:#fff;}
+.er-a,.er-b{background:#059669;}.er-c{background:#34d399;color:#065f46;}.er-d{background:#f59e0b;color:#92400e;}.er-e{background:#f97316;color:#fff;}.er-f,.er-g{background:#ef4444;}
+.epc-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.epc-tag{font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;background:var(--bg);color:var(--text2);border:1px solid var(--border);}
+.opportunity-flag{font-size:11px;font-weight:600;padding:6px 10px;border-radius:6px;margin-bottom:8px;}
+.flag-high{background:var(--red-bg);color:var(--red);}
+.flag-medium{background:var(--amber-bg);color:var(--amber);}
+.flag-low{background:var(--green-bg);color:var(--green);}
+.epc-actions{display:flex;gap:8px;}
+.epc-btn{flex:1;font-size:11px;padding:6px 10px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;text-align:center;transition:all 0.2s;text-decoration:none;}
+.epc-btn-primary{background:var(--purple);color:#fff;border:none;}
+.epc-btn-primary:hover{background:#6a4aad;}
+.epc-btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border);}
+.epc-btn-secondary:hover{border-color:var(--purple);color:var(--purple);}
+
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--muted);text-align:center;gap:8px;}
+.empty-icon{font-size:36px;opacity:0.3;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-badge">CC</div>EPC Motivated Seller Finder</div>
+  <a class="back" href="/">← Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="page-title">⚡ EPC Motivated Seller Finder</div>
+  <div class="page-sub">F and G rated properties face mandatory upgrade costs of £8,000–£15,000 by 2028. Many landlords would rather sell than pay. Find them before they list.</div>
+
+  <div class="search-bar">
+    <div class="fg">
+      <div class="flabel">Quick Select Postcode</div>
+      <div class="pc-chips">
+        <div class="pc-chip active" onclick="selectPC('LS7',this)">LS7</div>
+        <div class="pc-chip" onclick="selectPC('LS8',this)">LS8</div>
+        <div class="pc-chip" onclick="selectPC('LS6',this)">LS6</div>
+        <div class="pc-chip" onclick="selectPC('LS9',this)">LS9</div>
+        <div class="pc-chip" onclick="selectPC('LS11',this)">LS11</div>
+        <div class="pc-chip" onclick="selectPC('LS12',this)">LS12</div>
+        <div class="pc-chip" onclick="selectPC('LS1',this)">LS1</div>
+        <div class="pc-chip" onclick="selectPC('LS2',this)">LS2</div>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="flabel">Or enter postcode</div>
+      <input class="finput" id="pc-input" placeholder="e.g. LS7" value="LS7">
+    </div>
+    <div class="fg">
+      <div class="flabel">Filter</div>
+      <select class="fselect" id="filter-select">
+        <option value="poor">Poor ratings (F/G/E) only</option>
+        <option value="all">All ratings</option>
+        <option value="recent">Recent certificates</option>
+      </select>
+    </div>
+    <button class="btn-search" onclick="search()">🔍 Find Motivated Sellers</button>
+  </div>
+
+  <div id="insight-box" style="display:none"></div>
+  <div id="stats-row" style="display:none"></div>
+
+  <div id="results">
+    <div class="empty">
+      <div class="empty-icon">⚡</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text2)">Select a postcode and search</div>
+      <div style="font-size:12px">Find landlords facing upgrade costs who may prefer to sell</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentFilter = 'poor';
+let allData = [];
+
+function selectPC(pc, el) {
+  document.querySelectorAll('.pc-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pc-input').value = pc;
+}
+
+async function search() {
+  const pc = document.getElementById('pc-input').value.trim().toUpperCase();
+  const filter = document.getElementById('filter-select').value;
+  if (!pc) return;
+
+  document.getElementById('results').innerHTML = '<div class="empty"><div class="empty-icon" style="animation:spin 1s linear infinite">⏳</div><div style="font-size:13px;color:var(--muted)">Searching EPC register...</div></div>';
+  document.getElementById('insight-box').style.display = 'none';
+  document.getElementById('stats-row').style.display = 'none';
+
+  try {
+    const res = await fetch(`/api/epc?postcode=${encodeURIComponent(pc)}&filter=${filter}`);
+    const data = await res.json();
+
+    if (data.setupRequired) {
+      document.getElementById('results').innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">⚙️</div>
+          <div style="font-size:13px;font-weight:600">EPC API Setup Required</div>
+          <div style="font-size:12px;color:var(--muted);max-width:400px;line-height:1.6">${data.error}<br><br>Register free at <a href="https://epc.opendatacommunities.org" target="_blank" style="color:var(--purple)">epc.opendatacommunities.org</a> then add EPC_EMAIL and EPC_API_KEY to Vercel env vars.</div>
+        </div>`;
+      return;
+    }
+
+    if (!data.success) throw new Error(data.error);
+    allData = data.data || [];
+
+    // Show insight
+    const ib = document.getElementById('insight-box');
+    ib.style.display = 'block';
+    ib.innerHTML = `<div class="insight-box"><div class="insight-title">💡 ${data.insight}</div><div class="insight-text">Found ${data.filtered} properties in ${pc} matching your filter out of ${data.total} total certificates.</div></div>`;
+
+    // Show stats
+    const sr = document.getElementById('stats-row');
+    sr.style.display = 'grid';
+    const rb = data.ratingBreakdown || {};
+    sr.innerHTML = ['A','B','C','D','E','F','G'].map(r => `
+      <div class="stat">
+        <div class="stat-val rating-${r.toLowerCase()}">${rb[r]||0}</div>
+        <div class="stat-lbl">Rating ${r}</div>
+      </div>`).join('').substring(0, 5*200);
+    sr.innerHTML = `
+      <div class="stat"><div class="stat-val">${data.total}</div><div class="stat-lbl">Total properties</div></div>
+      <div class="stat"><div class="stat-val rating-f">${data.poorRated}</div><div class="stat-lbl">F/G Rated</div></div>
+      ${['E','D','C'].map(r=>`<div class="stat"><div class="stat-val rating-${r.toLowerCase()}">${rb[r]||0}</div><div class="stat-lbl">Rating ${r}</div></div>`).join('')}`;
+
+    renderResults(allData);
+
+  } catch(err) {
+    document.getElementById('results').innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div>${err.message}</div></div>`;
+  }
+}
+
+function renderResults(items) {
+  const r = document.getElementById('results');
+  if (!items.length) {
+    r.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div style="font-size:13px;font-weight:600">No matching properties found</div><div style="font-size:12px">Try "All ratings" filter or a different postcode</div></div>';
+    return;
+  }
+
+  r.innerHTML = `
+    <div class="results-hdr">
+      <div class="results-title">📋 ${items.length} Properties Found</div>
+    </div>
+    <div class="epc-grid">
+      ${items.map(p => `
+        <div class="epc-card">
+          <div class="epc-top">
+            <div class="epc-address">${p.address}, ${p.postcode}</div>
+            <div class="epc-rating er-${p.currentRating.toLowerCase()}">${p.currentRating}</div>
+          </div>
+          <div class="opportunity-flag flag-${p.opportunityFlag?.flag?.includes('HIGH')?'high':p.opportunityFlag?.flag?.includes('MED')?'medium':'low'}">
+            ${p.opportunityFlag?.flag} — ${p.opportunityFlag?.reason}
+          </div>
+          <div class="epc-meta">
+            <span class="epc-tag">${p.propertyType}</span>
+            <span class="epc-tag">${p.tenure||'Unknown tenure'}</span>
+            ${p.floorArea ? `<span class="epc-tag">${p.floorArea}m²</span>` : ''}
+            ${p.estimatedUpgradeCost ? `<span class="epc-tag" style="color:var(--red);border-color:var(--red)">Est. upgrade: £${p.estimatedUpgradeCost.toLocaleString()}</span>` : ''}
+          </div>
+          <div class="epc-meta">
+            <span class="epc-tag">Potential: ${p.potentialRating}</span>
+            <span class="epc-tag">Cert: ${p.lodgementDate||'—'}</span>
+            <span class="epc-tag">Motivation: ${p.motivationScore}/100</span>
+          </div>
+          <div class="epc-actions">
+            <a class="epc-btn epc-btn-primary" href="/outreach.html?type=landlord&address=${encodeURIComponent(p.address)}&postcode=${encodeURIComponent(p.postcode)}">✉ Generate Outreach</a>
+            <a class="epc-btn epc-btn-secondary" href="${p.link}" target="_blank">View EPC →</a>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+</script>
+</body>
+</html>

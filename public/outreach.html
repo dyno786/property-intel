@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC Property Outreach — Email & Letter Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f8f9fb; --white:#fff; --border:#e5e8ef; --border2:#d0d5e0;
+    --accent:#1a3a5c; --accent2:#2563eb; --red:#dc2626; --green:#059669;
+    --amber:#d97706; --blue:#2563eb; --text:#0f1623; --text2:#374151;
+    --muted:#6b7280; --muted2:#9ca3af; --surface2:#f3f5f8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; }
+
+  header {
+    background:var(--accent); padding:0 28px; height:58px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 12px rgba(26,58,92,0.15);
+  }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-mark { width:32px; height:32px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-weight:700; font-size:14px; color:#fff; }
+  .logo-text { font-family:'Playfair Display',serif; font-weight:700; font-size:16px; color:#fff; }
+  .logo-sub { font-size:11px; color:rgba(255,255,255,0.5); }
+  .back-btn { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:6px 14px; border-radius:5px; font-size:12px; cursor:pointer; text-decoration:none; }
+
+  .container { max-width:1100px; margin:0 auto; padding:28px; display:grid; grid-template-columns:380px 1fr; gap:24px; }
+
+  /* FORM PANEL */
+  .form-panel { background:var(--white); border:1px solid var(--border); border-radius:10px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.04); height:fit-content; }
+  .panel-title { font-family:'Playfair Display',serif; font-weight:700; font-size:18px; margin-bottom:6px; }
+  .panel-sub { font-size:12px; color:var(--muted); margin-bottom:22px; line-height:1.5; }
+
+  .section-label { font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); font-weight:600; margin-bottom:10px; margin-top:20px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .section-label:first-of-type { margin-top:0; }
+
+  .fg { margin-bottom:12px; }
+  .flabel { font-size:11px; color:var(--muted); margin-bottom:4px; display:block; font-weight:500; }
+  .finput, .fselect, .ftextarea {
+    width:100%; background:var(--surface2); border:1px solid var(--border);
+    color:var(--text); padding:9px 12px; border-radius:6px;
+    font-family:'DM Sans',sans-serif; font-size:13px; outline:none; transition:border-color 0.2s;
+  }
+  .finput:focus, .fselect:focus, .ftextarea:focus { border-color:var(--accent2); background:#fff; }
+  .ftextarea { resize:vertical; min-height:65px; }
+  .frow { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  /* TYPE CARDS */
+  .type-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+  .type-card {
+    border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+    cursor:pointer; transition:all 0.2s; background:var(--white);
+  }
+  .type-card:hover { border-color:var(--accent2); }
+  .type-card.active { border-color:var(--accent); background:#eff6ff; }
+  .type-card .tc-icon { font-size:18px; margin-bottom:4px; }
+  .type-card .tc-label { font-size:11px; font-weight:600; color:var(--text2); }
+  .type-card .tc-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+
+  .btn-generate {
+    width:100%; background:var(--accent); color:#fff; border:none;
+    padding:12px; border-radius:6px; font-family:'Playfair Display',serif;
+    font-weight:700; font-size:15px; cursor:pointer; transition:all 0.2s; margin-top:6px;
+  }
+  .btn-generate:hover { background:#0f2a45; }
+
+  /* PREVIEW PANEL */
+  .preview-panel { display:flex; flex-direction:column; gap:16px; }
+
+  .preview-card { background:var(--white); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+  .preview-hdr { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--surface2); }
+  .preview-title { font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px; }
+  .preview-actions { display:flex; gap:8px; }
+  .pbtn { background:var(--white); border:1px solid var(--border); color:var(--text2); padding:5px 12px; border-radius:5px; font-size:11px; cursor:pointer; transition:all 0.2s; }
+  .pbtn:hover { border-color:var(--accent2); color:var(--accent2); }
+  .pbtn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pbtn.primary:hover { background:#0f2a45; }
+
+  .email-preview {
+    padding:24px 28px; font-size:13px; line-height:1.8; color:var(--text);
+    white-space:pre-wrap; min-height:200px; font-family:'DM Sans',sans-serif;
+  }
+  .email-preview.empty { color:var(--muted2); font-style:italic; display:flex; align-items:center; justify-content:center; min-height:300px; font-size:13px; }
+
+  .subject-row { padding:12px 20px; border-bottom:1px solid var(--border); background:#fffbeb; display:flex; align-items:center; gap:10px; }
+  .subject-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; flex-shrink:0; }
+  .subject-text { font-size:13px; font-weight:500; color:var(--text); }
+
+  /* SOURCES PANEL */
+  .sources-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .source-card { background:var(--white); border:1px solid var(--border); border-radius:8px; padding:14px; }
+  .source-icon { font-size:20px; margin-bottom:6px; }
+  .source-name { font-weight:600; font-size:12px; margin-bottom:4px; }
+  .source-desc { font-size:11px; color:var(--muted); line-height:1.5; margin-bottom:8px; }
+  .source-link { font-size:11px; color:var(--accent2); text-decoration:none; }
+  .source-link:hover { text-decoration:underline; }
+
+  .tag { display:inline-block; font-size:9px; padding:2px 6px; border-radius:3px; margin-left:6px; font-family:'DM Mono',monospace; }
+  .tag-free { background:#d1fae5; color:#065f46; }
+  .tag-paid { background:#fee2e2; color:#991b1b; }
+
+  @media(max-width:900px) {
+    .container { grid-template-columns:1fr; }
+    .sources-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">CC</div>
+    <div>
+      <div class="logo-text">Property Outreach</div>
+      <div class="logo-sub">Email & Letter Generator</div>
+    </div>
+  </div>
+  <a class="back-btn" href="/">← Dashboard</a>
+</header>
+
+<div class="container">
+
+  <!-- FORM -->
+  <div class="form-panel">
+    <div class="panel-title">Generate Outreach</div>
+    <div class="panel-sub">Fill in the property details and select the situation — we'll write the email for you.</div>
+
+    <div class="section-label">Situation Type</div>
+    <div class="type-grid">
+      <div class="type-card active" onclick="setType('pub',this)">
+        <div class="tc-icon">🍺</div>
+        <div class="tc-label">Pub / Venue</div>
+        <div class="tc-sub">Closed or trading</div>
+      </div>
+      <div class="type-card" onclick="setType('distressed',this)">
+        <div class="tc-icon">🏚️</div>
+        <div class="tc-label">Distressed Property</div>
+        <div class="tc-sub">Run down / neglected</div>
+      </div>
+      <div class="type-card" onclick="setType('commercial',this)">
+        <div class="tc-icon">🏢</div>
+        <div class="tc-label">Commercial Unit</div>
+        <div class="tc-sub">Vacant or closing</div>
+      </div>
+      <div class="type-card" onclick="setType('landlord',this)">
+        <div class="tc-icon">🏠</div>
+        <div class="tc-label">Tired Landlord</div>
+        <div class="tc-sub">Long-term rental owner</div>
+      </div>
+      <div class="type-card" onclick="setType('insolvency',this)">
+        <div class="tc-icon">⚠️</div>
+        <div class="tc-label">Insolvency Lead</div>
+        <div class="tc-sub">Company in trouble</div>
+      </div>
+      <div class="type-card" onclick="setType('empty',this)">
+        <div class="tc-icon">🔒</div>
+        <div class="tc-label">Empty Property</div>
+        <div class="tc-sub">Long-term vacant</div>
+      </div>
+    </div>
+
+    <div class="section-label">Property Details</div>
+    <div class="fg"><label class="flabel">Property / Business Name</label><input class="finput" id="propName" placeholder="e.g. The Crown Inn, 42 Chapel Street"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">Street Address</label><input class="finput" id="propAddress" placeholder="e.g. 42 Chapel Street"></div>
+      <div class="fg"><label class="flabel">Town / Postcode</label><input class="finput" id="propTown" placeholder="e.g. Leeds, LS7 3NJ"></div>
+    </div>
+
+    <div class="section-label">Owner / Recipient Details</div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">Owner Name (if known)</label><input class="finput" id="ownerName" placeholder="e.g. Mr Smith or leave blank"></div>
+      <div class="fg"><label class="flabel">Company Name (if known)</label><input class="finput" id="ownerCompany" placeholder="e.g. Yorkshire Pubs Ltd"></div>
+    </div>
+
+    <div class="section-label">Your Details</div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">Your Name</label><input class="finput" id="yourName" placeholder="Mohammed" value="Mohammed"></div>
+      <div class="fg"><label class="flabel">Your Phone</label><input class="finput" id="yourPhone" placeholder="07xxx xxxxxx"></div>
+    </div>
+    <div class="fg"><label class="flabel">Your Email</label><input class="finput" id="yourEmail" placeholder="ccpropertiesleeds@gmail.com" value="ccpropertiesleeds@gmail.com"></div>
+
+    <div class="section-label">Additional Notes (optional)</div>
+    <div class="fg"><textarea class="ftextarea" id="extraNotes" placeholder="Any specific details about why you're interested, your budget, timeline etc..."></textarea></div>
+
+    <button class="btn-generate" onclick="generate()">Generate Email & Letter →</button>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-panel">
+
+    <div class="preview-card">
+      <div class="preview-hdr">
+        <div class="preview-title">✉️ Email Template</div>
+        <div class="preview-actions">
+          <button class="pbtn" onclick="copyEmail()">Copy</button>
+          <button class="pbtn primary" onclick="openMailto()">Open in Email App</button>
+        </div>
+      </div>
+      <div class="subject-row" id="subjectRow" style="display:none">
+        <span class="subject-label">Subject:</span>
+        <span class="subject-text" id="emailSubject"></span>
+      </div>
+      <div class="email-preview empty" id="emailPreview">
+        Fill in the form and click Generate to create your outreach email
+      </div>
+    </div>
+
+    <div class="preview-card">
+      <div class="preview-hdr">
+        <div class="preview-title">📄 Formal Letter (Post / Hand Deliver)</div>
+        <div class="preview-actions">
+          <button class="pbtn" onclick="copyLetter()">Copy</button>
+          <button class="pbtn primary" onclick="printLetter()">Print</button>
+        </div>
+      </div>
+      <div class="email-preview empty" id="letterPreview">
+        Fill in the form and click Generate to create your letter template
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="preview-card">
+      <div class="preview-hdr">
+        <div class="preview-title">🔍 Where to Find Owners & Leads</div>
+      </div>
+      <div style="padding:16px 20px">
+        <div class="sources-grid">
+          <div class="source-card">
+            <div class="source-icon">🏛️</div>
+            <div class="source-name">Land Registry <span class="tag tag-paid">£3/search</span></div>
+            <div class="source-desc">Find the registered owner of any property in England & Wales. £3 per title search.</div>
+            <a class="source-link" href="https://www.gov.uk/search-property-information-land-registry" target="_blank">Search now →</a>
+          </div>
+          <div class="source-card">
+            <div class="source-icon">🏢</div>
+            <div class="source-name">Companies House <span class="tag tag-free">Free</span></div>
+            <div class="source-desc">Find director names and addresses for company-owned properties. Completely free.</div>
+            <a class="source-link" href="https://find-and-update.company-information.service.gov.uk" target="_blank">Search now →</a>
+          </div>
+          <div class="source-card">
+            <div class="source-icon">🍺</div>
+            <div class="source-name">Pub Co Disposals <span class="tag tag-free">Free</span></div>
+            <div class="source-desc">Punch, Star Pubs, Greene King all list pubs for sale. Register for email alerts.</div>
+            <a class="source-link" href="https://starpubs.co.uk/pubs-for-sale" target="_blank">Star Pubs →</a>
+          </div>
+          <div class="source-card">
+            <div class="source-icon">⚠️</div>
+            <div class="source-name">The Gazette <span class="tag tag-free">Free</span></div>
+            <div class="source-desc">Official insolvency notices. Search for companies with property assets in your area.</div>
+            <a class="source-link" href="https://www.thegazette.co.uk/insolvency" target="_blank">Search now →</a>
+          </div>
+          <div class="source-card">
+            <div class="source-icon">🏚️</div>
+            <div class="source-name">Empty Properties <span class="tag tag-free">Free</span></div>
+            <div class="source-desc">Leeds Council empty homes register. Properties vacant 6+ months — motivated sellers.</div>
+            <a class="source-link" href="https://www.leeds.gov.uk/housing/empty-homes" target="_blank">View register →</a>
+          </div>
+          <div class="source-card">
+            <div class="source-icon">📋</div>
+            <div class="source-name">Planning Enforcement <span class="tag tag-free">Free</span></div>
+            <div class="source-desc">Enforcement notices on the Leeds portal often signal distressed or problem owners.</div>
+            <a class="source-link" href="https://publicaccess.leeds.gov.uk/online-applications/search.do?action=advanced&searchType=Enforcement" target="_blank">Search now →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentType = 'pub';
+let generatedEmail = '';
+let generatedSubject = '';
+let generatedLetter = '';
+
+function setType(type, el) {
+  currentType = type;
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const TEMPLATES = {
+  pub: {
+    subject: (prop, town) => `Expression of Interest — ${prop || 'Your Public House'}, ${town || ''}`,
+    email: (d) => `Dear ${d.owner || 'Sir/Madam'},
+
+I am writing to express a genuine interest in purchasing ${d.propName ? `"${d.propName}"` : 'your public house'} located at ${d.address}.
+
+I am a property investor based in Yorkshire and am actively looking to acquire licensed premises and public houses in the Leeds and West Yorkshire area. I note that ${d.propName || 'the property'} ${d.extra || 'may be available or approaching a transition point'}, and I wanted to reach out directly to introduce myself before any formal marketing process begins.
+
+I am a cash buyer with funds readily available, which means I can move quickly and offer certainty of completion without the delays associated with mortgage financing. I am also flexible on terms and open to discussing a range of arrangements including freehold purchase, lease assignment, or other structures that may suit your circumstances.
+
+I would be very grateful for the opportunity to have an informal conversation about the property. There is absolutely no obligation, and I am happy to treat any initial discussions in the strictest confidence.
+
+Please do not hesitate to contact me directly:
+
+${d.yourName}
+${d.yourPhone ? 'Phone: ' + d.yourPhone : ''}
+Email: ${d.yourEmail}
+
+I look forward to hearing from you.
+
+Yours sincerely,
+
+${d.yourName}`,
+
+    letter: (d) => `${d.yourName}
+${d.yourEmail}
+${d.yourPhone || ''}
+${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+
+${d.owner ? d.owner + '\n' : ''}${d.ownerCompany ? d.ownerCompany + '\n' : ''}${d.address}
+
+
+Dear ${d.owner || 'Sir/Madam'},
+
+RE: Expression of Interest — ${d.propName || 'Your Public House'}, ${d.address}
+
+I am writing to introduce myself as a serious property investor with a particular interest in acquiring licensed premises and public houses across West Yorkshire.
+
+Having become aware of ${d.propName || 'your property'} at ${d.address}, I wanted to write to you directly to express my genuine interest in the possibility of a purchase, should you ever be considering selling.
+
+I am a cash buyer, which means I can offer:
+• Certainty of completion — no mortgage delays or risk of fall-through
+• Speed — I can exchange and complete within weeks if required
+• Confidentiality — I am happy to deal directly without involving agents
+
+I appreciate that you may not be actively looking to sell at this time, and I would be equally happy to have a simple introductory conversation with no pressure or obligation whatsoever.
+
+If you would like to discuss further, please contact me at any time using the details above.
+
+Yours faithfully,
+
+
+${d.yourName}`
+  },
+
+  distressed: {
+    subject: (prop, town) => `Property Enquiry — ${prop || town || 'Your Property'}`,
+    email: (d) => `Dear ${d.owner || 'Sir/Madam'},
+
+I hope this message finds you well. I am writing regarding the property at ${d.address}.
+
+I am a local property investor who has been actively acquiring properties in the ${d.town || 'Leeds'} area, and I would be interested in having a conversation about whether you would consider a sale.
+
+I understand that managing property can sometimes become more burden than benefit, and I specialise in making the process as straightforward and stress-free as possible for sellers. I am a cash buyer which means:
+
+• No estate agent fees for you
+• No lengthy sales process
+• Completion on a timescale that suits you
+• A fair, transparent offer based on current market conditions
+
+I am not looking to take advantage of anyone's situation — I simply prefer to deal directly and honestly with owners, and I have found that many people appreciate the simplicity of a private sale.
+
+If you have any interest in exploring this further, I would be delighted to hear from you. Equally, if now is not the right time, please do keep my details — there is absolutely no pressure.
+
+${d.yourName}
+${d.yourPhone ? 'Tel: ' + d.yourPhone : ''}
+${d.yourEmail}
+
+Kind regards,
+${d.yourName}`,
+
+    letter: (d) => `${d.yourName}
+${d.yourEmail}
+${d.yourPhone || ''}
+${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+
+The Owner / Occupier
+${d.address}
+
+
+Dear Owner,
+
+RE: Private Purchase Enquiry — ${d.address}
+
+I am writing to you as a local property investor with a genuine interest in purchasing property in the ${d.town || 'Leeds'} area.
+
+I am a cash buyer and I am able to proceed quickly and discreetly, without the need for estate agents or lengthy marketing periods.
+
+If you have ever considered selling, I would be very happy to have an informal, no-obligation conversation. I can be flexible on timing and terms to suit your circumstances.
+
+Please feel free to contact me directly:
+
+${d.yourName}
+${d.yourPhone || ''}
+${d.yourEmail}
+
+Yours faithfully,
+
+${d.yourName}`
+  },
+
+  commercial: {
+    subject: (prop, town) => `Commercial Property Acquisition Enquiry — ${prop || town || ''}`,
+    email: (d) => `Dear ${d.owner || 'Sir/Madam'},
+
+I am a property investor based in Yorkshire and I am actively looking to acquire commercial premises in the ${d.town || 'Leeds'} area.
+
+I noted that ${d.propName || 'your property'} at ${d.address} may be available, and I wanted to reach out directly to express my interest before any formal process begins.
+
+I am a cash buyer with immediate funds available. I am interested in a wide range of commercial uses including retail, office, mixed-use, and development opportunities.
+
+I would welcome the opportunity to discuss the property with you directly. I can move quickly and am happy to make an offer subject to a brief inspection.
+
+Please do contact me at your convenience:
+
+${d.yourName}
+${d.yourPhone ? 'Tel: ' + d.yourPhone : ''}
+${d.yourEmail}
+
+Yours sincerely,
+${d.yourName}`,
+
+    letter: (d) => `${d.yourName}
+${d.yourEmail}
+${d.yourPhone || ''}
+${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+
+${d.owner ? d.owner + '\n' : ''}${d.address}
+
+
+Dear ${d.owner || 'Sir/Madam'},
+
+RE: Commercial Property Enquiry — ${d.propName || d.address}
+
+I write as an active property investor with a focus on commercial acquisitions across West Yorkshire.
+
+I am particularly interested in ${d.propName || 'your property'} at ${d.address} and would welcome the opportunity to discuss a potential purchase directly with you.
+
+As a cash buyer I am able to offer a swift and certain transaction, and I am flexible on structure and timing.
+
+Please do not hesitate to contact me should you wish to discuss further.
+
+Yours faithfully,
+
+${d.yourName}`
+  },
+
+  landlord: {
+    subject: (prop, town) => `Interested in Purchasing Your Property — ${prop || town || ''}`,
+    email: (d) => `Dear ${d.owner || 'Landlord'},
+
+I hope you don't mind me getting in touch directly. I am a local property investor and I am aware that you own the property at ${d.address}.
+
+I am writing to ask whether you would ever consider selling. I know many landlords in the current climate are reassessing their portfolios — whether due to tax changes, increasing regulation, maintenance costs, or simply looking to release equity — and I wanted to make sure you knew there is a straightforward option available to you.
+
+I am a cash buyer and I would be happy to make you a fair offer with:
+
+• No estate agent fees
+• Completion in 4–6 weeks or on a date that suits you
+• No need to redecorate or make repairs beforehand
+• Tenants can remain in situ if preferred
+
+This is not a high-pressure approach — I simply believe it is worth a conversation. If you are not interested at this time, I completely understand, and I am happy for you to keep my details for the future.
+
+${d.yourName}
+${d.yourPhone ? 'Tel: ' + d.yourPhone : ''}
+${d.yourEmail}`,
+
+    letter: (d) => `${d.yourName}
+${d.yourEmail}
+${d.yourPhone || ''}
+${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+
+${d.owner ? d.owner + '\n' : ''}${d.address}
+
+
+Dear ${d.owner || 'Landlord'},
+
+RE: Private Purchase Enquiry — ${d.address}
+
+I am writing as a local cash buyer with a genuine interest in acquiring buy-to-let properties in the ${d.town || 'Leeds'} area.
+
+I appreciate that managing a rental property requires considerable time and resource, and I am aware that the current regulatory and tax environment has made this increasingly challenging for many landlords.
+
+Should you ever wish to sell — whether now or in future — I would be delighted to make you a straightforward, no-obligation offer. I can purchase with tenants in situ and complete on your preferred timescale.
+
+Please feel free to contact me at any time.
+
+Yours faithfully,
+
+${d.yourName}`
+  },
+
+  insolvency: {
+    subject: (prop, town) => `Property Assets — Expression of Interest — ${prop || town || ''}`,
+    email: (d) => `Dear ${d.owner || 'Sir/Madam'},
+
+I write with reference to ${d.ownerCompany || 'your company'} and to express an interest in acquiring any property assets that may form part of the estate.
+
+I am a cash buyer and property investor based in Yorkshire, and I am specifically looking for commercial and residential property in the Leeds and West Yorkshire area. I am able to move very quickly and can provide proof of funds immediately.
+
+I understand that speed and certainty are often of paramount importance in these circumstances, and I can offer both.
+
+I would be very grateful for the opportunity to discuss this further at your earliest convenience.
+
+${d.yourName}
+${d.yourPhone ? 'Tel: ' + d.yourPhone : ''}
+${d.yourEmail}
+
+Yours sincerely,
+${d.yourName}`,
+
+    letter: (d) => `${d.yourName}
+${d.yourEmail}
+${d.yourPhone || ''}
+${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+
+${d.owner ? d.owner + '\n' : ''}${d.ownerCompany ? d.ownerCompany + '\n' : ''}${d.address}
+
+
+Dear ${d.owner || 'Sir/Madam'},
+
+RE: Expression of Interest in Property Assets
+
+I write to introduce myself as a cash property buyer with an interest in acquiring commercial and residential property assets in West Yorkshire.
+
+I am aware of the current situation regarding ${d.ownerCompany || 'your company'} and wanted to make contact at the earliest opportunity to express a genuine interest in any property assets that may be available.
+
+I am able to act quickly, provide proof of funds immediately, and offer a straightforward transaction with certainty of completion.
+
+I would welcome the opportunity to discuss this further at your convenience.
+
+Yours faithfully,
+
+${d.yourName}`
+  },
+
+  empty: {
+    subject: (prop, town) => `Enquiry Regarding Vacant Property — ${prop || town || ''}`,
+    email: (d) => `Dear ${d.owner || 'Owner'},
+
+I am writing regarding the property at ${d.address}, which I understand has been vacant for some time.
+
+I am a local property investor and I would be very interested in purchasing the property. I am a cash buyer and able to complete quickly, and I am entirely comfortable with properties that require renovation or refurbishment work.
+
+I appreciate that vacant properties can present challenges for their owners, and I want to make clear that I am approaching this in a straightforward and fair way. I would be happy to make an offer based on current market conditions and the property's state of repair.
+
+If you would like to discuss further, please do get in touch at any time.
+
+${d.yourName}
+${d.yourPhone ? 'Tel: ' + d.yourPhone : ''}
+${d.yourEmail}`,
+
+    letter: (d) => `${d.yourName}
+${d.yourEmail}
+${d.yourPhone || ''}
+${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+
+The Owner
+${d.address}
+
+
+Dear Owner,
+
+RE: Enquiry Regarding Vacant Property — ${d.address}
+
+I am a local cash buyer and property investor writing to express an interest in purchasing the above property, which I understand has been unoccupied for some time.
+
+I am experienced in purchasing properties in all conditions and am able to complete quickly without the need for mortgage approval.
+
+If you are considering selling, I would be very happy to arrange a brief visit and make you a no-obligation offer.
+
+Please contact me at your convenience.
+
+Yours faithfully,
+
+${d.yourName}`
+  }
+};
+
+function generate() {
+  const d = {
+    propName:     document.getElementById('propName').value,
+    address:      [document.getElementById('propAddress').value, document.getElementById('propTown').value].filter(Boolean).join(', '),
+    town:         document.getElementById('propTown').value,
+    owner:        document.getElementById('ownerName').value,
+    ownerCompany: document.getElementById('ownerCompany').value,
+    yourName:     document.getElementById('yourName').value || 'Mohammed',
+    yourPhone:    document.getElementById('yourPhone').value,
+    yourEmail:    document.getElementById('yourEmail').value,
+    extra:        document.getElementById('extraNotes').value
+  };
+
+  const tmpl = TEMPLATES[currentType] || TEMPLATES.pub;
+  generatedSubject = tmpl.subject(d.propName, d.town);
+  generatedEmail   = tmpl.email(d);
+  generatedLetter  = tmpl.letter(d);
+
+  // Show email
+  const emailEl = document.getElementById('emailPreview');
+  emailEl.classList.remove('empty');
+  emailEl.textContent = generatedEmail;
+
+  // Show subject
+  document.getElementById('subjectRow').style.display = 'flex';
+  document.getElementById('emailSubject').textContent = generatedSubject;
+
+  // Show letter
+  const letterEl = document.getElementById('letterPreview');
+  letterEl.classList.remove('empty');
+  letterEl.textContent = generatedLetter;
+}
+
+function copyEmail() {
+  if (!generatedEmail) return;
+  navigator.clipboard.writeText(generatedEmail).then(() => showCopied('copyEmail'));
+}
+function copyLetter() {
+  if (!generatedLetter) return;
+  navigator.clipboard.writeText(generatedLetter).then(() => showCopied('copyLetter'));
+}
+function openMailto() {
+  if (!generatedEmail) return;
+  const email = document.getElementById('ownerName').value ? '' : '';
+  window.location.href = `mailto:${email}?subject=${encodeURIComponent(generatedSubject)}&body=${encodeURIComponent(generatedEmail)}`;
+}
+function printLetter() {
+  if (!generatedLetter) return;
+  const w = window.open('','_blank');
+  w.document.write(`<html><body><pre style="font-family:Georgia,serif;font-size:14px;line-height:1.8;max-width:700px;margin:40px auto;white-space:pre-wrap">${generatedLetter}</pre></body></html>`);
+  w.print();
+}
+function showCopied(fn) {
+  // Visual feedback handled by button text
+}
+</script>
+</body>
+</html>
