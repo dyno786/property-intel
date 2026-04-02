@@ -1,33 +1,26 @@
 // api/insolvency.js
-// The Gazette - insolvency notices with date range support
-// Supports: region, months (1-6), breakdown
-// Uses Gazette search API with date filtering
+// The Gazette - correct feed URL discovered from their website
+// Uses data.feed endpoint with location/text/date filters
 
 const GAZETTE_BASE = 'https://www.thegazette.co.uk';
 
-const NOTICE_TYPES = [
-  { code: '2100', label: 'Winding Up / Liquidation' },
-  { code: '2150', label: 'Administration' },
-  { code: '2160', label: 'Receivership' },
-  { code: '2200', label: 'Voluntary Arrangement' }
-];
-
-const REGION_TERMS = {
-  leeds:        ['leeds'],
-  bradford:     ['bradford'],
-  wakefield:    ['wakefield'],
-  sheffield:    ['sheffield'],
-  huddersfield: ['huddersfield'],
-  yorkshire:    ['leeds', 'bradford', 'sheffield', 'wakefield', 'huddersfield'],
-  national:     ['']
+// Leeds City Council local authority code in Gazette system
+const REGION_CONFIG = {
+  leeds:        { text: 'leeds',        localAuth: 'Leeds City Council' },
+  bradford:     { text: 'bradford',     localAuth: 'Bradford Metropolitan District Council' },
+  wakefield:    { text: 'wakefield',    localAuth: 'Wakefield Metropolitan District Council' },
+  sheffield:    { text: 'sheffield',    localAuth: 'Sheffield City Council' },
+  huddersfield: { text: 'huddersfield', localAuth: 'Kirklees Council' },
+  yorkshire:    { text: 'yorkshire',    localAuth: null },
+  national:     { text: '',             localAuth: null }
 };
 
 const AREA_KEYWORDS = {
-  leeds:        ['leeds','ls1','ls2','ls3','ls6','ls7','ls8','ls9','ls10','ls11','ls12'],
-  bradford:     ['bradford','bd1','bd2','bd3','bd4','bd5'],
-  wakefield:    ['wakefield','wf1','wf2','wf3','wf4'],
-  sheffield:    ['sheffield','s1','s2','s3','s6','s10'],
-  huddersfield: ['huddersfield','kirklees','hd1','hd2','hd3']
+  leeds:        ['leeds','chapeltown','harehills','armley','beeston','roundhay','headingley'],
+  bradford:     ['bradford','shipley','keighley','bingley'],
+  wakefield:    ['wakefield','castleford','pontefract','ossett'],
+  sheffield:    ['sheffield','rotherham','darnall','hillsborough'],
+  huddersfield: ['huddersfield','kirklees','halifax','brighouse']
 };
 
 function detectArea(text) {
@@ -44,24 +37,26 @@ function parseXML(xml) {
   for (const part of parts) {
     const get = (tag) => {
       const m = part.match(new RegExp(`<${tag}[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/${tag}>`, 'i'));
-      return m ? m[1].replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim() : '';
+      return m ? m[1].replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#\d+;/g,' ').trim() : '';
     };
     const title   = get('title');
-    const desc    = get('description').replace(/\s+/g,' ').substring(0,500);
+    const desc    = get('description').replace(/\s+/g,' ').substring(0,400);
     const link    = get('link');
     const pubDate = get('pubDate');
     const cat     = get('category');
-    if (title) items.push({ title, description:desc, link, pubDate, category:cat });
+    const type    = get('notice-type') || get('noticeType') || '';
+    if (title && title.length > 1) {
+      items.push({ title, description: desc, link, pubDate, category: cat, noticeType: type });
+    }
   }
   return items;
 }
 
-function formatGazetteDate(date) {
-  // Gazette uses DD/MM/YYYY format for date filtering
-  const d = String(date.getDate()).padStart(2,'0');
-  const m = String(date.getMonth()+1).padStart(2,'0');
-  const y = date.getFullYear();
-  return `${d}%2F${m}%2F${y}`;
+function getDateRange(months) {
+  const now  = new Date();
+  const from = new Date(Date.now() - months * 30 * 24 * 60 * 60 * 1000);
+  const fmt  = (d) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  return { from, to: now, fromStr: fmt(from), toStr: fmt(now) };
 }
 
 export default async function handler(req, res) {
@@ -69,75 +64,101 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
-  const region    = (req.query.region    || 'leeds').toLowerCase();
-  const months    = Math.min(parseInt(req.query.months || '1'), 6);
-  const breakdown = req.query.breakdown  === 'true';
-  const terms     = REGION_TERMS[region] || REGION_TERMS.leeds;
-
-  // Date range
-  const dateTo   = new Date();
-  const dateFrom = new Date(Date.now() - months * 30 * 24 * 60 * 60 * 1000);
-  const fromStr  = formatGazetteDate(dateFrom);
-  const toStr    = formatGazetteDate(dateTo);
+  const region    = (req.query.region || 'leeds').toLowerCase();
+  const months    = Math.min(parseInt(req.query.months || '3'), 6);
+  const breakdown = req.query.breakdown === 'true';
+  const cfg       = REGION_CONFIG[region] || REGION_CONFIG.leeds;
+  const { from, to, fromStr, toStr } = getDateRange(months);
 
   const allItems = [];
   const errors   = [];
   let feedsChecked = 0;
 
-  for (const term of terms) {
-    for (const { code, label } of NOTICE_TYPES) {
-      feedsChecked++;
+  // Try multiple URL formats - Gazette has several feed endpoints
+  const feedUrls = [];
 
-      // Build URL with date range filter
-      let url = `${GAZETTE_BASE}/all-notices/notice?notice-type=${code}&format=rss`;
-      if (term) url += `&text=${encodeURIComponent(term)}`;
-      // Add date filters
-      url += `&start-publish-date=${fromStr}&end-publish-date=${toStr}`;
+  // Format 1: insolvency data.feed with text search (their own RSS link from the page)
+  if (cfg.text) {
+    feedUrls.push(`${GAZETTE_BASE}/insolvency/data.feed?text=${encodeURIComponent(cfg.text)}&start-publish-date=${encodeURIComponent(fromStr)}&end-publish-date=${encodeURIComponent(toStr)}&results-page=1`);
+    feedUrls.push(`${GAZETTE_BASE}/insolvency/data.feed?text=${encodeURIComponent(cfg.text)}&results-page=1`);
+  } else {
+    // National - no text filter
+    feedUrls.push(`${GAZETTE_BASE}/insolvency/data.feed?start-publish-date=${encodeURIComponent(fromStr)}&end-publish-date=${encodeURIComponent(toStr)}&results-page=1`);
+    feedUrls.push(`${GAZETTE_BASE}/insolvency/data.feed?results-page=1`);
+  }
 
-      try {
-        const r = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; CCPropertyIntel/1.0)',
-            'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-          }
-        });
+  // Format 2: all-notices with notice-type codes
+  const noticeCodes = ['2100','2150','2160','2200'];
+  for (const code of noticeCodes) {
+    if (cfg.text) {
+      feedUrls.push(`${GAZETTE_BASE}/all-notices/notice?notice-type=${code}&text=${encodeURIComponent(cfg.text)}&format=rss&start-publish-date=${encodeURIComponent(fromStr)}&end-publish-date=${encodeURIComponent(toStr)}`);
+    } else {
+      feedUrls.push(`${GAZETTE_BASE}/all-notices/notice?notice-type=${code}&format=rss`);
+    }
+  }
 
-        if (!r.ok) {
-          // Try without date filter as fallback
-          const fallbackUrl = `${GAZETTE_BASE}/all-notices/notice?notice-type=${code}&format=rss${term?'&text='+encodeURIComponent(term):''}`;
-          const fr = await fetch(fallbackUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/rss+xml, */*' }
-          });
-          if (fr.ok) {
-            const xml = await fr.text();
-            const items = parseXML(xml);
-            for (const item of items) allItems.push({ ...item, noticeLabel: label, code });
-          } else {
-            errors.push(`${term||'national'}/${code}: HTTP ${r.status}`);
-          }
-          continue;
-        }
+  // Format 3: data service feed
+  if (cfg.text) {
+    feedUrls.push(`${GAZETTE_BASE}/all-notices/data.feed?text=${encodeURIComponent(cfg.text)}&category=insolvency`);
+  }
 
-        const xml   = await r.text();
-        const items = parseXML(xml);
-        for (const item of items) allItems.push({ ...item, noticeLabel: label, code });
+  const fetchHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
+    'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+    'Accept-Language': 'en-GB,en;q=0.9',
+    'Cache-Control': 'no-cache',
+    'Referer': 'https://www.thegazette.co.uk/insolvency'
+  };
 
-      } catch(e) {
-        errors.push(`${term||'national'}/${code}: ${e.message}`);
+  for (const url of feedUrls) {
+    feedsChecked++;
+    try {
+      const r = await fetch(url, { headers: fetchHeaders });
+      if (!r.ok) {
+        errors.push(`HTTP ${r.status}: ${url.substring(50,100)}`);
+        continue;
       }
+      const contentType = r.headers.get('content-type') || '';
+      const text = await r.text();
+
+      // Check if it's actually XML/RSS
+      if (!text.includes('<item') && !text.includes('<entry')) {
+        errors.push(`Not RSS (${contentType.substring(0,30)}): ${url.substring(50,90)}`);
+        continue;
+      }
+
+      const items = parseXML(text);
+      if (items.length > 0) {
+        for (const item of items) allItems.push({ ...item, sourceUrl: url });
+        // If we found items, try next page too
+        if (items.length >= 10) {
+          try {
+            const url2 = url.replace('results-page=1','results-page=2').replace(/&results-page=\d+/,'') + (url.includes('results-page') ? '' : '&results-page=2');
+            const r2 = await fetch(url2, { headers: fetchHeaders });
+            if (r2.ok) {
+              const text2 = await r2.text();
+              const items2 = parseXML(text2);
+              for (const item of items2) allItems.push({ ...item, sourceUrl: url2 });
+            }
+          } catch(e) {}
+        }
+        break; // Found working URL format, use it
+      }
+    } catch(e) {
+      errors.push(`Error: ${e.message.substring(0,50)}`);
     }
   }
 
   // Deduplicate
   const seen   = new Set();
   const unique = allItems.filter(item => {
-    const key = `${item.title}|${item.pubDate}`;
+    const key = item.link || `${item.title}|${item.pubDate}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
-  // Format + detect area
+  // Format results
   const formatted = unique.map(item => {
     const area = (region === 'national' || region === 'yorkshire')
       ? detectArea(item.title + ' ' + item.description)
@@ -145,19 +166,16 @@ export default async function handler(req, res) {
 
     let parsedDate = '—';
     if (item.pubDate) {
-      try {
-        parsedDate = new Date(item.pubDate).toLocaleDateString('en-GB', {
-          day: 'numeric', month: 'short', year: 'numeric'
-        });
-      } catch(e) {}
+      try { parsedDate = new Date(item.pubDate).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
+      catch(e) {}
     }
 
     return {
       title:       item.title,
       description: item.description,
       area,
-      ref:         item.noticeLabel,
-      category:    item.noticeLabel,
+      ref:         item.category || item.noticeType || 'Corporate Insolvency',
+      category:    item.category || 'Corporate Insolvency',
       date:        parsedDate,
       rawDate:     item.pubDate || '',
       link:        item.link || `${GAZETTE_BASE}/insolvency`,
@@ -174,10 +192,11 @@ export default async function handler(req, res) {
 
   // Area breakdown
   const areaBreakdown = {};
-  for (const item of formatted) {
-    const a = item.area;
-    if (!areaBreakdown[a]) areaBreakdown[a] = [];
-    areaBreakdown[a].push(item);
+  if (breakdown) {
+    for (const item of formatted) {
+      if (!areaBreakdown[item.area]) areaBreakdown[item.area] = [];
+      areaBreakdown[item.area].push(item);
+    }
   }
 
   // Category breakdown
@@ -187,23 +206,24 @@ export default async function handler(req, res) {
   }
 
   res.status(200).json({
-    success:           true,
+    success: true,
     region,
     months,
     dateRange: {
-      from: dateFrom.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }),
-      to:   dateTo.toLocaleDateString('en-GB',   { day:'numeric', month:'short', year:'numeric' })
+      from: from.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }),
+      to:   to.toLocaleDateString('en-GB',   { day:'numeric', month:'short', year:'numeric' })
     },
     count:             formatted.length,
     data:              formatted,
-    areaBreakdown:     breakdown ? areaBreakdown : {},
+    areaBreakdown,
     categoryBreakdown,
     feedsChecked,
-    errors:            errors.slice(0,5),
+    urlsTried:         feedUrls.length,
+    errors,
     gazetteLinks: {
-      search:  `${GAZETTE_BASE}/insolvency/search?text=${encodeURIComponent(terms[0]||'')}`,
-      winding: `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(terms[0]||'')}&notice-type=2100`,
-      admin:   `${GAZETTE_BASE}/all-notices/notice?text=${encodeURIComponent(terms[0]||'')}&notice-type=2150`
+      search:  `${GAZETTE_BASE}/insolvency${cfg.text ? '?text='+encodeURIComponent(cfg.text) : ''}`,
+      winding: `${GAZETTE_BASE}/insolvency?text=${encodeURIComponent(cfg.text||'')}&notice-type=2100`,
+      admin:   `${GAZETTE_BASE}/insolvency?text=${encodeURIComponent(cfg.text||'')}&notice-type=2150`
     },
     source:    'The Gazette',
     fetchedAt: new Date().toISOString()
