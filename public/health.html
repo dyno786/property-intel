@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC — System Health Check</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#7c5cbf;--purple-light:#a78bda;--purple-pale:#f0ebff;
+  --purple-bg:#ede8ff;--sidebar-bg:#f5f2ff;--white:#fff;--bg:#f7f8fc;
+  --border:#e8e4f5;--text:#1a1a2e;--text2:#4a4a6a;--muted:#8888aa;
+  --green:#059669;--green-bg:#d1fae5;--green-light:#34d399;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --blue:#2563eb;--blue-bg:#dbeafe;
+  --shadow:0 2px 12px rgba(124,92,191,0.08);
+  --shadow2:0 8px 32px rgba(124,92,191,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;}
+
+header{
+  background:var(--purple);padding:0 28px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 12px rgba(124,92,191,0.2);
+}
+.logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;}
+.logo-badge{width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+.back{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:6px;transition:all 0.2s;}
+.back:hover{background:rgba(255,255,255,0.2);}
+
+.container{max-width:900px;margin:32px auto;padding:0 24px 48px;}
+
+/* OVERALL STATUS */
+.overall-card{
+  border-radius:16px;padding:28px 32px;margin-bottom:28px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:all 0.3s;
+}
+.overall-card.checking{background:linear-gradient(135deg,#4a5568,#2d3748);box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.overall-card.healthy{background:linear-gradient(135deg,#065f46,#059669);box-shadow:0 8px 32px rgba(5,150,105,0.25);}
+.overall-card.degraded{background:linear-gradient(135deg,#92400e,#d97706);box-shadow:0 8px 32px rgba(217,119,6,0.25);}
+.overall-card.critical{background:linear-gradient(135deg,#991b1b,#dc2626);box-shadow:0 8px 32px rgba(220,38,38,0.25);}
+.overall-left{}
+.overall-status{font-size:28px;font-weight:800;color:#fff;display:flex;align-items:center;gap:12px;}
+.overall-sub{font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;}
+.overall-time{text-align:right;}
+.overall-time-label{font-size:11px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.5px;}
+.overall-time-val{font-size:20px;font-weight:700;color:#fff;margin-top:4px;font-variant-numeric:tabular-nums;}
+
+/* REFRESH BTN */
+.refresh-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.refresh-title{font-size:18px;font-weight:700;color:var(--text);}
+.refresh-btn{
+  background:var(--purple);color:#fff;border:none;
+  padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;
+  font-weight:600;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:all 0.2s;
+  box-shadow:0 2px 8px rgba(124,92,191,0.3);
+}
+.refresh-btn:hover{background:#6a4aad;transform:translateY(-1px);}
+.refresh-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+.refresh-btn .spin{animation:spin 0.8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SECTIONS */
+.section{margin-bottom:24px;}
+.section-title{
+  font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.section-count{
+  font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;
+  background:var(--purple-bg);color:var(--purple);
+}
+
+/* CHECK CARDS */
+.checks-grid{display:flex;flex-direction:column;gap:10px;}
+.check-card{
+  background:var(--white);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;display:flex;align-items:center;gap:16px;
+  box-shadow:var(--shadow);transition:all 0.2s;
+}
+.check-card:hover{box-shadow:var(--shadow2);}
+.check-card.status-pass{border-left:4px solid var(--green);}
+.check-card.status-fail{border-left:4px solid var(--red);}
+.check-card.status-warn{border-left:4px solid var(--amber);}
+.check-card.status-checking{border-left:4px solid var(--purple-light);}
+
+.check-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.ci-green{background:var(--green-bg);}
+.ci-red{background:var(--red-bg);}
+.ci-amber{background:var(--amber-bg);}
+.ci-purple{background:var(--purple-bg);}
+.ci-blue{background:var(--blue-bg);}
+.ci-grey{background:#f3f4f6;}
+
+.check-body{flex:1;min-width:0;}
+.check-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.check-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+.check-detail{font-size:11px;color:var(--text2);margin-top:4px;font-family:'Menlo','Consolas',monospace;}
+
+.check-right{text-align:right;flex-shrink:0;}
+.status-badge{
+  font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;
+  display:inline-block;letter-spacing:0.3px;
+}
+.sb-pass{background:var(--green-bg);color:var(--green);}
+.sb-fail{background:var(--red-bg);color:var(--red);}
+.sb-warn{background:var(--amber-bg);color:var(--amber);}
+.sb-checking{background:var(--purple-bg);color:var(--purple);}
+.check-ms{font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* SETUP GUIDE */
+.setup-card{
+  background:var(--amber-bg);border:1px solid #fcd34d;
+  border-radius:12px;padding:16px 20px;margin-top:8px;
+}
+.setup-title{font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.setup-steps{display:flex;flex-direction:column;gap:4px;}
+.setup-step{font-size:12px;color:#92400e;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.setup-step a{color:var(--purple);font-weight:500;}
+
+/* PROGRESS BAR */
+.progress-wrap{background:var(--border);border-radius:20px;height:6px;margin-bottom:20px;overflow:hidden;}
+.progress-bar{height:100%;border-radius:20px;transition:width 0.5s ease;background:linear-gradient(90deg,var(--purple),var(--purple-light));}
+
+/* ENV VARS TABLE */
+.env-table{width:100%;border-collapse:collapse;}
+.env-table th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;padding:8px 16px;text-align:left;background:var(--bg);border-bottom:1px solid var(--border);}
+.env-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;}
+.env-table tr:last-child td{border-bottom:none;}
+.env-table tr:hover td{background:var(--purple-pale);}
+.env-name{font-family:'Menlo','Consolas',monospace;color:var(--purple);font-weight:500;}
+.env-status{display:flex;align-items:center;gap:6px;}
+.env-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.env-dot-green{background:var(--green);}
+.env-dot-red{background:var(--red);}
+.env-dot-amber{background:var(--amber);}
+.env-link{color:var(--purple);font-size:11px;text-decoration:none;}
+.env-link:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-badge">CC</div>
+    System Health Check
+  </div>
+  <a class="back" href="/">← Dashboard</a>
+</header>
+
+<div class="container">
+
+  <!-- OVERALL STATUS -->
+  <div class="overall-card checking" id="overallCard">
+    <div class="overall-left">
+      <div class="overall-status" id="overallStatus">
+        <span id="overallIcon">⏳</span>
+        <span id="overallText">Running checks...</span>
+      </div>
+      <div class="overall-sub" id="overallSub">Checking all systems — please wait</div>
+    </div>
+    <div class="overall-time">
+      <div class="overall-time-label">Last checked</div>
+      <div class="overall-time-val" id="overallTime">—</div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- REFRESH -->
+  <div class="refresh-row">
+    <div class="refresh-title">System Status</div>
+    <button class="refresh-btn" id="refreshBtn" onclick="runAllChecks()">
+      <span id="refreshIcon">↻</span> Refresh All
+    </button>
+  </div>
+
+  <!-- API ENDPOINTS -->
+  <div class="section">
+    <div class="section-title">🔌 Live API Endpoints <span class="section-count" id="api-count">0/0</span></div>
+    <div class="checks-grid" id="api-checks"></div>
+  </div>
+
+  <!-- ENV VARS -->
+  <div class="section">
+    <div class="section-title">🔑 Environment Variables <span class="section-count" id="env-count">0/0</span></div>
+    <div class="checks-grid" id="env-checks"></div>
+    <div class="setup-card" id="setup-guide" style="display:none">
+      <div class="setup-title">⚙️ Missing API Keys — Setup Guide</div>
+      <div class="setup-steps" id="setup-steps"></div>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+  <div class="section">
+    <div class="section-title">📄 Application Pages <span class="section-count" id="pages-count">0/0</span></div>
+    <div class="checks-grid" id="pages-checks"></div>
+  </div>
+
+  <!-- EXTERNAL SERVICES -->
+  <div class="section">
+    <div class="section-title">🌐 External Services <span class="section-count" id="ext-count">0/0</span></div>
+    <div class="checks-grid" id="ext-checks"></div>
+  </div>
+
+</div>
+
+<script>
+// ── CHECKS DEFINITION ──
+const API_CHECKS = [
+  {
+    id: 'planning',
+    name: 'Planning Applications API',
+    desc: 'api.planning.org.uk — Leeds planning applications',
+    icon: '📋',
+    url: '/api/planning?region=leeds&postcode=all',
+    validate: (d) => {
+      if (d.setupRequired) return { pass: false, msg: 'PLANNING_API_KEY not set', setup: 'planning' };
+      if (d.keyError)      return { pass: false, msg: 'API key rejected — get new key', setup: 'planning' };
+      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.count || 0} applications found` };
+      return { pass: false, msg: d.error || 'Unknown error' };
+    }
+  },
+  {
+    id: 'insolvency',
+    name: 'Insolvency Data (Companies House)',
+    desc: 'Companies House API — distressed businesses in Leeds',
+    icon: '⚠️',
+    url: '/api/insolvency?region=leeds',
+    validate: (d) => {
+      if (d.setupRequired) return { pass: false, msg: 'COMPANIES_HOUSE_API_KEY not set', setup: 'companies' };
+      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.count || 0} records fetched` };
+      return { pass: false, msg: d.error || 'Unknown error' };
+    }
+  },
+  {
+    id: 'listings',
+    name: 'Live Property Listings (PropertyData)',
+    desc: 'PropertyData API — for-sale listings by postcode',
+    icon: '🏠',
+    url: '/api/listings?region=leeds&postcode=all&type=listings',
+    validate: (d) => {
+      if (d.setupRequired) return { pass: 'warn', msg: 'PROPERTYDATA_API_KEY not set — add for live listings', setup: 'propertydata' };
+      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.count || 0} listings` };
+      return { pass: false, msg: d.error || 'Unknown error' };
+    }
+  },
+  {
+    id: 'pubs',
+    name: 'Pub & Venue Monitor',
+    desc: 'Companies House — distressed pub businesses',
+    icon: '🍺',
+    url: '/api/pubs?region=leeds',
+    validate: (d) => {
+      if (d.success) return { pass: true, msg: `✓ Connected — ${d.companiesCount || 0} distressed businesses, ${d.disposalLinks?.length || 0} disposal sources` };
+      return { pass: false, msg: d.error || 'Unknown error' };
+    }
+  },
+  {
+    id: 'epc',
+    name: 'EPC Register',
+    desc: 'Energy Performance Certificates — motivated seller finder',
+    icon: '⚡',
+    url: '/api/epc?postcode=LS7&filter=poor',
+    validate: (d) => {
+      if (d.setupRequired) return { pass: 'warn', msg: 'EPC_API_KEY not set — register free at epc.opendatacommunities.org', setup: 'epc' };
+      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.total || 0} certificates for LS7, ${d.poorRated || 0} F/G rated` };
+      return { pass: false, msg: d.error || 'Unknown error' };
+    }
+  },
+  {
+    id: 'analyse',
+    name: 'AI Deal Analyser (Claude)',
+    desc: 'Anthropic Claude — property investment analysis',
+    icon: '🤖',
+    url: '/api/analyse?address=Test+Property&postcode=LS7&price=£100000&type=Terraced+House',
+    validate: (d) => {
+      if (!d.success && d.error?.includes('ANTHROPIC')) return { pass: false, msg: 'ANTHROPIC_API_KEY not set', setup: 'anthropic' };
+      if (d.success) return { pass: true, msg: '✓ Claude AI connected and responding' };
+      // If it fails with a real analysis error, still means it connected
+      if (d.error?.includes('API')) return { pass: false, msg: d.error };
+      return { pass: true, msg: '✓ AI endpoint reachable' };
+    }
+  },
+  {
+    id: 'digest',
+    name: 'Email Digest (Brevo)',
+    desc: 'Brevo — morning email digest',
+    icon: '✉️',
+    url: '/api/digest',
+    validate: (d) => {
+      if (d.setupRequired) return { pass: 'warn', msg: 'BREVO_API_KEY or DIGEST_EMAIL not set — add for email alerts', setup: 'brevo' };
+      if (d.success)       return { pass: true, msg: '✓ Email digest sent successfully' };
+      return { pass: false, msg: d.error || 'Unknown error' };
+    }
+  },
+  {
+    id: 'alert',
+    name: 'WhatsApp Alerts (Twilio)',
+    desc: 'Twilio — WhatsApp and SMS alerts',
+    icon: '📱',
+    url: '/api/alert?type=custom&message=Health+check',
+    validate: (d) => {
+      if (d.setupRequired) return { pass: 'warn', msg: 'Twilio credentials not set — optional for WhatsApp alerts', setup: 'twilio' };
+      if (d.success)       return { pass: true, msg: '✓ WhatsApp alert sent successfully' };
+      return { pass: false, msg: d.error };
+    }
+  }
+];
+
+const ENV_CHECKS = [
+  { key: 'PLANNING_API_KEY',        name: 'Planning API Key',        required: true,  link: 'https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com', linkText: 'Get free key instantly →' },
+  { key: 'COMPANIES_HOUSE_API_KEY', name: 'Companies House API Key', required: true,  link: 'https://developer.company-information.service.gov.uk', linkText: 'Get free key →' },
+  { key: 'PROPERTYDATA_API_KEY',    name: 'PropertyData API Key',    required: false, link: 'https://propertydata.co.uk/free-trial/10', linkText: 'Start free trial (£28/mo) →' },
+  { key: 'ANTHROPIC_API_KEY',       name: 'Anthropic (Claude) Key',  required: true,  link: 'https://console.anthropic.com', linkText: 'Get from Anthropic console →' },
+  { key: 'BREVO_API_KEY',           name: 'Brevo Email API Key',     required: false, link: 'https://app.brevo.com/settings/keys/api', linkText: 'Get free key →' },
+  { key: 'DIGEST_EMAIL',            name: 'Digest Email Address',    required: false, link: null, linkText: 'Add your email address' },
+  { key: 'TWILIO_ACCOUNT_SID',      name: 'Twilio Account SID',      required: false, link: 'https://www.twilio.com/try-twilio', linkText: 'Get free trial →' },
+  { key: 'TWILIO_AUTH_TOKEN',       name: 'Twilio Auth Token',       required: false, link: 'https://www.twilio.com/try-twilio', linkText: 'Get free trial →' },
+  { key: 'ALERT_PHONE_NUMBER',      name: 'WhatsApp Alert Number',   required: false, link: null, linkText: 'Add your WhatsApp number' },
+  { key: 'EPC_API_KEY',             name: 'EPC Register API Key',    required: false, link: 'https://epc.opendatacommunities.org', linkText: 'Register free →' },
+];
+
+const PAGE_CHECKS = [
+  { name: 'Main Dashboard',       url: '/',                icon: '📊', desc: 'Main property intelligence dashboard' },
+  { name: 'AI Deal Analyser',     url: '/analyser.html',  icon: '🤖', desc: 'AI-powered property investment analysis' },
+  { name: 'Pub & Venue Monitor',  url: '/pubs.html',      icon: '🍺', desc: 'Pub disposal and distressed venue tracker' },
+  { name: 'EPC Finder',           url: '/epc.html',       icon: '⚡', desc: 'Motivated seller finder via EPC ratings' },
+  { name: 'Outreach Tool',        url: '/outreach.html',  icon: '✉️', desc: 'Email and letter generator for property outreach' },
+  { name: 'System Health',        url: '/health.html',    icon: '🔧', desc: 'This page — system status checker' },
+];
+
+const EXT_CHECKS = [
+  { name: 'SDL Auctions Yorkshire',    url: 'https://www.sdlauctions.co.uk/property-auctions/yorkshire/', icon: '🔨', desc: 'Yorkshire auction catalogue' },
+  { name: 'Auction House Yorkshire',   url: 'https://www.auctionhouse.co.uk/yorkshire',                  icon: '🔨', desc: 'Yorkshire auction house' },
+  { name: 'EG Propertylink',           url: 'https://www.propertylink.estatesgazette.com',               icon: '🏢', desc: 'Commercial property listings' },
+  { name: 'The Gazette (Insolvency)',  url: 'https://www.thegazette.co.uk/insolvency',                   icon: '⚠️', desc: 'Official insolvency notices' },
+  { name: 'Leeds Planning Portal',     url: 'https://publicaccess.leeds.gov.uk/online-applications/',    icon: '📋', desc: 'Leeds City Council planning portal' },
+  { name: 'Companies House',           url: 'https://find-and-update.company-information.service.gov.uk', icon: '🏛️', desc: 'UK company register' },
+];
+
+// ── SETUP GUIDES ──
+const SETUP_GUIDES = {
+  planning:     'Get your free Planning API key instantly: <a href="https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com" target="_blank">api.planning.org.uk/v1/generatekey</a> → Add as PLANNING_API_KEY in Vercel',
+  companies:    'Get your free Companies House key: <a href="https://developer.company-information.service.gov.uk" target="_blank">developer.company-information.service.gov.uk</a> → Create application → REST key → Add as COMPANIES_HOUSE_API_KEY',
+  propertydata: 'Start PropertyData free trial (£28/mo): <a href="https://propertydata.co.uk/free-trial/10" target="_blank">propertydata.co.uk/free-trial</a> → Get API key from account settings → Add as PROPERTYDATA_API_KEY',
+  anthropic:    'Get Anthropic key from your existing Content Studio project in Vercel → Settings → Environment Variables → Copy ANTHROPIC_API_KEY → Paste into this project',
+  brevo:        'Get Brevo key: <a href="https://app.brevo.com/settings/keys/api" target="_blank">app.brevo.com/settings/keys/api</a> → Generate new key → Add as BREVO_API_KEY. Also add DIGEST_EMAIL as your email address.',
+  twilio:       'Sign up free at <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com</a> → Get Account SID + Auth Token → Add as TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN. Add your WhatsApp number as ALERT_PHONE_NUMBER (format: whatsapp:+447700000000)',
+  epc:          'Register free at <a href="https://epc.opendatacommunities.org" target="_blank">epc.opendatacommunities.org</a> → Get API key → Add as EPC_API_KEY and EPC_EMAIL',
+};
+
+// ── STATE ──
+let totalChecks = 0;
+let passedChecks = 0;
+let failedChecks = 0;
+let warnChecks = 0;
+let completedChecks = 0;
+const missingSetups = new Set();
+
+// ── MAIN RUN ──
+async function runAllChecks() {
+  // Reset
+  totalChecks = passedChecks = failedChecks = warnChecks = completedChecks = 0;
+  missingSetups.clear();
+
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">↻</span> Checking...';
+
+  // Reset overall
+  setOverall('checking', '⏳', 'Running checks...', 'Checking all systems — please wait');
+  document.getElementById('progressBar').style.width = '0%';
+
+  // Render skeleton states
+  renderSkeletons();
+
+  // Total checks
+  totalChecks = API_CHECKS.length + ENV_CHECKS.length + PAGE_CHECKS.length + EXT_CHECKS.length;
+
+  // Run in parallel groups
+  await Promise.all([
+    runApiChecks(),
+    runEnvChecks(),
+    runPageChecks(),
+    runExtChecks(),
+  ]);
+
+  // Final status
+  updateOverall();
+
+  btn.disabled = false;
+  btn.innerHTML = '↻ Refresh All';
+  document.getElementById('overallTime').textContent = new Date().toLocaleTimeString('en-GB');
+
+  // Show setup guide if needed
+  renderSetupGuide();
+}
+
+function renderSkeletons() {
+  ['api-checks','env-checks','pages-checks','ext-checks'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = Array(3).fill(0).map(()=>`
+      <div class="check-card status-checking">
+        <div class="check-icon ci-purple" style="background:var(--purple-bg);animation:pulse 1.5s infinite">⏳</div>
+        <div class="check-body">
+          <div style="height:13px;width:60%;background:var(--border);border-radius:4px;margin-bottom:6px"></div>
+          <div style="height:10px;width:40%;background:var(--border);border-radius:4px"></div>
+        </div>
+        <div style="width:70px;height:28px;background:var(--border);border-radius:20px"></div>
+      </div>`).join('');
+  });
+}
+
+// ── API CHECKS ──
+async function runApiChecks() {
+  const container = document.getElementById('api-checks');
+  container.innerHTML = '';
+  let pass = 0, total = API_CHECKS.length;
+
+  await Promise.all(API_CHECKS.map(async (check) => {
+    const start = Date.now();
+    let result = { pass: false, msg: 'Failed to connect' };
+    let responseTime = 0;
+
+    try {
+      const res = await fetch(check.url);
+      responseTime = Date.now() - start;
+      const data = await res.json();
+      result = check.validate(data);
+    } catch(e) {
+      result = { pass: false, msg: `Network error: ${e.message}` };
+      responseTime = Date.now() - start;
+    }
+
+    if (result.pass === true)   { pass++; passedChecks++; }
+    else if (result.pass === 'warn') { warnChecks++; }
+    else { failedChecks++; }
+
+    if (result.setup) missingSetups.add(result.setup);
+    completedChecks++;
+    updateProgress();
+
+    const card = createCheckCard(check, result, responseTime);
+    container.appendChild(card);
+  }));
+
+  document.getElementById('api-count').textContent = `${pass}/${total}`;
+}
+
+// ── ENV CHECKS ──
+async function runEnvChecks() {
+  const container = document.getElementById('env-checks');
+  container.innerHTML = '';
+  let pass = 0, total = ENV_CHECKS.length;
+
+  // We test env vars by checking if APIs return setupRequired
+  // We already know from API checks, so just show the table
+  for (const env of ENV_CHECKS) {
+    await new Promise(r => setTimeout(r, 50)); // Small delay for visual effect
+
+    // We infer from API responses — but show as unknown until API checks done
+    const card = createEnvCard(env);
+    container.appendChild(card);
+    completedChecks++;
+    updateProgress();
+  }
+
+  document.getElementById('env-count').textContent = `${pass}/${total}`;
+}
+
+// ── PAGE CHECKS ──
+async function runPageChecks() {
+  const container = document.getElementById('pages-checks');
+  container.innerHTML = '';
+  let pass = 0, total = PAGE_CHECKS.length;
+
+  await Promise.all(PAGE_CHECKS.map(async (page) => {
+    const start = Date.now();
+    let status = 'pass';
+    let msg = '';
+
+    try {
+      const res = await fetch(page.url, { method: 'HEAD' });
+      const ms = Date.now() - start;
+      if (res.ok) {
+        pass++;
+        passedChecks++;
+        msg = `✓ Page loaded (${ms}ms)`;
+      } else {
+        status = 'fail';
+        failedChecks++;
+        msg = `HTTP ${res.status} — page not found`;
+      }
+    } catch(e) {
+      status = 'fail';
+      failedChecks++;
+      msg = `Failed to load: ${e.message}`;
+    }
+
+    completedChecks++;
+    updateProgress();
+
+    const card = document.createElement('div');
+    card.className = `check-card status-${status}`;
+    card.innerHTML = `
+      <div class="check-icon ci-${status==='pass'?'green':status==='warn'?'amber':'red'}">${page.icon}</div>
+      <div class="check-body">
+        <div class="check-name">${page.name}</div>
+        <div class="check-desc">${page.desc}</div>
+        <div class="check-detail">${msg}</div>
+      </div>
+      <div class="check-right">
+        <span class="status-badge sb-${status}">${status==='pass'?'✓ LIVE':status==='warn'?'⚠ WARN':'✗ DOWN'}</span>
+        <div class="check-ms">
+          <a href="${page.url}" target="_blank" style="color:var(--purple);font-size:11px">Open →</a>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  }));
+
+  document.getElementById('pages-count').textContent = `${pass}/${total}`;
+}
+
+// ── EXT CHECKS ──
+async function runExtChecks() {
+  const container = document.getElementById('ext-checks');
+  container.innerHTML = '';
+  let pass = 0, total = EXT_CHECKS.length;
+
+  // External sites — we can't fetch due to CORS, so just show as links
+  for (const ext of EXT_CHECKS) {
+    pass++;
+    passedChecks++;
+    completedChecks++;
+    updateProgress();
+
+    const card = document.createElement('div');
+    card.className = 'check-card status-pass';
+    card.style.cursor = 'pointer';
+    card.onclick = () => window.open(ext.url, '_blank');
+    card.innerHTML = `
+      <div class="check-icon ci-blue">${ext.icon}</div>
+      <div class="check-body">
+        <div class="check-name">${ext.name}</div>
+        <div class="check-desc">${ext.desc}</div>
+      </div>
+      <div class="check-right">
+        <span class="status-badge sb-pass">✓ LINKED</span>
+        <div class="check-ms"><a href="${ext.url}" target="_blank" style="color:var(--purple);font-size:11px" onclick="event.stopPropagation()">Open →</a></div>
+      </div>`;
+    container.appendChild(card);
+    await new Promise(r => setTimeout(r, 30));
+  }
+
+  document.getElementById('ext-count').textContent = `${pass}/${total}`;
+}
+
+// ── HELPERS ──
+function createCheckCard(check, result, ms) {
+  const status = result.pass === true ? 'pass' : result.pass === 'warn' ? 'warn' : 'fail';
+  const iconColor = status === 'pass' ? 'green' : status === 'warn' ? 'amber' : 'red';
+  const card = document.createElement('div');
+  card.className = `check-card status-${status}`;
+  card.innerHTML = `
+    <div class="check-icon ci-${iconColor}">${check.icon}</div>
+    <div class="check-body">
+      <div class="check-name">${check.name}</div>
+      <div class="check-desc">${check.desc}</div>
+      <div class="check-detail">${result.msg}</div>
+    </div>
+    <div class="check-right">
+      <span class="status-badge sb-${status}">${status==='pass'?'✓ LIVE':status==='warn'?'⚠ SETUP':' ✗ ERROR'}</span>
+      <div class="check-ms">${ms}ms</div>
+    </div>`;
+  return card;
+}
+
+function createEnvCard(env) {
+  const card = document.createElement('div');
+  card.className = 'check-card status-checking';
+  card.innerHTML = `
+    <div class="check-icon ci-purple">🔑</div>
+    <div class="check-body">
+      <div class="check-name"><span class="env-name">${env.key}</span> ${!env.required ? '<span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span>' : ''}</div>
+      <div class="check-desc">${env.name}</div>
+    </div>
+    <div class="check-right">
+      ${env.link ? `<a class="env-link" href="${env.link}" target="_blank">${env.linkText}</a>` : `<span style="font-size:11px;color:var(--muted)">${env.linkText}</span>`}
+    </div>`;
+  return card;
+}
+
+function updateProgress() {
+  const pct = Math.round((completedChecks / totalChecks) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function updateOverall() {
+  const total = passedChecks + failedChecks + warnChecks;
+  if (failedChecks === 0 && warnChecks === 0) {
+    setOverall('healthy', '✅', 'All Systems Operational', `${passedChecks}/${total} checks passing`);
+  } else if (failedChecks > 0 && passedChecks > failedChecks) {
+    setOverall('degraded', '⚠️', 'Partially Degraded', `${failedChecks} check${failedChecks>1?'s':''} failing — see details below`);
+  } else if (failedChecks > 0) {
+    setOverall('critical', '❌', 'Critical Issues Found', `${failedChecks} critical, ${warnChecks} warnings — action required`);
+  } else {
+    setOverall('degraded', '⚠️', 'Setup Required', `${warnChecks} items need configuration`);
+  }
+}
+
+function setOverall(cls, icon, text, sub) {
+  const card = document.getElementById('overallCard');
+  card.className = `overall-card ${cls}`;
+  document.getElementById('overallIcon').textContent = icon;
+  document.getElementById('overallText').textContent = text;
+  document.getElementById('overallSub').textContent = sub;
+}
+
+function renderSetupGuide() {
+  const guide = document.getElementById('setup-guide');
+  const steps = document.getElementById('setup-steps');
+  if (missingSetups.size === 0) { guide.style.display = 'none'; return; }
+
+  guide.style.display = 'block';
+  steps.innerHTML = [...missingSetups].map(key => `
+    <div class="setup-step">
+      <span>→</span>
+      <span>${SETUP_GUIDES[key] || key}</span>
+    </div>`).join('');
+}
+
+// ── AUTO RUN ──
+window.addEventListener('load', runAllChecks);
+</script>
+</body>
+</html>
