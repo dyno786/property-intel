@@ -1,129 +1,232 @@
 // api/epc.js
-// Downloads EPC certificates for a postcode
-// Flags F/G rated properties as motivated sellers (facing upgrade costs)
-// Free - EPC Register open data
+// EPC Register - Domestic + Non-domestic certificates
+// Searches by postcode, energy band, property type
+// Free API - requires EPC_EMAIL + EPC_API_KEY in Vercel env vars
+// Leeds local authority code: E08000035
 
 const EPC_BASE = 'https://epc.opendatacommunities.org/api/v1';
+const LEEDS_LA = 'E08000035';
+
+const LA_CODES = {
+  leeds:        'E08000035',
+  bradford:     'E08000032',
+  wakefield:    'E08000036',
+  sheffield:    'E08000019',
+  huddersfield: 'E08000034' // Kirklees
+};
+
+// Non-domestic property types relevant to property investment
+const COMMERCIAL_TYPES = [
+  'a1-a2',           // Retail
+  'a3-a4-a5',        // Restaurant/pub/takeaway
+  'b1-office',       // Office
+  'b8-storage',      // Storage/warehouse
+  'c1-hotel',        // Hotel
+  'restaurant-public-house', // Pub specifically
+  'retail',
+  'retail-warehouse',
+  'warehouse-storage'
+];
+
+function getAuth(email, key) {
+  return 'Basic ' + Buffer.from(`${email}:${key}`).toString('base64');
+}
+
+function estimateUpgradeCost(rating) {
+  const costs = { 'g':15000, 'f':12000, 'e':8000, 'd':4000, 'c':1500, 'b':500 };
+  return costs[rating?.toLowerCase()] || 0;
+}
+
+function getMotivationScore(rating, tenure, date) {
+  let score = 0;
+  const r = (rating||'').toLowerCase();
+  if (r === 'g') score += 50;
+  else if (r === 'f') score += 35;
+  else if (r === 'e') score += 20;
+  if ((tenure||'').toLowerCase().includes('rental') || (tenure||'').toLowerCase().includes('let')) score += 25;
+  if (date && date < '2020-01-01') score += 15;
+  if (date && date < '2018-01-01') score += 10;
+  return Math.min(score, 100);
+}
+
+function formatDomestic(row) {
+  const rating   = row['current-energy-rating'] || '?';
+  const cost     = estimateUpgradeCost(rating);
+  const score    = getMotivationScore(rating, row['tenure'], row['lodgement-date']);
+  const addr     = [row['address1'], row['address2'], row['address3']].filter(Boolean).join(', ');
+  const potential = row['potential-energy-rating'] || '?';
+
+  return {
+    id:              row['lmk-key'] || '',
+    address:         addr || row['address'] || '—',
+    postcode:        row['postcode'] || '—',
+    currentRating:   rating.toUpperCase(),
+    potentialRating: potential.toUpperCase(),
+    currentScore:    parseInt(row['current-energy-efficiency']) || 0,
+    potentialScore:  parseInt(row['potential-energy-efficiency']) || 0,
+    propertyType:    row['property-type'] || '—',
+    builtForm:       row['built-form'] || '—',
+    floorArea:       row['total-floor-area'] || '—',
+    tenure:          row['tenure'] || '—',
+    heatingType:     row['main-fuel'] || '—',
+    lodgementDate:   row['lodgement-date'] || '—',
+    estimatedUpgradeCost: cost,
+    motivationScore: score,
+    opportunityFlag: score >= 50
+      ? { flag: '🔴 HIGH', reason: `Facing ~£${cost.toLocaleString()} upgrade costs — motivated to sell` }
+      : score >= 25
+      ? { flag: '🟡 MEDIUM', reason: 'May face future upgrade requirements' }
+      : { flag: '🟢 LOW', reason: 'Good EPC rating' },
+    type:  'domestic',
+    link:  `https://find-energy-certificate.service.gov.uk/energy-certificate/${row['lmk-key']}`
+  };
+}
+
+function formatNonDomestic(row) {
+  const rating  = row['asset-rating-band'] || row['energy-rating-current'] || '?';
+  const addr    = [row['address1'], row['address2'], row['address3']].filter(Boolean).join(', ');
+
+  return {
+    id:            row['lmk-key'] || '',
+    address:       addr || row['address'] || '—',
+    postcode:      row['postcode'] || '—',
+    currentRating: rating.toUpperCase(),
+    propertyType:  row['property-type'] || row['main-heating-fuel'] || '—',
+    floorArea:     row['floor-area'] || row['total-floor-area'] || '—',
+    lodgementDate: row['lodgement-date'] || '—',
+    assetRating:   row['asset-rating'] || '—',
+    motivationScore: rating.toLowerCase() === 'f' || rating.toLowerCase() === 'g' ? 70 : rating.toLowerCase() === 'e' ? 40 : 10,
+    opportunityFlag: ['f','g'].includes(rating.toLowerCase())
+      ? { flag: '🔴 HIGH', reason: 'F/G rated commercial — MEES regulations apply, owner may sell' }
+      : ['e'].includes(rating.toLowerCase())
+      ? { flag: '🟡 MEDIUM', reason: 'E rated — approaching minimum standard threshold' }
+      : { flag: '🟢 LOW', reason: 'Meets current minimum energy standards' },
+    type: 'commercial',
+    link: `https://find-energy-certificate.service.gov.uk/energy-certificate/${row['lmk-key']}`
+  };
+}
+
+async function fetchEPC(url, auth) {
+  const r = await fetch(url, {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': auth
+    }
+  });
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`EPC API ${r.status}: ${text.substring(0,200)}`);
+  }
+  return await r.json();
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
-  const postcode = req.query.postcode || 'LS7';
-  const filter   = req.query.filter   || 'all'; // all | poor | good | recent
+  const postcode   = (req.query.postcode || 'LS7').toUpperCase().trim();
+  const region     = (req.query.region   || 'leeds').toLowerCase();
+  const certType   = req.query.certType  || 'domestic';   // domestic | commercial | both
+  const energyBand = req.query.band      || 'poor';        // poor (F/G/E) | all | fg (F/G only)
+  const size       = Math.min(parseInt(req.query.size||'100'), 500);
 
-  // EPC API uses basic auth with email as username
-  // Register free at https://epc.opendatacommunities.org
-  const epcEmail = process.env.EPC_EMAIL || 'ccpropertiesleeds@gmail.com';
-  const epcKey   = process.env.EPC_API_KEY || '';
-  const auth     = Buffer.from(`${epcEmail}:${epcKey}`).toString('base64');
+  const epcEmail = process.env.EPC_EMAIL;
+  const epcKey   = process.env.EPC_API_KEY;
+
+  if (!epcEmail || !epcKey) {
+    return res.status(200).json({
+      success: false,
+      error: 'EPC_EMAIL and EPC_API_KEY not set in Vercel environment variables',
+      setupRequired: true,
+      setupSteps: [
+        'Go to https://epc.opendatacommunities.org and register',
+        'Get your API key from your account page',
+        'Add EPC_EMAIL to Vercel env vars',
+        'Add EPC_API_KEY to Vercel env vars'
+      ],
+      data: []
+    });
+  }
+
+  const auth = getAuth(epcEmail, epcKey);
+  const laCode = LA_CODES[region] || LA_CODES.leeds;
 
   try {
-    const url = `${EPC_BASE}/domestic/search?postcode=${encodeURIComponent(postcode)}&size=100`;
-    const r = await fetch(url, {
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Accept': 'application/json'
+    const results = { domestic: [], commercial: [] };
+
+    // Build energy band filter
+    let bands = [];
+    if (energyBand === 'poor')   bands = ['f','g','e'];
+    else if (energyBand === 'fg') bands = ['f','g'];
+    else if (energyBand === 'all') bands = [];
+
+    // ── DOMESTIC EPC ──
+    if (certType === 'domestic' || certType === 'both') {
+      const params = new URLSearchParams({ postcode, size: size.toString() });
+      bands.forEach(b => params.append('energy-band', b));
+
+      const domUrl = `${EPC_BASE}/domestic/search?${params}`;
+      try {
+        const domData = await fetchEPC(domUrl, auth);
+        results.domestic = (domData.rows || []).map(formatDomestic);
+      } catch(e) {
+        console.error('Domestic EPC error:', e.message);
+        results.domesticError = e.message;
       }
-    });
-
-    if (r.status === 401) {
-      return res.status(200).json({
-        success: false,
-        error: 'EPC API requires registration. Register free at https://epc.opendatacommunities.org and add EPC_EMAIL + EPC_API_KEY to Vercel env vars.',
-        setupRequired: true,
-        data: []
-      });
     }
 
-    if (!r.ok) {
-      throw new Error(`EPC API returned ${r.status}`);
+    // ── NON-DOMESTIC / COMMERCIAL EPC ──
+    if (certType === 'commercial' || certType === 'both') {
+      const params = new URLSearchParams({ postcode, size: size.toString() });
+      bands.forEach(b => params.append('energy-band', b));
+
+      const comUrl = `${EPC_BASE}/non-domestic/search?${params}`;
+      try {
+        const comData = await fetchEPC(comUrl, auth);
+        results.commercial = (comData.rows || []).map(formatNonDomestic);
+      } catch(e) {
+        console.error('Commercial EPC error:', e.message);
+        results.commercialError = e.message;
+      }
     }
 
-    const json = await r.json();
-    const rows = json.rows || [];
+    // Combined + sorted by motivation score
+    const all = [...results.domestic, ...results.commercial]
+      .sort((a, b) => b.motivationScore - a.motivationScore);
 
-    // Process and flag opportunities
-    const processed = rows.map(p => {
-      const currentRating  = p['current-energy-rating']   || '?';
-      const potentialRating = p['potential-energy-rating'] || '?';
-      const currentScore   = parseInt(p['current-energy-efficiency'])   || 0;
-      const potentialScore = parseInt(p['potential-energy-efficiency']) || 0;
-      const improvementCost = estimateImprovementCost(currentRating, potentialRating);
-
-      return {
-        address:         p['address'] || p['address1'] || '—',
-        postcode:        p['postcode'] || postcode,
-        currentRating,
-        potentialRating,
-        currentScore,
-        potentialScore,
-        propertyType:    p['property-type'] || '—',
-        builtForm:       p['built-form'] || '—',
-        floorArea:       p['total-floor-area'] || '—',
-        lodgementDate:   p['lodgement-date'] || '—',
-        tenure:          p['tenure'] || '—',
-        heatingType:     p['main-fuel'] || '—',
-        estimatedUpgradeCost: improvementCost,
-        opportunityFlag: getOpportunityFlag(currentRating, improvementCost),
-        motivationScore: getMotivationScore(currentRating, p['tenure'], p['lodgement-date']),
-        link:            `https://find-energy-certificate.service.gov.uk/energy-certificate/${p['lmk-key']}`
-      };
+    // Rating breakdown
+    const ratingBreakdown = {};
+    all.forEach(p => {
+      const r = p.currentRating;
+      ratingBreakdown[r] = (ratingBreakdown[r] || 0) + 1;
     });
 
-    // Filter based on request
-    let filtered = processed;
-    if (filter === 'poor')   filtered = processed.filter(p => ['F','G','E'].includes(p.currentRating));
-    if (filter === 'good')   filtered = processed.filter(p => ['A','B','C'].includes(p.currentRating));
-    if (filter === 'recent') filtered = processed.filter(p => p.lodgementDate >= '2023-01-01');
-
-    // Sort by motivation score (highest first)
-    filtered.sort((a,b) => b.motivationScore - a.motivationScore);
-
-    // Summary stats
-    const ratingCounts = {};
-    processed.forEach(p => { ratingCounts[p.currentRating] = (ratingCounts[p.currentRating]||0)+1; });
-    const poorRated = processed.filter(p => ['F','G'].includes(p.currentRating));
+    const highOpportunity = all.filter(p => p.motivationScore >= 50);
+    const poorRated       = all.filter(p => ['F','G'].includes(p.currentRating));
 
     res.status(200).json({
       success: true,
       postcode,
-      filter,
-      total: processed.length,
-      filtered: filtered.length,
-      poorRated: poorRated.length,
-      ratingBreakdown: ratingCounts,
-      data: filtered,
-      insight: poorRated.length > 0
-        ? `${poorRated.length} F/G rated properties in ${postcode} — these landlords face £8,000-£15,000 upgrade costs by 2028 and may prefer to sell`
-        : `No F/G rated properties found — good quality stock in ${postcode}`,
+      region,
+      certType,
+      energyBand,
+      total:          all.length,
+      domestic:       results.domestic.length,
+      commercial:     results.commercial.length,
+      poorRated:      poorRated.length,
+      highOpportunity: highOpportunity.length,
+      ratingBreakdown,
+      data: all,
+      insight: highOpportunity.length > 0
+        ? `${highOpportunity.length} high-opportunity properties in ${postcode} — owners likely motivated to sell due to energy upgrade costs`
+        : poorRated.length > 0
+        ? `${poorRated.length} F/G rated properties found — potential motivated sellers`
+        : `${all.length} properties found in ${postcode} — all meeting current energy standards`,
       fetchedAt: new Date().toISOString()
     });
 
   } catch(err) {
+    console.error('EPC handler error:', err.message);
     res.status(500).json({ success: false, error: err.message, data: [] });
   }
-}
-
-function estimateImprovementCost(current, potential) {
-  const costs = { 'G': 15000, 'F': 12000, 'E': 8000, 'D': 4000, 'C': 1500 };
-  return costs[current] || 0;
-}
-
-function getOpportunityFlag(rating, cost) {
-  if (['F','G'].includes(rating)) return { flag: '🔴 HIGH', reason: `Facing £${cost.toLocaleString()} mandatory upgrade — motivated seller` };
-  if (['E'].includes(rating))     return { flag: '🟡 MEDIUM', reason: `May face future upgrade requirements` };
-  return { flag: '🟢 LOW', reason: 'Good EPC rating — less pressure to sell' };
-}
-
-function getMotivationScore(rating, tenure, date) {
-  let score = 0;
-  if (rating === 'G') score += 40;
-  if (rating === 'F') score += 30;
-  if (rating === 'E') score += 15;
-  if (tenure === 'rental') score += 20;
-  // Older certificates = property hasn't been actively managed
-  if (date && date < '2020-01-01') score += 15;
-  if (date && date < '2018-01-01') score += 10;
-  return score;
 }
