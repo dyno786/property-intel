@@ -361,6 +361,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
     <div class="rtab" onclick="setRegion('wakefield',this)">Wakefield</div>
     <div class="rtab" onclick="setRegion('sheffield',this)">Sheffield</div>
     <div class="rtab" onclick="setRegion('huddersfield',this)">Huddersfield</div>
+    <div class="rtab" onclick="setRegion('yorkshire',this)" style="border-left:2px solid var(--border);margin-left:8px;padding-left:22px">⚜️ Yorkshire</div>
+    <div class="rtab" onclick="setRegion('national',this)">🇬🇧 National</div>
   </div>
 
   <!-- FILTER BAR -->
@@ -615,6 +617,8 @@ function renderPlanning(data){
 }
 
 // ── RENDER INSOLVENCY ──
+let insolvencyAreaFilter = 'all';
+
 function renderInsolvency(data){
   const panel=document.getElementById('p-insolvency');
   const badge=document.getElementById('b-insolvency');
@@ -622,36 +626,92 @@ function renderInsolvency(data){
   const count=data.count??0;
   document.getElementById('sv-insolvency').textContent=count||'—';
   nb.textContent=count||'—';
-  if(data.setupRequired){
-    badge.textContent='Setup needed';
-    panel.innerHTML=`<div class="info-note">⚙️ Add COMPANIES_HOUSE_API_KEY to Vercel env vars.</div>${empty('API key required')}`;
-    return;
-  }
+
   if(!data.data?.length){
     badge.textContent='0 found';
-    panel.innerHTML=empty('No insolvency records found','Try refreshing or check The Gazette directly');
+    // Show gazette links even when empty
+    const links=data.gazetteLinks||{};
+    panel.innerHTML=`
+      <div class="info-note">
+        ℹ️ No insolvency notices found today for this area. The Gazette publishes notices throughout the week.<br>
+        <a href="${links.search||'https://www.thegazette.co.uk/insolvency'}" target="_blank" style="color:var(--purple)">Search The Gazette directly →</a>
+        &nbsp;·&nbsp;
+        <a href="${links.winding||'https://www.thegazette.co.uk/insolvency'}" target="_blank" style="color:var(--purple)">Liquidation notices →</a>
+        &nbsp;·&nbsp;
+        <a href="${links.admin||'https://www.thegazette.co.uk/insolvency'}" target="_blank" style="color:var(--purple)">Administration notices →</a>
+      </div>
+      ${empty('No notices today','Check back tomorrow — The Gazette publishes Mon–Fri')}`;
     return;
   }
-  badge.textContent=`${count} found`;
-  panel.innerHTML=data.data.map(item=>`
+
+  badge.textContent=`${count} notices`;
+
+  // Build area filter tabs if we have breakdown data
+  const breakdown=data.areaBreakdown||{};
+  const hasBreakdown=Object.keys(breakdown).length>0;
+  const areas=['all',...Object.keys(breakdown)];
+
+  const areaTabs = hasBreakdown ? `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
+      ${areas.map(a=>`
+        <button onclick="filterInsolvency('${a}',this)" 
+          style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;${a===insolvencyAreaFilter?'background:var(--purple);color:#fff;border-color:var(--purple);':'background:var(--white);color:var(--text2);'}">
+          ${a==='all'?'All Areas ('+count+')':a.charAt(0).toUpperCase()+a.slice(1)+' ('+(breakdown[a]?.length||0)+')'}
+        </button>`).join('')}
+    </div>` : '';
+
+  // Category breakdown pills
+  const catBreak=data.categoryBreakdown||{};
+  const catPills=Object.entries(catBreak).map(([cat,n])=>
+    `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600">${cat}: ${n}</span>`
+  ).join('');
+
+  const items = insolvencyAreaFilter==='all'
+    ? data.data
+    : (breakdown[insolvencyAreaFilter]||[]);
+
+  panel.innerHTML=areaTabs+`
+    ${catPills?`<div style="padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)">${catPills}</div>`:''}
+    <div id="insolvency-items">
+      ${renderInsolvencyItems(items,data.gazetteLinks)}
+    </div>`;
+}
+
+function renderInsolvencyItems(items, gazetteLinks){
+  if(!items?.length) return empty('No notices for this area','Try "All Areas" or check The Gazette');
+  return items.map(item=>`
     <div class="item" onclick="window.open('${item.link}','_blank')">
       <div class="item-dot dot-red">⚠️</div>
       <div class="item-body">
         <div class="item-title">${item.title}</div>
         <div class="item-meta">
           <span class="m-red">${item.category}</span>
-          <span>${item.address||'—'}</span>
+          ${item.area?`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--purple-bg);color:var(--purple);font-weight:600">${item.area}</span>`:''}
         </div>
         <div class="item-meta" style="margin-top:2px">
-          <span>${item.ref}</span>
-          <span>${item.date||'—'}</span>
+          <span>${item.description?.substring(0,100)||''}...</span>
         </div>
+        <div class="item-meta" style="margin-top:2px"><span>${item.date||'—'}</span></div>
       </div>
       <div class="item-right">
-        <span class="item-status status-pending">${item.category}</span><br>
+        <span class="item-status status-pending" style="font-size:9px;white-space:nowrap">${item.category?.split('/')[0]||'Notice'}</span><br>
         <button class="save-btn" onclick="event.stopPropagation();quickSave('insolvency','${esc(item.title)}','—',this)">★ Save</button>
       </div>
     </div>`).join('');
+}
+
+function filterInsolvency(area, btn){
+  insolvencyAreaFilter=area;
+  // Update button styles
+  btn.closest('div').querySelectorAll('button').forEach(b=>{
+    b.style.background='var(--white)';b.style.color='var(--text2)';b.style.borderColor='var(--border)';
+  });
+  btn.style.background='var(--purple)';btn.style.color='#fff';btn.style.borderColor='var(--purple)';
+  // Re-render items
+  const items=document.getElementById('insolvency-items');
+  if(!items)return;
+  // Get cached data
+  apiFetch(`/api/insolvency?region=${region}&breakdown=true`).then(data=>renderInsolvency(data));
 }
 
 // ── RENDER LISTINGS ──
@@ -690,7 +750,7 @@ async function loadAll(){
   ['sv-planning','sv-insolvency','sv-listings','sv-auction'].forEach(id=>document.getElementById(id).textContent='…');
   const pc=postcode;
   const[insolvency,planning,listings]=await Promise.all([
-    apiFetch(`/api/insolvency?region=${region}`),
+    apiFetch(`/api/insolvency?region=${region}&breakdown=true`),
     apiFetch(`/api/planning?region=${region}&postcode=${pc}`),
     apiFetch(`/api/listings?region=${region}&postcode=${pc}&type=listings`)
   ]);
