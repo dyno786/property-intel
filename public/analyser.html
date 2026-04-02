@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC — AI Deal Analyser</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#7c5cbf;--purple-light:#a78bda;--purple-pale:#f0ebff;--purple-bg:#ede8ff;--sidebar-bg:#f5f2ff;--white:#fff;--bg:#f7f8fc;--border:#e8e4f5;--text:#1a1a2e;--text2:#4a4a6a;--muted:#8888aa;--green:#34c97e;--green-bg:#e8faf2;--amber:#f5a623;--amber-bg:#fff8ec;--red:#e05555;--red-bg:#fdf0f0;--shadow:0 2px 12px rgba(124,92,191,0.08);--shadow2:0 8px 32px rgba(124,92,191,0.15);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;}
+header{background:var(--purple);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(124,92,191,0.2);}
+.logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;}
+.logo-badge{width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;}
+.back{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:6px;}
+.container{max-width:1000px;margin:32px auto;padding:0 24px;}
+.page-title{font-size:24px;font-weight:700;margin-bottom:6px;}
+.page-sub{color:var(--muted);margin-bottom:28px;}
+
+.analyser-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;}
+
+/* FORM */
+.form-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow);height:fit-content;}
+.form-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.fg{margin-bottom:12px;}
+.flabel{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;font-weight:500;}
+.finput,.fselect,.ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.finput:focus,.fselect:focus{border-color:var(--purple);background:var(--white);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-analyse{width:100%;background:linear-gradient(135deg,var(--purple),var(--purple-light));color:#fff;border:none;padding:13px;border-radius:10px;font-family:'Inter',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px;transition:all 0.2s;box-shadow:0 4px 14px rgba(124,92,191,0.3);}
+.btn-analyse:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,92,191,0.4);}
+.btn-analyse:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+
+/* RESULT */
+.result-card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+.result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--muted);text-align:center;gap:12px;}
+.result-empty-icon{font-size:48px;opacity:0.3;}
+.result-empty-title{font-size:15px;font-weight:600;color:var(--text2);}
+.result-empty-sub{font-size:12px;}
+
+/* VERDICT HEADER */
+.verdict-hdr{padding:24px 28px;display:flex;align-items:center;justify-content:space-between;}
+.verdict-hdr.strong-buy{background:linear-gradient(135deg,#065f46,#059669);}
+.verdict-hdr.buy{background:linear-gradient(135deg,#1e40af,#3b82f6);}
+.verdict-hdr.hold{background:linear-gradient(135deg,#92400e,#f59e0b);}
+.verdict-hdr.avoid{background:linear-gradient(135deg,#991b1b,#ef4444);}
+.verdict-label{font-size:28px;font-weight:800;color:#fff;}
+.verdict-score{text-align:right;}
+.score-num{font-size:42px;font-weight:800;color:#fff;line-height:1;}
+.score-label{font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;}
+.verdict-headline{font-size:14px;color:rgba(255,255,255,0.9);margin-top:6px;}
+
+/* METRICS ROW */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);}
+.metric{padding:16px 20px;border-right:1px solid var(--border);text-align:center;}
+.metric:last-child{border-right:none;}
+.metric-val{font-size:18px;font-weight:700;color:var(--purple);}
+.metric-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;}
+
+/* SECTIONS */
+.analysis-body{padding:24px 28px;}
+.section{margin-bottom:22px;}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.list-items{display:flex;flex-direction:column;gap:6px;}
+.list-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.5;}
+.list-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.dot-green{background:var(--green);}
+.dot-red{background:var(--red);}
+.dot-amber{background:var(--amber);}
+.dot-purple{background:var(--purple);}
+.dot-blue{background:#3b82f6;}
+.action-steps{display:flex;flex-direction:column;gap:8px;}
+.action-step{display:flex;align-items:flex-start;gap:10px;background:var(--purple-pale);border-radius:8px;padding:10px 14px;}
+.step-num{background:var(--purple);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.step-text{font-size:13px;line-height:1.5;}
+.market-context{background:var(--purple-pale);border-left:3px solid var(--purple);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.7;color:var(--text2);}
+.recommended-offer{background:var(--green-bg);border:1px solid #a7f3d0;border-radius:10px;padding:14px 18px;}
+.offer-label{font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.offer-text{font-size:14px;font-weight:600;color:var(--text);}
+
+/* LOADING */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:16px;}
+.spinner{width:40px;height:40px;border:3px solid var(--purple-pale);border-top-color:var(--purple);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted);text-align:center;}
+.loading-steps{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
+.loading-step{font-size:11px;color:var(--muted2);opacity:0;}
+.loading-step.visible{opacity:1;color:var(--green);}
+
+/* QUICK FILLS */
+.quick-fills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.qf{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text2);background:var(--bg);transition:all 0.2s;}
+.qf:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-badge">CC</div>AI Deal Analyser</div>
+  <a class="back" href="/">← Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="page-title">🤖 AI Deal Analyser</div>
+  <div class="page-sub">Enter any property address — AI pulls market data, calculates yields, and gives you an investment verdict in seconds.</div>
+
+  <div class="analyser-grid">
+    <div class="form-card">
+      <div class="form-title">🏠 Property Details</div>
+
+      <div style="margin-bottom:14px">
+        <div class="flabel">Quick Fill — Try These</div>
+        <div class="quick-fills">
+          <div class="qf" onclick="quickFill('123 Chapeltown Road','LS7 3HY','£85,000','Terraced House')">LS7 Terrace</div>
+          <div class="qf" onclick="quickFill('45 Roundhay Road','LS8 4AB','£145,000','Mixed Use')">LS8 Mixed Use</div>
+          <div class="qf" onclick="quickFill('Former Crown Pub, 12 New Street','LS1 2DE','£220,000','Commercial/Pub')">LS1 Pub</div>
+          <div class="qf" onclick="quickFill('Unit 4, Harehills Lane','LS9 7BG','£95,000','Retail')">LS9 Retail</div>
+        </div>
+      </div>
+
+      <div class="fg"><label class="flabel">Property Address *</label><input class="finput" id="f-address" placeholder="e.g. 42 Chapeltown Road, Leeds"></div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Postcode *</label><input class="finput" id="f-postcode" placeholder="e.g. LS7 3HY"></div>
+        <div class="fg"><label class="flabel">Asking Price</label><input class="finput" id="f-price" placeholder="e.g. £95,000"></div>
+      </div>
+      <div class="fg"><label class="flabel">Property Type</label>
+        <select class="fselect" id="f-type">
+          <option value="Terraced House">Terraced House</option>
+          <option value="Semi-detached House">Semi-detached House</option>
+          <option value="Detached House">Detached House</option>
+          <option value="Flat/Apartment">Flat / Apartment</option>
+          <option value="Mixed Use">Mixed Use</option>
+          <option value="Commercial/Retail">Commercial / Retail</option>
+          <option value="Commercial/Pub">Pub / Licensed Premises</option>
+          <option value="Industrial/Warehouse">Industrial / Warehouse</option>
+          <option value="Office">Office</option>
+          <option value="Development Site">Development Site</option>
+          <option value="HMO">HMO</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flabel">Additional Context (optional)</label>
+        <textarea class="finput" id="f-context" rows="3" placeholder="e.g. Currently vacant, needs full refurbishment, planning permission for 4 flats already granted..."></textarea>
+      </div>
+      <button class="btn-analyse" id="analyseBtn" onclick="analyse()">🤖 Analyse This Property</button>
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="result-empty" id="emptyState">
+        <div class="result-empty-icon">🤖</div>
+        <div class="result-empty-title">Ready to Analyse</div>
+        <div class="result-empty-sub">Enter a property address and click Analyse.<br>AI will pull market data and give you a verdict in seconds.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function quickFill(address, postcode, price, type) {
+  document.getElementById('f-address').value = address;
+  document.getElementById('f-postcode').value = postcode;
+  document.getElementById('f-price').value = price;
+  document.getElementById('f-type').value = type;
+}
+
+async function analyse() {
+  const address = document.getElementById('f-address').value;
+  const postcode = document.getElementById('f-postcode').value;
+  if (!address || !postcode) { alert('Please enter an address and postcode'); return; }
+
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analysing...';
+
+  const card = document.getElementById('resultCard');
+  card.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">AI is analysing this property...</div>
+      <div class="loading-steps">
+        <div class="loading-step visible" id="ls1">✓ Fetching market data for ${postcode}</div>
+        <div class="loading-step" id="ls2">⏳ Checking comparable prices...</div>
+        <div class="loading-step" id="ls3">⏳ Calculating yield potential...</div>
+        <div class="loading-step" id="ls4">⏳ Generating AI investment verdict...</div>
+      </div>
+    </div>`;
+
+  // Animate loading steps
+  setTimeout(() => document.getElementById('ls2').classList.add('visible'), 800);
+  setTimeout(() => document.getElementById('ls3').classList.add('visible'), 1600);
+  setTimeout(() => document.getElementById('ls4').classList.add('visible'), 2400);
+
+  try {
+    const res = await fetch('/api/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address,
+        postcode: postcode.toUpperCase(),
+        price: document.getElementById('f-price').value,
+        type: document.getElementById('f-type').value,
+        context: document.getElementById('f-context').value
+      })
+    });
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error);
+    renderResult(data);
+  } catch(err) {
+    card.innerHTML = `
+      <div class="result-empty">
+        <div class="result-empty-icon">❌</div>
+        <div class="result-empty-title">Analysis Failed</div>
+        <div class="result-empty-sub">${err.message}<br><br>Check ANTHROPIC_API_KEY is set in Vercel env vars.</div>
+      </div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🤖 Analyse This Property';
+}
+
+function renderResult(data) {
+  const a = data.analysis;
+  const verdict = (a.verdict || 'HOLD').toLowerCase().replace(' ', '-');
+  const verdictClass = verdict.includes('strong') ? 'strong-buy' : verdict.includes('buy') ? 'buy' : verdict.includes('avoid') ? 'avoid' : 'hold';
+  const md = data.marketData || {};
+
+  const card = document.getElementById('resultCard');
+  card.innerHTML = `
+    <div class="verdict-hdr ${verdictClass}">
+      <div>
+        <div class="verdict-label">${a.verdict || '—'}</div>
+        <div class="verdict-headline">${a.headline || ''}</div>
+      </div>
+      <div class="verdict-score">
+        <div class="score-num">${a.score || '—'}</div>
+        <div class="score-label">Score /10</div>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric"><div class="metric-val">${a.askingPrice||data.price||'—'}</div><div class="metric-lbl">Asking Price</div></div>
+      <div class="metric"><div class="metric-val">${a.estimatedValue||'—'}</div><div class="metric-lbl">Est. Value</div></div>
+      <div class="metric"><div class="metric-val">${a.grossYield||'—'}</div><div class="metric-lbl">Gross Yield</div></div>
+      <div class="metric"><div class="metric-val">${a.monthlyRent||'—'}</div><div class="metric-lbl">Monthly Rent</div></div>
+    </div>
+
+    <div class="analysis-body">
+
+      ${a.recommendedOffer ? `
+      <div class="section">
+        <div class="recommended-offer">
+          <div class="offer-label">💰 Recommended Offer</div>
+          <div class="offer-text">${a.recommendedOffer}</div>
+        </div>
+      </div>` : ''}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="section">
+          <div class="section-title">✅ Pros</div>
+          <div class="list-items">${(a.pros||[]).map(p=>`<div class="list-item"><div class="list-dot dot-green"></div><span>${p}</span></div>`).join('')}</div>
+        </div>
+        <div class="section">
+          <div class="section-title">❌ Cons</div>
+          <div class="list-items">${(a.cons||[]).map(c=>`<div class="list-item"><div class="list-dot dot-red"></div><span>${c}</span></div>`).join('')}</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="section">
+          <div class="section-title">⚠️ Risks</div>
+          <div class="list-items">${(a.risks||[]).map(r=>`<div class="list-item"><div class="list-dot dot-amber"></div><span>${r}</span></div>`).join('')}</div>
+        </div>
+        <div class="section">
+          <div class="section-title">💡 Opportunities</div>
+          <div class="list-items">${(a.opportunities||[]).map(o=>`<div class="list-item"><div class="list-dot dot-purple"></div><span>${o}</span></div>`).join('')}</div>
+        </div>
+      </div>
+
+      ${a.marketContext ? `
+      <div class="section">
+        <div class="section-title">📍 Market Context</div>
+        <div class="market-context">${a.marketContext}</div>
+      </div>` : ''}
+
+      ${a.exitStrategy ? `
+      <div class="section">
+        <div class="section-title">🚪 Exit Strategy</div>
+        <div class="market-context">${a.exitStrategy}</div>
+      </div>` : ''}
+
+      ${a.dueDiligence?.length ? `
+      <div class="section">
+        <div class="section-title">🔍 Due Diligence Checklist</div>
+        <div class="list-items">${a.dueDiligence.map(d=>`<div class="list-item"><div class="list-dot dot-blue"></div><span>${d}</span></div>`).join('')}</div>
+      </div>` : ''}
+
+      ${a.actionPlan?.length ? `
+      <div class="section">
+        <div class="section-title">📋 Action Plan</div>
+        <div class="action-steps">${a.actionPlan.map((s,i)=>`<div class="action-step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('')}</div>
+      </div>` : ''}
+
+    </div>`;
+}
+</script>
+</body>
+</html>
