@@ -286,22 +286,22 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
   </div>
 
   <div class="sidebar-section">Monitor</div>
-  <div class="nav-item active" onclick="showView('dashboard')">
+  <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')">
     <span class="nav-icon">📊</span> Dashboard
   </div>
-  <div class="nav-item" onclick="showView('auctions')">
+  <div class="nav-item" data-view="auctions" onclick="showView('auctions')">
     <span class="nav-icon">🔨</span> Auctions
     <span class="nav-badge" id="nb-auction">—</span>
   </div>
-  <div class="nav-item" onclick="showView('planning')">
+  <div class="nav-item" data-view="planning" onclick="showView('planning')">
     <span class="nav-icon">📋</span> Planning
     <span class="nav-badge" id="nb-planning">—</span>
   </div>
-  <div class="nav-item" onclick="showView('insolvency')">
+  <div class="nav-item" data-view="insolvency" onclick="showView('insolvency')">
     <span class="nav-icon">⚠️</span> Insolvency
     <span class="nav-badge" id="nb-insolvency">—</span>
   </div>
-  <div class="nav-item" onclick="showView('listings')">
+  <div class="nav-item" data-view="listings" onclick="showView('listings')">
     <span class="nav-icon">🏠</span> Listings
     <span class="nav-badge" id="nb-listings">—</span>
   </div>
@@ -579,27 +579,29 @@ function renderPlanning(data){
   const badge=document.getElementById('b-planning');
   const nb=document.getElementById('nb-planning');
   const count=data.count??0;
-  document.getElementById('sv-planning').textContent=count||'—';
-  nb.textContent=count||'—';
+  const cards=data.data||[];
+  document.getElementById('sv-planning').textContent=count||cards.length||'—';
+  nb.textContent=count||cards.length||'—';
   if(data.setupRequired||data.keyError){
     badge.textContent='Key error';
     panel.innerHTML=`<div class="info-note">⚙️ Planning API key issue. <a href="https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com" target="_blank">Get new key →</a></div>${empty('API key error')}`;
     return;
   }
-  if(!data.data?.length){
-    badge.textContent='0 apps';
-    panel.innerHTML=empty('No applications found','Last 14 days checked');
+  // Always show cards — they are useful portal links even if count is 0
+  if(!cards.length){
+    badge.textContent='—';
+    panel.innerHTML=empty('No planning data','Check your Planning API key');
     return;
   }
-  badge.textContent=`${count} apps`;
-  panel.innerHTML=data.data.map(item=>`
+  badge.textContent=count>0?`${count} apps`:`${cards.length} filters`;
+  // Show message banner if we have a count
+  const msg=data.message?`<div class="info-note">📋 ${data.message}</div>`:'';
+  panel.innerHTML=msg+cards.map(item=>`
     <div class="item" onclick="window.open('${item.link}','_blank')">
-      <div class="item-dot dot-blue">📋</div>
+      <div class="item-dot dot-blue" style="font-size:18px">${item.title.split(' ')[0]}</div>
       <div class="item-body">
-        <div class="item-title">${item.title}</div>
-        <div class="item-meta">
-          <span>${item.address||item.ref||''}</span>
-        </div>
+        <div class="item-title">${item.title.substring(2)}</div>
+        <div class="item-meta"><span>${item.address}</span></div>
         <div class="item-meta" style="margin-top:2px">
           <span class="m-purple">${item.note||item.ref||''}</span>
           <span>${item.date}</span>
@@ -702,23 +704,38 @@ async function loadAll(){
 }
 
 // ── NAV ──
-function setRegion(r,el){
-  region=r;postcode='all';
-  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
-  document.getElementById('filterBar').style.display=r==='leeds'?'flex':'none';
+function setRegion(r, el) {
+  region = r; postcode = 'all';
+  document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('filterBar').style.display = r === 'leeds' ? 'flex' : 'none';
+  document.querySelectorAll('.pc-chip').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.pc-chip')[0].classList.add('active');
+  // Keep Dashboard active in sidebar when switching region tabs
+  keepSidebarActive('dashboard');
   loadAll();
 }
-function setPostcode(pc,el){
-  postcode=pc;
-  document.querySelectorAll('.pc-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');
+function setPostcode(pc, el) {
+  postcode = pc;
+  document.querySelectorAll('.pc-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  keepSidebarActive('dashboard');
   loadAll();
 }
-function refreshAll(){loadAll();}
-function showView(v){
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  document.getElementById('pageTitle').textContent=v.charAt(0).toUpperCase()+v.slice(1);
+function refreshAll() {
+  keepSidebarActive('dashboard');
+  loadAll();
+}
+function showView(v) {
+  keepSidebarActive(v);
+  document.getElementById('pageTitle').textContent = v.charAt(0).toUpperCase() + v.slice(1);
+}
+function keepSidebarActive(view) {
+  // Remove active from all sidebar nav items
+  document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
+  // Set active on the matching one
+  const target = document.querySelector(`.nav-item[data-view="${view}"]`);
+  if (target) target.classList.add('active');
 }
 
 // ── SAVED ──
