@@ -1,35 +1,8 @@
-// api/insolvency.js - v7
-// The Gazette Linked Data API - working endpoint confirmed
-// Filters to corporate insolvency only, fetches multiple pages, proper area detection
+// api/insolvency.js - v8
+// The Gazette - show all notices, remove strict category filter
+// Let users see everything and filter themselves
 
 const GAZETTE_BASE = 'https://www.thegazette.co.uk';
-
-// Corporate insolvency notice categories only
-const INSOLVENCY_CATEGORIES = new Set([
-  'appointment of liquidators',
-  'appointment of administrators', 
-  'appointment of receivers',
-  'winding-up orders',
-  'petitions to wind up',
-  'petitions to wind up (companies)',
-  'notices to creditors',
-  'resolution for voluntary winding-up',
-  'resolutions for winding-up',
-  'administration orders',
-  'receivership',
-  'voluntary arrangement',
-  'creditors voluntary liquidation',
-  'members voluntary liquidation',
-  'liquidation by the court',
-  'winding up',
-  'insolvency',
-  'annual liquidation meetings',
-  'final meetings',
-  'meetings of creditors',
-  'deemed consent',
-  'notice of dividends',
-  'notice of intended dividends'
-]);
 
 const REGION_CONFIG = {
   leeds:        { text: 'leeds' },
@@ -42,12 +15,23 @@ const REGION_CONFIG = {
 };
 
 const AREA_KEYWORDS = {
-  leeds:        ['leeds','chapeltown','harehills','armley','beeston','roundhay','headingley','morley','pudsey','garforth'],
+  leeds:        ['leeds','chapeltown','harehills','armley','beeston','roundhay','headingley','morley','pudsey'],
   bradford:     ['bradford','shipley','keighley','bingley','ilkley'],
-  wakefield:    ['wakefield','castleford','pontefract','ossett','normanton'],
-  sheffield:    ['sheffield','rotherham','darnall','hillsborough'],
-  huddersfield: ['huddersfield','kirklees','halifax','brighouse','dewsbury']
+  wakefield:    ['wakefield','castleford','pontefract','ossett'],
+  sheffield:    ['sheffield','rotherham','darnall'],
+  huddersfield: ['huddersfield','kirklees','halifax','brighouse']
 };
+
+// Categories we want to highlight as high priority
+const HIGH_PRIORITY = new Set([
+  'appointment of liquidators','appointment of administrators',
+  'appointment of receivers','winding-up orders',
+  'petitions to wind up','petitions to wind up (companies)',
+  'resolution for voluntary winding-up','resolutions for winding-up',
+  'administration orders','creditors voluntary liquidation',
+  'liquidation by the court','members voluntary liquidation',
+  'meetings of creditors'
+]);
 
 function detectArea(text) {
   const lower = (text||'').toLowerCase();
@@ -57,17 +41,12 @@ function detectArea(text) {
   return 'other';
 }
 
-function isInsolvencyNotice(category) {
-  if (!category) return false;
-  const lower = category.toLowerCase();
-  return INSOLVENCY_CATEGORIES.has(lower) ||
-    lower.includes('liquidat') ||
-    lower.includes('administrat') ||
-    lower.includes('insolven') ||
-    lower.includes('wind') ||
-    lower.includes('receiv') ||
-    lower.includes('creditor') ||
-    lower.includes('winding');
+function getPriority(category) {
+  const lower = (category||'').toLowerCase();
+  if (HIGH_PRIORITY.has(lower)) return 'high';
+  if (lower.includes('liquidat') || lower.includes('wind') || lower.includes('administrat') || lower.includes('insolven') || lower.includes('receiv') || lower.includes('creditor')) return 'high';
+  if (lower.includes('notice') || lower.includes('meeting') || lower.includes('dividend')) return 'medium';
+  return 'low';
 }
 
 function parseAtom(xml) {
@@ -83,14 +62,15 @@ function parseAtom(xml) {
       return m ? m[1] : '';
     };
     const title    = get('title');
-    const summary  = (get('summary') || get('content')).substring(0,500);
+    const summary  = (get('summary') || get('content')).replace(/\s+/g,' ').substring(0,500);
     const updated  = get('updated') || get('published');
     const link     = getLinkHref();
-    const catMatch = entry.match(/<category[^>]+term=["']([^"']+)["']/gi) || [];
-    const cats     = catMatch.map(c => { const m = c.match(/term=["']([^"']+)["']/i); return m ? m[1] : ''; }).filter(Boolean);
-    const category = cats.find(c => isInsolvencyNotice(c)) || cats[0] || '';
-
-    if (title) items.push({ title, description: summary, pubDate: updated, link, category, allCategories: cats });
+    const catMatch = [...entry.matchAll(/<category[^>]+term=["']([^"']+)["']/gi)];
+    const cats     = catMatch.map(m => m[1]).filter(Boolean);
+    const category = cats[0] || 'Corporate Notice';
+    if (title && title.length > 2) {
+      items.push({ title, description: summary, pubDate: updated, link, category, allCats: cats });
+    }
   }
   return items;
 }
@@ -132,55 +112,52 @@ export default async function handler(req, res) {
   const allItems = [];
   const seen     = new Set();
 
-  // Build base URL - confirmed working endpoint
+  // Confirmed working endpoint from last night
   const baseUrl = cfg.text
     ? `${GAZETTE_BASE}/all-notices/data.feed?text=${encodeURIComponent(cfg.text)}&category=insolvency&format=atom`
     : `${GAZETTE_BASE}/all-notices/data.feed?category=insolvency&format=atom`;
 
-  // Fetch up to 5 pages (50 results per page = up to 250 results)
+  // Fetch pages 1-5
   for (let page = 1; page <= 5; page++) {
-    const url   = `${baseUrl}&results-page=${page}`;
-    const items = await fetchPage(url);
+    const items = await fetchPage(`${baseUrl}&results-page=${page}`);
     if (!items || items.length === 0) break;
-
     for (const item of items) {
       const key = item.link || `${item.title}|${item.pubDate}`;
       if (seen.has(key)) continue;
       seen.add(key);
       allItems.push(item);
     }
-
-    // If less than 10 results, no more pages
-    if (items.length < 10) break;
+    if (items.length < 5) break; // last page
   }
 
-  // Filter to insolvency-relevant notices only
-  const insolvencyItems = allItems.filter(item =>
-    isInsolvencyNotice(item.category) ||
-    item.allCategories?.some(c => isInsolvencyNotice(c))
-  );
-
-  // Format
-  const formatted = insolvencyItems.map(item => {
+  // Format ALL items - no filtering, let users see everything
+  const formatted = allItems.map(item => {
     const searchText = item.title + ' ' + item.description;
     const area = (region === 'national' || region === 'yorkshire')
-      ? detectArea(searchText)
-      : region;
+      ? detectArea(searchText) : region;
 
     let parsedDate = '—';
     try { if (item.pubDate) parsedDate = new Date(item.pubDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch(e){}
+
+    const priority = getPriority(item.category);
 
     return {
       title:       item.title,
       description: item.description,
       area,
-      category:    item.category || 'Corporate Insolvency',
+      category:    item.category,
+      priority,    // high | medium | low
       date:        parsedDate,
       rawDate:     item.pubDate || '',
       link:        item.link || `${GAZETTE_BASE}/insolvency`,
       source:      'The Gazette'
     };
-  }).sort((a,b) => new Date(b.rawDate||0) - new Date(a.rawDate||0));
+  }).sort((a,b) => {
+    // Sort by priority first, then date
+    const p = { high:0, medium:1, low:2 };
+    if (p[a.priority] !== p[b.priority]) return p[a.priority] - p[b.priority];
+    return new Date(b.rawDate||0) - new Date(a.rawDate||0);
+  });
 
   // Breakdowns
   const areaBreakdown = {};
@@ -193,15 +170,16 @@ export default async function handler(req, res) {
     categoryBreakdown[item.category] = (categoryBreakdown[item.category]||0) + 1;
   }
 
+  const highPriority = formatted.filter(i => i.priority === 'high');
+
   res.status(200).json({
-    success: true,
+    success:       true,
     region,
     months,
-    dateRange: { from: dispFrom, to: dispTo },
-    count:    formatted.length,
-    total:    allItems.length,
-    filtered: allItems.length - formatted.length,
-    data:     formatted,
+    dateRange:     { from: dispFrom, to: dispTo },
+    count:         formatted.length,
+    highPriority:  highPriority.length,
+    data:          formatted,
     areaBreakdown,
     categoryBreakdown,
     gazetteLinks: {
