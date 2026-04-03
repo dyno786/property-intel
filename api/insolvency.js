@@ -81,12 +81,13 @@ async function fetchPage(url) {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'application/atom+xml, application/xml, text/xml, */*',
-        'Accept-Language': 'en-GB,en;q=0.9'
+        'Accept-Language': 'en-GB,en;q=0.9',
+        'Accept-Encoding': 'identity' // prevent compression so we can parse the XML
       }
     });
     if (!r.ok) return null;
     const body = await r.text();
-    if (!body.includes('<entry')) return null;
+    if (!body.includes('<entry') && !body.includes('<item')) return null;
     return parseAtom(body);
   } catch(e) { return null; }
 }
