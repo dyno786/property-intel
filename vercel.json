@@ -1,10 +1,31 @@
 {
-  "version": 2,
-  "functions": {
-    "api/*.js": { "maxDuration": 30 }
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/api/epc",          "destination": "/api/epc.js"          },
+    { "source": "/api/insolvency",   "destination": "/api/insolvency.js"   },
+    { "source": "/api/probate",      "destination": "/api/probate.js"      },
+    { "source": "/api/planning",     "destination": "/api/planning.js"     },
+    { "source": "/api/news",         "destination": "/api/news.js"         },
+    { "source": "/api/floodrisk",    "destination": "/api/floodrisk.js"    },
+    { "source": "/api/comparables",  "destination": "/api/comparables.js"  },
+    { "source": "/api/analyse",      "destination": "/api/analyse.js"      },
+    { "source": "/api/pubs",         "destination": "/api/pubs.js"         },
+    { "source": "/api/listings",     "destination": "/api/listings.js"     },
+    { "source": "/api/landregistry", "destination": "/api/landregistry.js" },
+    { "source": "/api/digest",       "destination": "/api/digest.js"       },
+    { "source": "/api/alert",        "destination": "/api/alert.js"        },
+    { "source": "/api/companies",    "destination": "/api/companies.js"    },
+    { "source": "/api/crime",        "destination": "/api/crime.js"        },
+    { "source": "/api/schools",      "destination": "/api/schools.js"      },
+    { "source": "/api/hmo",          "destination": "/api/hmo.js"          },
+    { "source": "/api/sentiment",    "destination": "/api/sentiment.js"    },
+    { "source": "/api/auctions",     "destination": "/api/auctions.js"     },
+    { "source": "/api/disposals",    "destination": "/api/disposals.js"    },
+    { "source": "/api/boe",          "destination": "/api/boe.js"          },
+    { "source": "/api/subsidence",   "destination": "/api/subsidence.js"   },
+    { "source": "/api/bmv",          "destination": "/api/bmv.js"          },
+    { "source": "/api/mortgage",     "destination": "/api/mortgage.js"     },
+    { "source": "/api/regeneration", "destination": "/api/regeneration.js" },
+    { "source": "/api/directmail",   "destination": "/api/directmail.js"   },
+    { "source": "/api/alerts",       "destination": "/api/alerts.js"       }
   ]
 }

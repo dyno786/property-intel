@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+/* ═══════════════════════════════════════
+   CC PROPERTY INTEL — SHARED STYLES v2
+   ═══════════════════════════════════════ */
+:root {
+  --bg:       #0c0f1a;
+  --surface:  #131728;
+  --surface2: #191e32;
+  --surface3: #1f253d;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.16);
+
+  --gold:     #d4a843;
+  --gold2:    #f0c060;
+  --gold-dim: rgba(212,168,67,0.12);
+  --gold-border: rgba(212,168,67,0.35);
+
+  --white:    #f0eeea;
+  --text:     #e8e6e0;
+  --muted:    #9098b4;
+  --muted2:   #606888;
+
+  --green:    #22c55e;
+  --green-dim:rgba(34,197,94,0.12);
+  --red:      #ef4444;
+  --red-dim:  rgba(239,68,68,0.12);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.12);
+  --blue:     #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --purple:   #a855f7;
+  --purple-dim:rgba(168,85,247,0.12);
+  --teal:     #14b8a6;
+  --teal-dim: rgba(20,184,166,0.12);
+
+  --r:  12px;
+  --r2:  8px;
+  --r3:  6px;
+
+  --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-size: 15px;
+  --line-height: 1.6;
+}
+
+/* RESET */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:var(--font-size); }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:1rem;
+  line-height:var(--line-height);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAVIGATION ── */
+.topnav {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center;
+  padding:0 16px;
+  min-height:56px;
+  gap:12px;
+}
+.nav-left { display:flex; align-items:center; flex-shrink:0; }
+.nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.nav-logo {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--gold); color:#0c0f1a;
+  font-size:14px; font-weight:900; letter-spacing:0.5px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.nav-name { font-size:15px; font-weight:700; color:var(--white); line-height:1; }
+.nav-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+.nav-brand-text { display:flex; flex-direction:column; }
+
+/* Hamburger */
+.nav-hamburger {
+  display:none; background:none; border:1px solid var(--border);
+  color:var(--muted); font-size:20px; cursor:pointer;
+  padding:4px 10px; border-radius:var(--r3);
+  margin-left:auto;
+}
+.nav-hamburger:hover { color:var(--gold); border-color:var(--gold-border); }
+
+/* Nav links */
+.nav-links {
+  display:flex; align-items:center; gap:2px;
+  overflow-x:auto; flex:1;
+  scrollbar-width:none; padding:8px 0;
+}
+.nav-links::-webkit-scrollbar { display:none; }
+.nav-link {
+  flex-shrink:0;
+  font-size:12px; font-weight:600;
+  color:var(--muted); text-decoration:none;
+  padding:6px 10px; border-radius:var(--r3);
+  transition:all 0.15s; white-space:nowrap;
+  border:1px solid transparent;
+}
+.nav-link:hover { color:var(--white); background:var(--surface2); }
+.nav-link.active {
+  color:var(--gold); background:var(--gold-dim);
+  border-color:var(--gold-border);
+}
+
+/* Mobile nav */
+@media (max-width:768px) {
+  .nav-hamburger { display:flex; align-items:center; }
+  .nav-links {
+    display:none; position:fixed;
+    top:56px; left:0; right:0; bottom:0;
+    background:var(--surface); z-index:199;
+    flex-direction:column; align-items:stretch;
+    overflow-y:auto; padding:12px;
+    gap:4px; border-top:1px solid var(--border);
+  }
+  .nav-links.open { display:flex; }
+  .nav-link {
+    font-size:15px; padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    border-radius:var(--r2);
+  }
+  .nav-link:last-child { border-bottom:none; }
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  padding:24px 16px 0;
+  max-width:1100px; margin:0 auto;
+  display:flex; align-items:flex-start;
+  justify-content:space-between; gap:12px;
+  flex-wrap:wrap;
+}
+.page-title { font-size:clamp(20px,4vw,26px); font-weight:800; color:var(--white); margin-bottom:4px; }
+.page-sub   { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* ── CONTENT WRAPPER ── */
+.content { padding:16px 16px 80px; max-width:1100px; margin:0 auto; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); overflow:hidden;
+  margin-bottom:14px;
+}
+.card-hdr {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.card-title { font-size:14px; font-weight:700; color:var(--white); display:flex; align-items:center; gap:8px; }
+.card-body  { padding:16px 18px; }
+
+/* ── GRID ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.auto-grid-sm { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.auto-grid-md { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.auto-grid-lg { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+@media(max-width:600px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+}
+
+/* ── STATS ── */
+.stat-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r2); padding:14px 16px;
+}
+.stat-val { font-size:clamp(20px,3vw,26px); font-weight:800; color:var(--gold); line-height:1; margin-bottom:4px; }
+.stat-lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; }
+.stat-change { font-size:12px; color:var(--muted); margin-top:3px; }
+.stat-card.green { border-color:rgba(34,197,94,0.25); }
+.stat-card.green .stat-val { color:var(--green); }
+
+/* ── BADGES ── */
+.badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:0.3px; display:inline-block; }
+.b-gold   { background:var(--gold-dim);   color:var(--gold);   border:1px solid var(--gold-border); }
+.b-green  { background:var(--green-dim);  color:var(--green);  }
+.b-red    { background:var(--red-dim);    color:var(--red);    }
+.b-amber  { background:var(--amber-dim);  color:var(--amber);  }
+.b-blue   { background:var(--blue-dim);   color:var(--blue);   }
+.b-purple { background:var(--purple-dim); color:var(--purple); }
+.b-muted  { background:var(--surface3);   color:var(--muted);  }
+
+/* ── RISK BADGES ── */
+.risk-low    { background:var(--green-dim);  color:var(--green);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-medium { background:var(--amber-dim);  color:var(--amber);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-high   { background:var(--red-dim);    color:var(--red);    font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-unknown{ background:var(--surface3);   color:var(--muted);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+
+/* ── FORM FIELDS ── */
+.field { margin-bottom:14px; }
+.field-label {
+  font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.7px;
+  color:var(--muted); margin-bottom:6px; display:block;
+}
+.field-hint { font-weight:400; color:var(--muted2); }
+.field-input, .field-select, .field-textarea {
+  width:100%; background:var(--surface2);
+  border:1px solid var(--border); border-radius:var(--r2);
+  padding:11px 14px; font-size:15px; color:var(--white);
+  outline:none; font-family:var(--font);
+  transition:border-color 0.15s;
+  -webkit-appearance:none;
+}
+.field-input:focus, .field-select:focus, .field-textarea:focus { border-color:var(--gold); }
+.field-input::placeholder, .field-textarea::placeholder { color:var(--muted2); }
+.field-select { cursor:pointer; }
+.field-select option { background:var(--surface2); }
+.field-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:11px 20px; border-radius:var(--r2); font-size:14px; font-weight:700; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; font-family:var(--font); }
+.btn-gold   { background:var(--gold);     color:#0c0f1a; }
+.btn-gold:hover { background:var(--gold2); }
+.btn-ghost  { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--white); border-color:var(--border2); }
+.btn-red    { background:var(--red-dim);  color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+.btn-green  { background:var(--green-dim);color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-sm { padding:7px 14px; font-size:12px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.75);
+  z-index:500; display:flex; align-items:center;
+  justify-content:center; padding:16px;
+}
+.modal {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--r); width:100%; max-width:520px;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-hdr {
+  padding:18px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; background:var(--surface); z-index:1;
+}
+.modal-title { font-size:16px; font-weight:700; color:var(--white); }
+.modal-close { font-size:22px; color:var(--muted); cursor:pointer; line-height:1; background:none; border:none; }
+.modal-close:hover { color:var(--white); }
+.modal-body { padding:20px; }
+.modal-footer {
+  padding:16px 20px; border-top:1px solid var(--border);
+  display:flex; gap:8px; justify-content:flex-end;
+  position:sticky; bottom:0; background:var(--surface);
+}
+
+/* ── TABLES ── */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.5px; color:var(--muted);
+  padding:10px 14px; text-align:left;
+  background:var(--surface2); border-bottom:1px solid var(--border);
+}
+.data-table td { padding:11px 14px; border-top:1px solid var(--border); vertical-align:top; line-height:1.5; }
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.data-table a { color:var(--gold); text-decoration:none; }
+.data-table a:hover { text-decoration:underline; }
+
+/* ── ALERT BOXES ── */
+.alert { border-radius:var(--r2); padding:14px 16px; margin-bottom:14px; display:flex; gap:12px; align-items:flex-start; }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-body {}
+.alert-title { font-size:13px; font-weight:700; margin-bottom:3px; }
+.alert-text  { font-size:12px; line-height:1.6; color:var(--muted); }
+.alert-gold   { background:var(--gold-dim);   border:1px solid var(--gold-border); }
+.alert-gold .alert-title { color:var(--gold); }
+.alert-red    { background:var(--red-dim);    border:1px solid rgba(239,68,68,0.3); }
+.alert-red .alert-title { color:var(--red); }
+.alert-green  { background:var(--green-dim);  border:1px solid rgba(34,197,94,0.3); }
+.alert-green .alert-title { color:var(--green); }
+.alert-amber  { background:var(--amber-dim);  border:1px solid rgba(245,158,11,0.3); }
+.alert-amber .alert-title { color:var(--amber); }
+
+/* ── LOADING ── */
+.loading-spinner { display:inline-block; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--r2); }
+@keyframes shimmer { to { background-position:-200% 0; } }
+
+/* ── SECTION HEADER ── */
+.section-hdr { display:flex; align-items:center; justify-content:space-between; margin:20px 0 12px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:14px; font-weight:700; color:var(--white); }
+.section-sub   { font-size:12px; color:var(--muted); margin-top:2px; }
+.section-action { font-size:12px; font-weight:700; color:var(--gold); cursor:pointer; text-decoration:none; }
+.section-action:hover { text-decoration:underline; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ── COLOURS ── */
+.text-gold   { color:var(--gold);   }
+.text-green  { color:var(--green);  }
+.text-red    { color:var(--red);    }
+.text-amber  { color:var(--amber);  }
+.text-muted  { color:var(--muted);  }
+.text-white  { color:var(--white);  }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ── NAV JS ── */
+/* (toggleNav function shared inline) */
+
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC Property — Deal Sourcing</title>
+
+</head>
+<body>
+<nav class="topnav">
+  <div class="nav-left"><a class="nav-brand" href="/index.html">
+    <div class="nav-logo">CC</div>
+    <div class="nav-brand-text"><div class="nav-name">Property Intel</div><div class="nav-sub">CC Properties Leeds</div></div>
+  </a></div>
+  <button class="nav-hamburger" onclick="toggleNav()" id="hamburger">&#9776;</button>
+  <div class="nav-links" id="nav-links">
+    <a class="nav-link" href="/index.html">📊 Dashboard</a>
+    <a class="nav-link" href="/epc.html">⚡ EPC Finder</a>
+    <a class="nav-link" href="/news.html">📰 News</a>
+    <a class="nav-link" href="/pipeline.html">◐ Pipeline</a>
+    <a class="nav-link" href="/portfolio.html">◈ Portfolio</a>
+    <a class="nav-link" href="/risk.html">◉ Risk Check</a>
+    <a class="nav-link" href="/calculators.html">◑ Calculators</a>
+    <a class="nav-link" href="/analyser.html">🤖 AI Analyser</a>
+    <a class="nav-link" href="/sourcing.html">🔍 Sourcing</a>
+    <a class="nav-link" href="/disposals.html">🏛️ Disposals</a>
+    <a class="nav-link" href="/auctions.html">🔨 Auctions</a>
+    <a class="nav-link" href="/outreach.html">✉️ Outreach</a>
+    <a class="nav-link" href="/pubs.html">🍺 Pubs</a>
+    <a class="nav-link" href="/health.html">🔧 Health</a>
+    <a class="nav-link" href="/bmv.html">📉 BMV</a>
+    <a class="nav-link" href="/rates.html">💰 Rates</a>
+    <a class="nav-link" href="/regeneration.html">🏙️ Regen</a>
+    <a class="nav-link" href="/directmail.html">📬 Mail</a>
+    <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
+  </div>
+</nav>
+
+
+<div class="header">
+  <div class="h-title">🔍 Deal Sourcing Hub</div>
+  <div class="h-sub">Every lead source in one place — direct links, contacts, and LinkedIn search templates</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('public',this)">🏛️ Public Sector</div>
+  <div class="tab" onclick="show('supermarkets',this)">🛒 Supermarkets</div>
+  <div class="tab" onclick="show('universities',this)">🎓 Universities</div>
+  <div class="tab" onclick="show('linkedin',this)">💼 LinkedIn Searches</div>
+  <div class="tab" onclick="show('probate',this)">⚰️ Probate</div>
+  <div class="tab" onclick="show('hidden',this)">🔍 Hidden Sources</div>
+</div>
+
+<div class="content">
+
+<!-- PUBLIC SECTOR -->
+<div id="panel-public" class="panel active">
+  <div class="alert-box">
+    <div class="ab-icon">🔴</div>
+    <div>
+      <div class="ab-title">Leeds Council is actively selling right now — including LS7 land</div>
+      <div class="ab-desc">November 2025: Council gave notice of disposal of land adjacent to 5 Roundhay Road LS7. Capital Receipts programme sells 40-50 sites per year. Check weekly — first come first served.</div>
+    </div>
+  </div>
+  <div class="source-grid">
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🏛️</div><div class="sc-status ss-hot">Check Weekly</div></div>
+      <div class="sc-name">Leeds City Council</div>
+      <div class="sc-desc">Live disposal page — auctions, direct sales, development sites. Also publishes Executive Board meeting agendas 2-3 weeks before approval — advance notice of upcoming disposals.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.leeds.gov.uk/commercial-opportunities/council-owned-land-and-property-for-sale-or-to-let" target="_blank">→ Property for Sale / To Let</a>
+        <a class="sc-link" href="https://democracy.leeds.gov.uk/mgCommitteeDetails.aspx?ID=133" target="_blank">→ Executive Board Agendas (advance notice)</a>
+        <a class="sc-link" href="https://datamillnorth.org/dataset/leeds-city-council-property-disposals" target="_blank">→ Data Mill North — All disposals since 2013</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🇬🇧</div><div class="sc-status ss-active">40-day advance</div></div>
+      <div class="sc-name">Government Property Finder</div>
+      <div class="sc-desc">All central government surplus — HMRC, DWP, MoD, courts. By law, surplus property must be registered here for 40 working days before going to open market. You get advance notice.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.gov.uk/find-property" target="_blank">→ Government Property Finder</a>
+        <a class="sc-link" href="https://www.data.gov.uk/dataset/49b15726-1603-4618-b7bb-38af6ed111e8/register-of-surplus-land" target="_blank">→ Register of Surplus Public Sector Land</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🏥</div><div class="sc-status ss-active">£717m available</div></div>
+      <div class="sc-name">NHS Surplus Land Register</div>
+      <div class="sc-desc">£717m in surplus NHS land nationally — bi-annual open data publication. Former GP surgeries, health centres, old hospitals. Yorkshire and Humber ICB has significant estate rationalisation ongoing.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://digital.nhs.uk/data-and-information/publications/statistical/nhs-surplus-land" target="_blank">→ NHS Surplus Land Data</a>
+        <a class="sc-link" href="https://www.property.nhs.uk/" target="_blank">→ NHS Property Services</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🚄</div><div class="sc-status ss-active">Active Dec 2025</div></div>
+      <div class="sc-name">HS2 Surplus Land</div>
+      <div class="sc-desc">HS2 Phase 2 route toward Leeds — compulsorily purchased land no longer needed being sold. Disposal Delivery Agent appointed December 2025. Land near proposed Leeds terminus area.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.find-tender.service.gov.uk/Search/Results?&Keywords=HS2+surplus" target="_blank">→ Find a Tender — HS2 Disposals</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🚔</div><div class="sc-status ss-active">Ongoing</div></div>
+      <div class="sc-name">Police & Court Disposals</div>
+      <div class="sc-desc">West Yorkshire Police estate rationalisation ongoing — Victorian police stations in residential areas going surplus. HM Courts & Tribunals Service also closing and selling courthouses.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.gov.uk/find-property" target="_blank">→ Government Property Finder</a>
+        <a class="sc-link" href="https://www.westyorkshire.police.uk/" target="_blank">→ WY Police (estates contact)</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🏫</div><div class="sc-status ss-free">Planning trigger</div></div>
+      <div class="sc-name">School Closure Monitor</div>
+      <div class="sc-desc">When a school closes, planning application for demolition or change of use follows. Monitor Leeds, Bradford and Wakefield planning portals for educational use class changes — earliest public signal.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.leeds.gov.uk/planning" target="_blank">→ Leeds Planning Portal</a>
+        <a class="sc-link" href="https://planning.bradford.gov.uk/" target="_blank">→ Bradford Planning Portal</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px">Yorkshire Council Portals</div>
+  <table class="table">
+    <thead><tr><th>Council</th><th>Status</th><th>Disposal URL</th><th>Annual Volume</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Leeds City Council</strong></td><td><span class="badge b-hot">Active</span></td><td><a href="https://www.leeds.gov.uk/commercial-opportunities/council-owned-land-and-property-for-sale-or-to-let" target="_blank">leeds.gov.uk/commercial-opportunities</a></td><td>40-50/yr</td></tr>
+      <tr><td><strong>Bradford MDC</strong></td><td><span class="badge b-active">Active</span></td><td><a href="https://www.bradford.gov.uk/business/property-for-sale-or-rent" target="_blank">bradford.gov.uk/business/property</a></td><td>20-30/yr</td></tr>
+      <tr><td><strong>Wakefield MDC</strong></td><td><span class="badge b-active">Active</span></td><td><a href="https://www.wakefield.gov.uk/business/property-for-sale" target="_blank">wakefield.gov.uk/business/property-for-sale</a></td><td>10-20/yr</td></tr>
+      <tr><td><strong>Sheffield CC</strong></td><td><span class="badge b-active">Active</span></td><td><a href="https://www.sheffield.gov.uk/property-for-sale" target="_blank">sheffield.gov.uk/property-for-sale</a></td><td>20-30/yr</td></tr>
+      <tr><td><strong>Kirklees (Huddersfield)</strong></td><td><span class="badge b-active">Active</span></td><td><a href="https://www.kirklees.gov.uk/council-and-democracy/property" target="_blank">kirklees.gov.uk/property</a></td><td>15-20/yr</td></tr>
+      <tr><td><strong>Calderdale (Halifax)</strong></td><td><span class="badge b-active">Active</span></td><td><a href="https://www.calderdale.gov.uk/v2/residents/council-and-democracy/land-property" target="_blank">calderdale.gov.uk/land-property</a></td><td>10-15/yr</td></tr>
+      <tr><td><strong>North Yorkshire</strong></td><td><span class="badge b-occ">Monitor</span></td><td><a href="https://www.northyorkshire.gov.uk/business/property" target="_blank">northyorkshire.gov.uk/business/property</a></td><td>10-20/yr</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SUPERMARKETS -->
+<div id="panel-supermarkets" class="panel">
+  <div class="alert-box">
+    <div class="ab-icon">🔴</div>
+    <div>
+      <div class="ab-title">Asda & Morrisons raised £6.5bn from property disposals — more coming</div>
+      <div class="ab-desc">PE owners still need to reduce debt. Surplus car parks, closed stores, adjacent land — all investor scale (£200k-£800k). Aldi and Lidl publish live national disposal lists every quarter.</div>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Chain</th><th>Status</th><th>What's Available</th><th>Contact / URL</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Aldi</strong></td><td><span class="badge b-active">Active list</span></td><td>Freehold/leasehold surplus UK-wide. Suitable retail/residential/mixed use.</td><td><a href="https://www.aldi.co.uk/corporate/property/sites-for-sale" target="_blank">aldi.co.uk/sites-for-sale</a><br><span style="color:var(--gold)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="421027232e073136233627062b31322d31232e3102232e262b6c212d6c3729">[email&#160;protected]</a></span></td></tr>
+      <tr><td><strong>Lidl</strong></td><td><span class="badge b-active">National list</span></td><td>Published quarterly — freeholds, leaseholds, residual land with brochures.</td><td><a href="https://www.realestate-lidl.co.uk/sites-for-sale-and-to-let" target="_blank">realestate-lidl.co.uk/sites-for-sale</a></td></tr>
+      <tr><td><strong>Asda</strong></td><td><span class="badge b-hot">🔴 Major disposal</span></td><td>Car parks, adjacent land on 125-yr leases, some closed stores.</td><td><span style="color:var(--gold)">Newsteer</span> (car parks) · <span style="color:var(--gold)">Eastdil Secured</span> (stores)</td></tr>
+      <tr><td><strong>Morrisons</strong></td><td><span class="badge b-hot">🔴 Major disposal</span></td><td>Sale &amp; leaseback of stores, surplus land. Bradford HQ.</td><td><a href="https://www.morrisons-property.com" target="_blank">morrisons-property.com</a></td></tr>
+      <tr><td><strong>Co-op</strong></td><td><span class="badge b-active">Ongoing</span></td><td>Convenience store closures — freehold &amp; leasehold units.</td><td><a href="https://www.coop.co.uk/corporate/property" target="_blank">coop.co.uk/corporate/property</a></td></tr>
+      <tr><td><strong>Tesco</strong></td><td><span class="badge b-occ">Selective</span></td><td>Surplus car park land, Express closures, petrol forecourts.</td><td><a href="https://www.tesco.com/property" target="_blank">tesco.com/property</a> · CBRE / Savills</td></tr>
+      <tr><td><strong>Sainsbury's</strong></td><td><span class="badge b-occ">Selective</span></td><td>Former Homebase surplus. Sold/leased back stores 2022.</td><td><a href="https://www.sainsburys.co.uk/property" target="_blank">sainsburys.co.uk/property</a></td></tr>
+      <tr><td><strong>Iceland</strong></td><td><span class="badge b-occ">Occasional</span></td><td>Occasional closures in underperforming locations.</td><td><a href="https://www.iceland.co.uk/corporate" target="_blank">iceland.co.uk/corporate</a></td></tr>
+      <tr><td><strong>Farmfoods</strong></td><td><span class="badge b-occ">Direct approach</span></td><td>Private family business. 300+ stores. Direct approach needed.</td><td><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="54312720352031271432352639323b3b30277a373b7a213f">[email&#160;protected]</a> (direct)</td></tr>
+      <tr><td><strong>M&amp;S</strong></td><td><span class="badge b-active">Simply Food closures</span></td><td>Simply Food format closures in retail parks.</td><td>Cushman &amp; Wakefield</td></tr>
+      <tr><td><strong>Wilko (former)</strong></td><td><span class="badge b-hot">🔴 Administrators</span></td><td>Former Wilko units 5,000-15,000 sq ft. Leeds, Bradford, Sheffield.</td><td>Hilco (administrators)</td></tr>
+      <tr><td><strong>NatWest / Lloyds / Barclays</strong></td><td><span class="badge b-hot">🔴 Branch closures</span></td><td>Victorian/Edwardian high street freeholds. Prime for residential conversion.</td><td>Via each bank's property agent</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- UNIVERSITIES -->
+<div id="panel-universities" class="panel">
+  <div class="alert-box">
+    <div class="ab-icon">🔴</div>
+    <div>
+      <div class="ab-title">Sheffield Hallam actively selling listed Victorian buildings right now</div>
+      <div class="ab-desc">Oak Lodge, Mundella House, Montgomery House — all listed, all in Conservation Area, all identified for housing. Nearly half of UK universities face deficits this year. This is happening across Yorkshire right now.</div>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>University</th><th>Status</th><th>Known / Likely Disposals</th><th>How to Monitor</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Sheffield Hallam</strong></td><td><span class="badge b-hot">🔴 Selling now</span></td><td>Oak Lodge, Mundella House, Montgomery House — listed Victorian buildings, Collegiate Crescent. Housing conversion identified as most viable use.</td><td>Sheffield planning portal · <a href="https://www.shu.ac.uk/about-us/our-university/our-strategy" target="_blank">shu.ac.uk/estate</a></td></tr>
+      <tr><td><strong>Univ of Leeds</strong></td><td><span class="badge b-occ">Monitor</span></td><td>Large estate. Watch for planning applications for demolition or change of use of peripheral buildings.</td><td><a href="https://www.leeds.gov.uk/planning" target="_blank">Leeds planning portal</a></td></tr>
+      <tr><td><strong>Leeds Beckett</strong></td><td><span class="badge b-active">Watch</span></td><td>City and Headingley campuses. Consolidation pressure. Headingley campus buildings worth watching.</td><td><a href="https://www.leedsbeckett.ac.uk/" target="_blank">leedsbeckett.ac.uk/estate</a></td></tr>
+      <tr><td><strong>Univ of Bradford</strong></td><td><span class="badge b-active">Watch</span></td><td>City centre campus. Financial pressure — estate review ongoing.</td><td><a href="https://planning.bradford.gov.uk/" target="_blank">Bradford planning portal</a></td></tr>
+      <tr><td><strong>Huddersfield</strong></td><td><span class="badge b-occ">Monitor</span></td><td>Compact campus — peripheral buildings occasionally surplus.</td><td>Kirklees planning portal</td></tr>
+      <tr><td><strong>York St John</strong></td><td><span class="badge b-active">Watch</span></td><td>Under financial pressure. Historic buildings in York city centre.</td><td>York planning portal · Companies House</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- LINKEDIN -->
+<div id="panel-linkedin" class="panel">
+  <div class="linkedin-box">
+    <div class="lb-title">💼 LinkedIn Search Templates — Copy & Paste into LinkedIn Search</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">These are legal B2B searches. Under GDPR Article 6(1)(f) legitimate interests, contacting a property professional about a commercial transaction via LinkedIn is fully lawful.</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--white);margin:12px 0 6px">🏛️ Council & Public Sector</div>
+    <div class="search-row">"Head of Asset Management" Leeds City Council</div>
+    <div class="search-row">"Estate Manager" OR "Property Manager" "Leeds Council" OR "Bradford Council"</div>
+    <div class="search-row">"Director of Property" "West Yorkshire" council</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--white);margin:12px 0 6px">🎓 Universities</div>
+    <div class="search-row">"Director of Estates" "Sheffield Hallam" OR "Leeds Beckett" OR "University of Bradford"</div>
+    <div class="search-row">"Estates Manager" OR "Head of Estates" university Yorkshire</div>
+    <div class="search-row">"Property Manager" "University of Leeds"</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--white);margin:12px 0 6px">🏥 NHS</div>
+    <div class="search-row">"Head of Estates" OR "Estates Director" NHS Yorkshire</div>
+    <div class="search-row">"Property Manager" "Yorkshire and Humber" NHS</div>
+    <div class="search-row">"Estates" NHS Property Services Leeds</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--white);margin:12px 0 6px">🛒 Supermarkets & Retail</div>
+    <div class="search-row">"Head of Property" OR "Property Director" Asda</div>
+    <div class="search-row">"Head of Property" OR "Estates Manager" Morrisons Bradford</div>
+    <div class="search-row">"Real Estate" OR "Property" Aldi UK</div>
+    <div class="search-row">"Property Director" OR "Estates" Lidl GB</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--white);margin:12px 0 6px">💡 Key Intermediaries</div>
+    <div class="search-row">"Insolvency Practitioner" Leeds OR Bradford</div>
+    <div class="search-row">"Planning Consultant" Leeds Yorkshire</div>
+    <div class="search-row">"Commercial Property Solicitor" Leeds</div>
+    <div class="search-row">"Chartered Surveyor" RICS Leeds BTL</div>
+
+    <div class="search-note">💡 Tip: Use Sales Navigator (£99/mo) for 50 InMail credits — message anyone without needing to connect first. Start with a free trial.</div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:12px">Other Free Contact Sources</div>
+  <div class="source-grid">
+    <div class="source-card">
+      <div class="sc-name">Companies House</div>
+      <div class="sc-desc">Every company must list directors — name, date of birth, registered address. Free search. Cross-reference with LinkedIn for their profile and title.</div>
+      <div class="sc-links"><a class="sc-link" href="https://find-and-update.company-information.service.gov.uk/" target="_blank">→ Companies House Free Search</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-name">Planning Application Agent Contacts</div>
+      <div class="sc-desc">Every planning application lists the agent's name, phone and email. Call them directly — they know about the disposal 6-12 months before anyone else.</div>
+      <div class="sc-links"><a class="sc-link" href="https://www.leeds.gov.uk/planning" target="_blank">→ Leeds Planning Portal</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-name">Land Registry — Owner Address</div>
+      <div class="sc-desc">£3 per title — get the owner's name and correspondence address for any property in England & Wales. Use for direct mail campaigns.</div>
+      <div class="sc-links"><a class="sc-link" href="https://eservices.landregistry.gov.uk/eservices/FindAProperty/view/QuickEnquiryInit.do" target="_blank">→ Land Registry Title Search</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBATE -->
+<div id="panel-probate" class="panel">
+  <div class="alert-box">
+    <div class="ab-icon">⚰️</div>
+    <div>
+      <div class="ab-title">Probate leads — executors need to sell quickly</div>
+      <div class="ab-desc">Deceased estates notices in The Gazette mean an executor is managing an estate and typically wants a quick, clean sale. Approach respectfully within 2-4 weeks of the notice appearing. Competition is very low — most investors don't know this source exists.</div>
+    </div>
+  </div>
+  <div class="source-grid">
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">📰</div><div class="sc-status ss-free">Free</div></div>
+      <div class="sc-name">The Gazette — Deceased Estates</div>
+      <div class="sc-desc">Notice type 1300/1301/1302. Same source as your insolvency panel but different notice codes. Executors publishing legal notice of estate administration — properties typically need selling within 12 months.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.thegazette.co.uk/all-notices/notice?notice-type=1300&text=leeds" target="_blank">→ Leeds Deceased Estates</a>
+        <a class="sc-link" href="https://www.thegazette.co.uk/all-notices/notice?notice-type=1300&text=yorkshire" target="_blank">→ Yorkshire Deceased Estates</a>
+        <a class="sc-link" href="https://www.thegazette.co.uk/all-notices/notice?notice-type=1300" target="_blank">→ National Deceased Estates</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">⚖️</div><div class="sc-status ss-free">Free</div></div>
+      <div class="sc-name">Probate Registry — Grant Applications</div>
+      <div class="sc-desc">When probate is granted, it becomes public record. Search by deceased person's name or postcode. Shows who the executors are and the value of the estate.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="https://www.gov.uk/search-will-probate" target="_blank">→ Search Probate Records (free)</a>
+      </div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">✉️</div><div class="sc-status ss-active">Strategy</div></div>
+      <div class="sc-name">How to Approach Probate Vendors</div>
+      <div class="sc-desc">Write to the executor (address from Land Registry title — £3). Reference the probate notice. Be respectful, state you are a cash buyer who can complete quickly. Use the Outreach Tool to generate an appropriate letter.</div>
+      <div class="sc-links">
+        <a class="sc-link" href="outreach.html" target="_blank">→ Generate Probate Letter</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HIDDEN SOURCES -->
+<div id="panel-hidden" class="panel">
+  <div class="source-grid">
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">⛪</div><div class="sc-status ss-free">Free</div></div>
+      <div class="sc-name">Church of England Disposals</div>
+      <div class="sc-desc">Third largest landowner in UK. Hundreds of redundant churches disposed annually. Historic buildings in residential areas — strong conversion potential. Church Commissioners publish surplus estate.</div>
+      <div class="sc-links"><a class="sc-link" href="https://www.churchofengland.org/about/church-commissioners/property" target="_blank">→ Church Commissioners Property</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🚌</div><div class="sc-status ss-active">Ongoing</div></div>
+      <div class="sc-name">Network Rail Surplus Land</div>
+      <div class="sc-desc">Former goods yards, lineside land, redundant infrastructure. Often prime urban locations. Network Rail Property publishes surplus sites regularly — some with immediate development potential.</div>
+      <div class="sc-links"><a class="sc-link" href="https://www.networkrailproperty.co.uk/commercial-property-for-sale" target="_blank">→ Network Rail Property for Sale</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🪖</div><div class="sc-status ss-active">Active programme</div></div>
+      <div class="sc-name">MoD Surplus Land</div>
+      <div class="sc-desc">Defence Infrastructure Organisation (DIO) disposal programme ongoing. Former TA centres, drill halls, barracks. Often solid Victorian buildings in residential areas at below-market prices.</div>
+      <div class="sc-links"><a class="sc-link" href="https://www.gov.uk/guidance/estate-disposals" target="_blank">→ MoD Estate Disposals</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🏨</div><div class="sc-status ss-free">Gazette filter</div></div>
+      <div class="sc-name">Hotel & Hospitality Distress</div>
+      <div class="sc-desc">Filter Gazette insolvency notices for SIC code 55100 (hotels). Former hotels in city centres ideal for residential conversion — already have en-suite rooms, good floor plans. Leeds and Bradford have distressed stock.</div>
+      <div class="sc-links"><a class="sc-link" href="https://www.thegazette.co.uk/all-notices/notice?notice-type=2150&text=hotel" target="_blank">→ Hotel Administration Notices</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">🌿</div><div class="sc-status ss-free">Free</div></div>
+      <div class="sc-name">Charity Commission Disposals</div>
+      <div class="sc-desc">Charities selling property must register with Charity Commission. Community centres, youth clubs, sports clubs. Often below market with community use covenants — sometimes negotiable.</div>
+      <div class="sc-links"><a class="sc-link" href="https://register-of-charities.charitycommission.gov.uk/" target="_blank">→ Charity Commission Register</a></div>
+    </div>
+    <div class="source-card">
+      <div class="sc-top"><div class="sc-icon">📋</div><div class="sc-status ss-active">Strategy</div></div>
+      <div class="sc-name">Google Alerts — Free Monitoring</div>
+      <div class="sc-desc">Set up free alerts for: "Leeds council disposal", "Sheffield Hallam surplus", "NHS Yorkshire property", "Asda property sale", "Morrisons estate", "Yorkshire insolvency". Instant email when news breaks.</div>
+      <div class="sc-links"><a class="sc-link" href="https://alerts.google.com" target="_blank">→ Set Up Google Alerts (free)</a></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/
+<script>
+function setActiveNav(){var p=window.location.pathname.split('/').pop()||'index.html';document.querySelectorAll('.nav-link').forEach(function(a){var h=a.getAttribute('href').split('/').pop();if(h===p||(p===''&&h==='index.html'))a.classList.add('active');});}
+function toggleNav(){var l=document.getElementById('nav-links');var b=document.getElementById('hamburger');l.classList.toggle('open');b.textContent=l.classList.contains('open')?'✕':'☰';}
+document.addEventListener('click',function(e){var n=document.getElementById('nav-links');var b=document.getElementById('hamburger');if(n&&b&&!n.contains(e.target)&&!b.contains(e.target)){n.classList.remove('open');b.textContent='☰';}});
+setActiveNav();
+</script>

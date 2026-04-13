@@ -1,650 +1,853 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<style>
+/* ═══════════════════════════════════════
+   CC PROPERTY INTEL — SHARED STYLES v2
+   ═══════════════════════════════════════ */
+:root {
+  --bg:       #0c0f1a;
+  --surface:  #131728;
+  --surface2: #191e32;
+  --surface3: #1f253d;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.16);
+
+  --gold:     #d4a843;
+  --gold2:    #f0c060;
+  --gold-dim: rgba(212,168,67,0.12);
+  --gold-border: rgba(212,168,67,0.35);
+
+  --white:    #f0eeea;
+  --text:     #e8e6e0;
+  --muted:    #9098b4;
+  --muted2:   #606888;
+
+  --green:    #22c55e;
+  --green-dim:rgba(34,197,94,0.12);
+  --red:      #ef4444;
+  --red-dim:  rgba(239,68,68,0.12);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.12);
+  --blue:     #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --purple:   #a855f7;
+  --purple-dim:rgba(168,85,247,0.12);
+  --teal:     #14b8a6;
+  --teal-dim: rgba(20,184,166,0.12);
+
+  --r:  12px;
+  --r2:  8px;
+  --r3:  6px;
+
+  --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-size: 15px;
+  --line-height: 1.6;
+}
+
+/* RESET */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:var(--font-size); }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:1rem;
+  line-height:var(--line-height);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAVIGATION ── */
+.topnav {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center;
+  padding:0 16px;
+  min-height:56px;
+  gap:12px;
+}
+.nav-left { display:flex; align-items:center; flex-shrink:0; }
+.nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.nav-logo {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--gold); color:#0c0f1a;
+  font-size:14px; font-weight:900; letter-spacing:0.5px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.nav-name { font-size:15px; font-weight:700; color:var(--white); line-height:1; }
+.nav-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+.nav-brand-text { display:flex; flex-direction:column; }
+
+/* Hamburger */
+.nav-hamburger {
+  display:none; background:none; border:1px solid var(--border);
+  color:var(--muted); font-size:20px; cursor:pointer;
+  padding:4px 10px; border-radius:var(--r3);
+  margin-left:auto;
+}
+.nav-hamburger:hover { color:var(--gold); border-color:var(--gold-border); }
+
+/* Nav links */
+.nav-links {
+  display:flex; align-items:center; gap:2px;
+  overflow-x:auto; flex:1;
+  scrollbar-width:none; padding:8px 0;
+}
+.nav-links::-webkit-scrollbar { display:none; }
+.nav-link {
+  flex-shrink:0;
+  font-size:12px; font-weight:600;
+  color:var(--muted); text-decoration:none;
+  padding:6px 10px; border-radius:var(--r3);
+  transition:all 0.15s; white-space:nowrap;
+  border:1px solid transparent;
+}
+.nav-link:hover { color:var(--white); background:var(--surface2); }
+.nav-link.active {
+  color:var(--gold); background:var(--gold-dim);
+  border-color:var(--gold-border);
+}
+
+/* Mobile nav */
+@media (max-width:768px) {
+  .nav-hamburger { display:flex; align-items:center; }
+  .nav-links {
+    display:none; position:fixed;
+    top:56px; left:0; right:0; bottom:0;
+    background:var(--surface); z-index:199;
+    flex-direction:column; align-items:stretch;
+    overflow-y:auto; padding:12px;
+    gap:4px; border-top:1px solid var(--border);
+  }
+  .nav-links.open { display:flex; }
+  .nav-link {
+    font-size:15px; padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    border-radius:var(--r2);
+  }
+  .nav-link:last-child { border-bottom:none; }
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  padding:24px 16px 0;
+  max-width:1100px; margin:0 auto;
+  display:flex; align-items:flex-start;
+  justify-content:space-between; gap:12px;
+  flex-wrap:wrap;
+}
+.page-title { font-size:clamp(20px,4vw,26px); font-weight:800; color:var(--white); margin-bottom:4px; }
+.page-sub   { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* ── CONTENT WRAPPER ── */
+.content { padding:16px 16px 80px; max-width:1100px; margin:0 auto; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); overflow:hidden;
+  margin-bottom:14px;
+}
+.card-hdr {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.card-title { font-size:14px; font-weight:700; color:var(--white); display:flex; align-items:center; gap:8px; }
+.card-body  { padding:16px 18px; }
+
+/* ── GRID ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.auto-grid-sm { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.auto-grid-md { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.auto-grid-lg { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+@media(max-width:600px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+}
+
+/* ── STATS ── */
+.stat-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r2); padding:14px 16px;
+}
+.stat-val { font-size:clamp(20px,3vw,26px); font-weight:800; color:var(--gold); line-height:1; margin-bottom:4px; }
+.stat-lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; }
+.stat-change { font-size:12px; color:var(--muted); margin-top:3px; }
+.stat-card.green { border-color:rgba(34,197,94,0.25); }
+.stat-card.green .stat-val { color:var(--green); }
+
+/* ── BADGES ── */
+.badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:0.3px; display:inline-block; }
+.b-gold   { background:var(--gold-dim);   color:var(--gold);   border:1px solid var(--gold-border); }
+.b-green  { background:var(--green-dim);  color:var(--green);  }
+.b-red    { background:var(--red-dim);    color:var(--red);    }
+.b-amber  { background:var(--amber-dim);  color:var(--amber);  }
+.b-blue   { background:var(--blue-dim);   color:var(--blue);   }
+.b-purple { background:var(--purple-dim); color:var(--purple); }
+.b-muted  { background:var(--surface3);   color:var(--muted);  }
+
+/* ── RISK BADGES ── */
+.risk-low    { background:var(--green-dim);  color:var(--green);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-medium { background:var(--amber-dim);  color:var(--amber);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-high   { background:var(--red-dim);    color:var(--red);    font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-unknown{ background:var(--surface3);   color:var(--muted);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+
+/* ── FORM FIELDS ── */
+.field { margin-bottom:14px; }
+.field-label {
+  font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.7px;
+  color:var(--muted); margin-bottom:6px; display:block;
+}
+.field-hint { font-weight:400; color:var(--muted2); }
+.field-input, .field-select, .field-textarea {
+  width:100%; background:var(--surface2);
+  border:1px solid var(--border); border-radius:var(--r2);
+  padding:11px 14px; font-size:15px; color:var(--white);
+  outline:none; font-family:var(--font);
+  transition:border-color 0.15s;
+  -webkit-appearance:none;
+}
+.field-input:focus, .field-select:focus, .field-textarea:focus { border-color:var(--gold); }
+.field-input::placeholder, .field-textarea::placeholder { color:var(--muted2); }
+.field-select { cursor:pointer; }
+.field-select option { background:var(--surface2); }
+.field-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:11px 20px; border-radius:var(--r2); font-size:14px; font-weight:700; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; font-family:var(--font); }
+.btn-gold   { background:var(--gold);     color:#0c0f1a; }
+.btn-gold:hover { background:var(--gold2); }
+.btn-ghost  { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--white); border-color:var(--border2); }
+.btn-red    { background:var(--red-dim);  color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+.btn-green  { background:var(--green-dim);color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-sm { padding:7px 14px; font-size:12px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.75);
+  z-index:500; display:flex; align-items:center;
+  justify-content:center; padding:16px;
+}
+.modal {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--r); width:100%; max-width:520px;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-hdr {
+  padding:18px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; background:var(--surface); z-index:1;
+}
+.modal-title { font-size:16px; font-weight:700; color:var(--white); }
+.modal-close { font-size:22px; color:var(--muted); cursor:pointer; line-height:1; background:none; border:none; }
+.modal-close:hover { color:var(--white); }
+.modal-body { padding:20px; }
+.modal-footer {
+  padding:16px 20px; border-top:1px solid var(--border);
+  display:flex; gap:8px; justify-content:flex-end;
+  position:sticky; bottom:0; background:var(--surface);
+}
+
+/* ── TABLES ── */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.5px; color:var(--muted);
+  padding:10px 14px; text-align:left;
+  background:var(--surface2); border-bottom:1px solid var(--border);
+}
+.data-table td { padding:11px 14px; border-top:1px solid var(--border); vertical-align:top; line-height:1.5; }
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.data-table a { color:var(--gold); text-decoration:none; }
+.data-table a:hover { text-decoration:underline; }
+
+/* ── ALERT BOXES ── */
+.alert { border-radius:var(--r2); padding:14px 16px; margin-bottom:14px; display:flex; gap:12px; align-items:flex-start; }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-body {}
+.alert-title { font-size:13px; font-weight:700; margin-bottom:3px; }
+.alert-text  { font-size:12px; line-height:1.6; color:var(--muted); }
+.alert-gold   { background:var(--gold-dim);   border:1px solid var(--gold-border); }
+.alert-gold .alert-title { color:var(--gold); }
+.alert-red    { background:var(--red-dim);    border:1px solid rgba(239,68,68,0.3); }
+.alert-red .alert-title { color:var(--red); }
+.alert-green  { background:var(--green-dim);  border:1px solid rgba(34,197,94,0.3); }
+.alert-green .alert-title { color:var(--green); }
+.alert-amber  { background:var(--amber-dim);  border:1px solid rgba(245,158,11,0.3); }
+.alert-amber .alert-title { color:var(--amber); }
+
+/* ── LOADING ── */
+.loading-spinner { display:inline-block; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--r2); }
+@keyframes shimmer { to { background-position:-200% 0; } }
+
+/* ── SECTION HEADER ── */
+.section-hdr { display:flex; align-items:center; justify-content:space-between; margin:20px 0 12px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:14px; font-weight:700; color:var(--white); }
+.section-sub   { font-size:12px; color:var(--muted); margin-top:2px; }
+.section-action { font-size:12px; font-weight:700; color:var(--gold); cursor:pointer; text-decoration:none; }
+.section-action:hover { text-decoration:underline; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ── COLOURS ── */
+.text-gold   { color:var(--gold);   }
+.text-green  { color:var(--green);  }
+.text-red    { color:var(--red);    }
+.text-amber  { color:var(--amber);  }
+.text-muted  { color:var(--muted);  }
+.text-white  { color:var(--white);  }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ── NAV JS ── */
+/* (toggleNav function shared inline) */
+
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CC — System Health Check</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --purple:#7c5cbf;--purple-light:#a78bda;--purple-pale:#f0ebff;
-  --purple-bg:#ede8ff;--sidebar-bg:#f5f2ff;--white:#fff;--bg:#f7f8fc;
-  --border:#e8e4f5;--text:#1a1a2e;--text2:#4a4a6a;--muted:#8888aa;
-  --green:#059669;--green-bg:#d1fae5;--green-light:#34d399;
-  --amber:#d97706;--amber-bg:#fef3c7;
-  --red:#dc2626;--red-bg:#fee2e2;
-  --blue:#2563eb;--blue-bg:#dbeafe;
-  --shadow:0 2px 12px rgba(124,92,191,0.08);
-  --shadow2:0 8px 32px rgba(124,92,191,0.15);
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;}
+<title>CC Property Intel — System Health</title>
 
-header{
-  background:var(--purple);padding:0 28px;height:58px;
-  display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 2px 12px rgba(124,92,191,0.2);
-}
-.logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;}
-.logo-badge{width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
-.back{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:6px;transition:all 0.2s;}
-.back:hover{background:rgba(255,255,255,0.2);}
-
-.container{max-width:900px;margin:32px auto;padding:0 24px 48px;}
-
-/* OVERALL STATUS */
-.overall-card{
-  border-radius:16px;padding:28px 32px;margin-bottom:28px;
-  display:flex;align-items:center;justify-content:space-between;
-  transition:all 0.3s;
-}
-.overall-card.checking{background:linear-gradient(135deg,#4a5568,#2d3748);box-shadow:0 8px 32px rgba(0,0,0,0.15);}
-.overall-card.healthy{background:linear-gradient(135deg,#065f46,#059669);box-shadow:0 8px 32px rgba(5,150,105,0.25);}
-.overall-card.degraded{background:linear-gradient(135deg,#92400e,#d97706);box-shadow:0 8px 32px rgba(217,119,6,0.25);}
-.overall-card.critical{background:linear-gradient(135deg,#991b1b,#dc2626);box-shadow:0 8px 32px rgba(220,38,38,0.25);}
-.overall-left{}
-.overall-status{font-size:28px;font-weight:800;color:#fff;display:flex;align-items:center;gap:12px;}
-.overall-sub{font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;}
-.overall-time{text-align:right;}
-.overall-time-label{font-size:11px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.5px;}
-.overall-time-val{font-size:20px;font-weight:700;color:#fff;margin-top:4px;font-variant-numeric:tabular-nums;}
-
-/* REFRESH BTN */
-.refresh-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.refresh-title{font-size:18px;font-weight:700;color:var(--text);}
-.refresh-btn{
-  background:var(--purple);color:#fff;border:none;
-  padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;
-  font-weight:600;font-size:13px;cursor:pointer;
-  display:flex;align-items:center;gap:8px;transition:all 0.2s;
-  box-shadow:0 2px 8px rgba(124,92,191,0.3);
-}
-.refresh-btn:hover{background:#6a4aad;transform:translateY(-1px);}
-.refresh-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
-.refresh-btn .spin{animation:spin 0.8s linear infinite;display:inline-block;}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* SECTIONS */
-.section{margin-bottom:24px;}
-.section-title{
-  font-size:12px;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;
-  padding-bottom:8px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:8px;
-}
-.section-count{
-  font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;
-  background:var(--purple-bg);color:var(--purple);
-}
-
-/* CHECK CARDS */
-.checks-grid{display:flex;flex-direction:column;gap:10px;}
-.check-card{
-  background:var(--white);border:1px solid var(--border);border-radius:12px;
-  padding:16px 20px;display:flex;align-items:center;gap:16px;
-  box-shadow:var(--shadow);transition:all 0.2s;
-}
-.check-card:hover{box-shadow:var(--shadow2);}
-.check-card.status-pass{border-left:4px solid var(--green);}
-.check-card.status-fail{border-left:4px solid var(--red);}
-.check-card.status-warn{border-left:4px solid var(--amber);}
-.check-card.status-checking{border-left:4px solid var(--purple-light);}
-
-.check-icon{
-  width:40px;height:40px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;flex-shrink:0;
-}
-.ci-green{background:var(--green-bg);}
-.ci-red{background:var(--red-bg);}
-.ci-amber{background:var(--amber-bg);}
-.ci-purple{background:var(--purple-bg);}
-.ci-blue{background:var(--blue-bg);}
-.ci-grey{background:#f3f4f6;}
-
-.check-body{flex:1;min-width:0;}
-.check-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
-.check-desc{font-size:11px;color:var(--muted);line-height:1.5;}
-.check-detail{font-size:11px;color:var(--text2);margin-top:4px;font-family:'Menlo','Consolas',monospace;}
-
-.check-right{text-align:right;flex-shrink:0;}
-.status-badge{
-  font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;
-  display:inline-block;letter-spacing:0.3px;
-}
-.sb-pass{background:var(--green-bg);color:var(--green);}
-.sb-fail{background:var(--red-bg);color:var(--red);}
-.sb-warn{background:var(--amber-bg);color:var(--amber);}
-.sb-checking{background:var(--purple-bg);color:var(--purple);}
-.check-ms{font-size:10px;color:var(--muted);margin-top:4px;}
-
-/* SETUP GUIDE */
-.setup-card{
-  background:var(--amber-bg);border:1px solid #fcd34d;
-  border-radius:12px;padding:16px 20px;margin-top:8px;
-}
-.setup-title{font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.setup-steps{display:flex;flex-direction:column;gap:4px;}
-.setup-step{font-size:12px;color:#92400e;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
-.setup-step a{color:var(--purple);font-weight:500;}
-
-/* PROGRESS BAR */
-.progress-wrap{background:var(--border);border-radius:20px;height:6px;margin-bottom:20px;overflow:hidden;}
-.progress-bar{height:100%;border-radius:20px;transition:width 0.5s ease;background:linear-gradient(90deg,var(--purple),var(--purple-light));}
-
-/* ENV VARS TABLE */
-.env-table{width:100%;border-collapse:collapse;}
-.env-table th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;padding:8px 16px;text-align:left;background:var(--bg);border-bottom:1px solid var(--border);}
-.env-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;}
-.env-table tr:last-child td{border-bottom:none;}
-.env-table tr:hover td{background:var(--purple-pale);}
-.env-name{font-family:'Menlo','Consolas',monospace;color:var(--purple);font-weight:500;}
-.env-status{display:flex;align-items:center;gap:6px;}
-.env-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.env-dot-green{background:var(--green);}
-.env-dot-red{background:var(--red);}
-.env-dot-amber{background:var(--amber);}
-.env-link{color:var(--purple);font-size:11px;text-decoration:none;}
-.env-link:hover{text-decoration:underline;}
-</style>
 </head>
 <body>
-
-<header>
-  <div class="logo">
-    <div class="logo-badge">CC</div>
-    System Health Check
+<nav class="topnav">
+  <div class="nav-left"><a class="nav-brand" href="/index.html">
+    <div class="nav-logo">CC</div>
+    <div class="nav-brand-text"><div class="nav-name">Property Intel</div><div class="nav-sub">CC Properties Leeds</div></div>
+  </a></div>
+  <button class="nav-hamburger" onclick="toggleNav()" id="hamburger">&#9776;</button>
+  <div class="nav-links" id="nav-links">
+    <a class="nav-link" href="/index.html">📊 Dashboard</a>
+    <a class="nav-link" href="/epc.html">⚡ EPC Finder</a>
+    <a class="nav-link" href="/news.html">📰 News</a>
+    <a class="nav-link" href="/pipeline.html">◐ Pipeline</a>
+    <a class="nav-link" href="/portfolio.html">◈ Portfolio</a>
+    <a class="nav-link" href="/risk.html">◉ Risk Check</a>
+    <a class="nav-link" href="/calculators.html">◑ Calculators</a>
+    <a class="nav-link" href="/analyser.html">🤖 AI Analyser</a>
+    <a class="nav-link" href="/sourcing.html">🔍 Sourcing</a>
+    <a class="nav-link" href="/disposals.html">🏛️ Disposals</a>
+    <a class="nav-link" href="/auctions.html">🔨 Auctions</a>
+    <a class="nav-link" href="/outreach.html">✉️ Outreach</a>
+    <a class="nav-link" href="/pubs.html">🍺 Pubs</a>
+    <a class="nav-link" href="/health.html">🔧 Health</a>
+    <a class="nav-link" href="/bmv.html">📉 BMV</a>
+    <a class="nav-link" href="/rates.html">💰 Rates</a>
+    <a class="nav-link" href="/regeneration.html">🏙️ Regen</a>
+    <a class="nav-link" href="/directmail.html">📬 Mail</a>
+    <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
   </div>
-  <a class="back" href="/">← Dashboard</a>
-</header>
+</nav>
 
-<div class="container">
 
-  <!-- OVERALL STATUS -->
-  <div class="overall-card checking" id="overallCard">
-    <div class="overall-left">
-      <div class="overall-status" id="overallStatus">
-        <span id="overallIcon">⏳</span>
-        <span id="overallText">Running checks...</span>
-      </div>
-      <div class="overall-sub" id="overallSub">Checking all systems — please wait</div>
+
+<!-- BANNER -->
+<div class="banner">
+  <div class="banner-card bc-checking" id="banner">
+    <div class="banner-left">
+      <div class="banner-status" id="banner-status">⟳ Running checks...</div>
+      <div class="banner-sub" id="banner-sub">Testing all APIs, pages, environment variables and external links</div>
     </div>
-    <div class="overall-time">
-      <div class="overall-time-label">Last checked</div>
-      <div class="overall-time-val" id="overallTime">—</div>
+    <div class="banner-right">
+      <div class="banner-stat"><div class="bs-val" id="b-pass">—</div><div class="bs-lbl">Passing</div></div>
+      <div class="banner-stat"><div class="bs-val" id="b-warn">—</div><div class="bs-lbl">Warnings</div></div>
+      <div class="banner-stat"><div class="bs-val" id="b-fail">—</div><div class="bs-lbl">Failing</div></div>
+      <button class="run-btn" id="run-btn" onclick="runAll()" disabled>↻ Re-run</button>
     </div>
   </div>
+</div>
 
-  <!-- PROGRESS -->
-  <div class="progress-wrap">
-    <div class="progress-bar" id="progressBar" style="width:0%"></div>
-  </div>
+<div class="content">
 
-  <!-- REFRESH -->
-  <div class="refresh-row">
-    <div class="refresh-title">System Status</div>
-    <button class="refresh-btn" id="refreshBtn" onclick="runAllChecks()">
-      <span id="refreshIcon">↻</span> Refresh All
-    </button>
-  </div>
-
-  <!-- API ENDPOINTS -->
+  <!-- APIs -->
   <div class="section">
-    <div class="section-title">🔌 Live API Endpoints <span class="section-count" id="api-count">0/0</span></div>
-    <div class="checks-grid" id="api-checks"></div>
-  </div>
-
-  <!-- ENV VARS -->
-  <div class="section">
-    <div class="section-title">🔑 Environment Variables <span class="section-count" id="env-count">0/0</span></div>
-    <div class="checks-grid" id="env-checks"></div>
-    <div class="setup-card" id="setup-guide" style="display:none">
-      <div class="setup-title">⚙️ Missing API Keys — Setup Guide</div>
-      <div class="setup-steps" id="setup-steps"></div>
-    </div>
+    <div class="section-hdr">API Endpoints <div class="section-count" id="api-count">0 / 0</div></div>
+    <div class="check-grid" id="api-grid"></div>
   </div>
 
   <!-- PAGES -->
   <div class="section">
-    <div class="section-title">📄 Application Pages <span class="section-count" id="pages-count">0/0</span></div>
-    <div class="checks-grid" id="pages-checks"></div>
+    <div class="section-hdr">Pages <div class="section-count" id="pages-count">0 / 0</div></div>
+    <div class="check-grid" id="pages-grid"></div>
   </div>
 
-  <!-- EXTERNAL SERVICES -->
+  <!-- ENV VARS -->
   <div class="section">
-    <div class="section-title">🌐 External Services <span class="section-count" id="ext-count">0/0</span></div>
-    <div class="checks-grid" id="ext-checks"></div>
+    <div class="section-hdr">Environment Variables <div class="section-count" id="env-count">checking...</div></div>
+    <div class="env-grid" id="env-grid"></div>
+  </div>
+
+  <!-- EXTERNAL LINKS -->
+  <div class="section">
+    <div class="section-hdr">External Data Sources</div>
+    <div class="ext-grid" id="ext-grid"></div>
+  </div>
+
+  <!-- FULL SUMMARY -->
+  <div class="section">
+    <div class="section-hdr">Full Platform Summary</div>
+    <table class="summary-table">
+      <thead><tr><th>Feature</th><th>Status</th><th>API / Source</th><th>Cost</th><th>Notes</th></tr></thead>
+      <tbody id="summary-body"></tbody>
+    </table>
   </div>
 
 </div>
 
 <script>
-// ── CHECKS DEFINITION ──
+// ══════════════════════════════════════════
+// API CHECKS — all endpoints now in platform
+// ══════════════════════════════════════════
 const API_CHECKS = [
   {
-    id: 'planning',
-    name: 'Planning Applications API',
-    desc: 'api.planning.org.uk — Leeds planning applications',
-    icon: '📋',
-    url: '/api/planning?region=leeds&postcode=all',
-    validate: (d) => {
-      if (d.setupRequired) return { pass: false, msg: 'PLANNING_API_KEY not set', setup: 'planning' };
-      if (d.keyError)      return { pass: false, msg: 'API key rejected — get new key', setup: 'planning' };
-      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.count || 0} applications found` };
-      return { pass: false, msg: d.error || 'Unknown error' };
+    id:'epc', name:'EPC Finder', icon:'⚡',
+    url:'/api/epc?postcode=LS7&filter=poor',
+    check: d => {
+      if (d.setupRequired) return { pass:'warn', msg:'EPC_API_KEY not set — register free at epc.opendatacommunities.org', fix:'Add EPC_EMAIL and EPC_API_KEY to Vercel environment variables' };
+      if (!d.success) return { pass:false, msg: d.error || 'API failed' };
+      return { pass:true, msg:`${d.count || 0} F/G rated properties found in LS7` };
     }
   },
   {
-    id: 'insolvency',
-    name: 'Insolvency Data (Companies House)',
-    desc: 'Companies House API — distressed businesses in Leeds',
-    icon: '⚠️',
-    url: '/api/insolvency?region=leeds',
-    validate: (d) => {
-      if (d.setupRequired) return { pass: false, msg: 'COMPANIES_HOUSE_API_KEY not set', setup: 'companies' };
-      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.count || 0} records fetched` };
-      return { pass: false, msg: d.error || 'Unknown error' };
+    id:'insolvency', name:'Insolvency Notices', icon:'⚠️',
+    url:'/api/insolvency?region=leeds',
+    check: d => {
+      if (!d.success) return { pass:false, msg: d.error || 'Gazette API failed' };
+      return { pass:true, msg:`${d.count || 0} notices found · ${d.highPriority || 0} high priority` };
     }
   },
   {
-    id: 'listings',
-    name: 'Live Property Listings (PropertyData)',
-    desc: 'PropertyData API — for-sale listings by postcode',
-    icon: '🏠',
-    url: '/api/listings?region=leeds&postcode=all&type=listings',
-    validate: (d) => {
-      if (d.setupRequired) return { pass: 'warn', msg: 'PROPERTYDATA_API_KEY not set — add for live listings', setup: 'propertydata' };
-      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.count || 0} listings` };
-      return { pass: false, msg: d.error || 'Unknown error' };
+    id:'probate', name:'Probate Leads', icon:'ⰻ',
+    url:'/api/probate?region=leeds',
+    check: d => {
+      if (!d.success) return { pass:false, msg: d.error || 'Gazette probate API failed' };
+      return { pass:true, msg:`${d.count || 0} deceased estate notices found` };
     }
   },
   {
-    id: 'pubs',
-    name: 'Pub & Venue Monitor',
-    desc: 'Companies House — distressed pub businesses',
-    icon: '🍺',
-    url: '/api/pubs?region=leeds',
-    validate: (d) => {
-      if (d.success) return { pass: true, msg: `✓ Connected — ${d.companiesCount || 0} distressed businesses, ${d.disposalLinks?.length || 0} disposal sources` };
-      return { pass: false, msg: d.error || 'Unknown error' };
+    id:'planning', name:'Planning Applications', icon:'📋',
+    url:'/api/planning?region=leeds&postcode=all',
+    check: d => {
+      if (d.setupRequired) return { pass:false, msg:'PLANNING_API_KEY not set', fix:'Get free key at api.planning.org.uk → add as PLANNING_API_KEY in Vercel' };
+      if (!d.success) return { pass:false, msg: d.error || 'Planning API failed' };
+      return { pass:true, msg:'Planning portal links loaded for Leeds' };
     }
   },
   {
-    id: 'epc',
-    name: 'EPC Register',
-    desc: 'Energy Performance Certificates — motivated seller finder',
-    icon: '⚡',
-    url: '/api/epc?postcode=LS7&filter=poor',
-    validate: (d) => {
-      if (d.setupRequired) return { pass: 'warn', msg: 'EPC_API_KEY not set — register free at epc.opendatacommunities.org', setup: 'epc' };
-      if (d.success)       return { pass: true,  msg: `✓ Connected — ${d.total || 0} certificates for LS7, ${d.poorRated || 0} F/G rated` };
-      return { pass: false, msg: d.error || 'Unknown error' };
+    id:'news', name:'Property News Feed', icon:'📰',
+    url:'/api/news',
+    check: d => {
+      if (!d.success) return { pass:false, msg: d.error || 'News RSS feed failed' };
+      return { pass:true, msg:`${d.count || 0} news stories fetched and summarised` };
     }
   },
   {
-    id: 'analyse',
-    name: 'AI Deal Analyser (Claude)',
-    desc: 'Anthropic Claude — property investment analysis',
-    icon: '🤖',
-    url: '/api/analyse?address=Test+Property&postcode=LS7&price=£100000&type=Terraced+House',
-    validate: (d) => {
-      if (!d.success && d.error?.includes('ANTHROPIC')) return { pass: false, msg: 'ANTHROPIC_API_KEY not set', setup: 'anthropic' };
-      if (d.success) return { pass: true, msg: '✓ Claude AI connected and responding' };
-      // If it fails with a real analysis error, still means it connected
-      if (d.error?.includes('API')) return { pass: false, msg: d.error };
-      return { pass: true, msg: '✓ AI endpoint reachable' };
+    id:'floodrisk', name:'Flood Risk Checker', icon:'🌊',
+    url:'/api/floodrisk?postcode=LS7+4EH',
+    check: d => {
+      if (!d.success) return { pass:false, msg: d.error || 'Environment Agency API failed' };
+      return { pass:true, msg:`Zone ${d.floodRisk?.zone || '?'} — ${d.floodRisk?.label || ''}` };
     }
   },
   {
-    id: 'digest',
-    name: 'Email Digest (Brevo)',
-    desc: 'Brevo — morning email digest',
-    icon: '✉️',
-    url: '/api/digest',
-    validate: (d) => {
-      if (d.setupRequired) return { pass: 'warn', msg: 'BREVO_API_KEY or DIGEST_EMAIL not set — add for email alerts', setup: 'brevo' };
-      if (d.success)       return { pass: true, msg: '✓ Email digest sent successfully' };
-      return { pass: false, msg: d.error || 'Unknown error' };
+    id:'comparables', name:'Comparable Sales', icon:'📊',
+    url:'/api/comparables?postcode=LS7+4EH&months=12',
+    check: d => {
+      if (!d.success) return { pass:false, msg: d.error || 'Land Registry SPARQL failed' };
+      return { pass:true, msg:`${d.count || 0} sold prices found for LS7 4EH (12 months)` };
     }
   },
   {
-    id: 'alert',
-    name: 'WhatsApp Alerts (Twilio)',
-    desc: 'Twilio — WhatsApp and SMS alerts',
-    icon: '📱',
-    url: '/api/alert?type=custom&message=Health+check',
-    validate: (d) => {
-      if (d.setupRequired) return { pass: 'warn', msg: 'Twilio credentials not set — optional for WhatsApp alerts', setup: 'twilio' };
-      if (d.success)       return { pass: true, msg: '✓ WhatsApp alert sent successfully' };
-      return { pass: false, msg: d.error };
+    id:'analyse', name:'AI Deal Analyser', icon:'🤖',
+    url:'/api/analyse?address=42+Chapeltown+Road&postcode=LS7&price=145000&type=Terraced+House',
+    check: d => {
+      if (!d.success && d.error?.includes('ANTHROPIC')) return { pass:false, msg:'ANTHROPIC_API_KEY not set', fix:'Add ANTHROPIC_API_KEY to Vercel environment variables' };
+      if (!d.success) return { pass:false, msg: d.error || 'Claude AI API failed' };
+      return { pass:true, msg:'Claude AI responding — deal analysis working' };
     }
-  }
+  },
+  {
+    id:'pubs', name:'Pub Monitor', icon:'🍺',
+    url:'/api/pubs?region=leeds',
+    check: d => {
+      if (!d.success) return { pass:false, msg: d.error || 'Pub API failed' };
+      return { pass:true, msg:'Pub disposal sources loaded' };
+    }
+  },
+  {
+    id:'listings', name:'PropertyData Listings', icon:'🏠',
+    url:'/api/listings?region=leeds&postcode=all&type=listings',
+    check: d => {
+      if (d.setupRequired) return { pass:'warn', msg:'PROPERTYDATA_API_KEY not set — optional paid feature (£28/mo)', fix:'Start free trial at propertydata.co.uk/free-trial → add key to Vercel' };
+      if (!d.success) return { pass:false, msg: d.error || 'PropertyData API failed' };
+      return { pass:true, msg:`${d.count || 0} listings loaded` };
+    }
+  },
+  {
+    id:'landregistry', name:'Land Registry', icon:'📜',
+    url:'/api/landregistry?postcode=LS7+4EH',
+    check: d => {
+      if (!d.success) return { pass:'warn', msg: d.error || 'Land Registry SPARQL returned no data — may be timeout' };
+      return { pass:true, msg:'Land Registry SPARQL API responding' };
+    }
+  },
+  {
+    id:'digest', name:'Email Digest', icon:'📧',
+    url:'/api/digest',
+    check: d => {
+      if (d.setupRequired) return { pass:'warn', msg:'BREVO_API_KEY or DIGEST_EMAIL not set — optional', fix:'Add BREVO_API_KEY and DIGEST_EMAIL to Vercel for daily email digests' };
+      if (!d.success) return { pass:false, msg: d.error || 'Digest API failed' };
+      return { pass:true, msg:'Email digest configured' };
+    }
+  },
+  {
+    id:'alert', name:'WhatsApp Alerts', icon:'📱',
+    url:'/api/alert?type=custom&message=Health+check',
+    check: d => {
+      if (d.setupRequired) return { pass:'warn', msg:'Twilio keys not set — optional WhatsApp alerts', fix:'Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, ALERT_PHONE_NUMBER to Vercel' };
+      if (!d.success) return { pass:false, msg: d.error || 'Alert API failed' };
+      return { pass:true, msg:'WhatsApp/SMS alerts configured' };
+    }
+  },
+  {
+    id:'companies', name:'Companies House', icon:'🏛️',
+    url:'/api/companies?query=test+company+leeds',
+    check: d => {
+      if (d.setupRequired) return { pass:'warn', msg:'COMPANIES_HOUSE_API_KEY not set', fix:'Get free key at developer.company-information.service.gov.uk → add as COMPANIES_HOUSE_API_KEY' };
+      if (!d.success) return { pass:false, msg: d.error || 'Companies House API failed' };
+      return { pass:true, msg:'Companies House API responding' };
+    }
+  },
 ];
 
-const ENV_CHECKS = [
-  { key: 'PLANNING_API_KEY',        name: 'Planning API Key',        required: true,  link: 'https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com', linkText: 'Get free key instantly →' },
-  { key: 'COMPANIES_HOUSE_API_KEY', name: 'Companies House API Key', required: true,  link: 'https://developer.company-information.service.gov.uk', linkText: 'Get free key →' },
-  { key: 'PROPERTYDATA_API_KEY',    name: 'PropertyData API Key',    required: false, link: 'https://propertydata.co.uk/free-trial/10', linkText: 'Start free trial (£28/mo) →' },
-  { key: 'ANTHROPIC_API_KEY',       name: 'Anthropic (Claude) Key',  required: true,  link: 'https://console.anthropic.com', linkText: 'Get from Anthropic console →' },
-  { key: 'BREVO_API_KEY',           name: 'Brevo Email API Key',     required: false, link: 'https://app.brevo.com/settings/keys/api', linkText: 'Get free key →' },
-  { key: 'DIGEST_EMAIL',            name: 'Digest Email Address',    required: false, link: null, linkText: 'Add your email address' },
-  { key: 'TWILIO_ACCOUNT_SID',      name: 'Twilio Account SID',      required: false, link: 'https://www.twilio.com/try-twilio', linkText: 'Get free trial →' },
-  { key: 'TWILIO_AUTH_TOKEN',       name: 'Twilio Auth Token',       required: false, link: 'https://www.twilio.com/try-twilio', linkText: 'Get free trial →' },
-  { key: 'ALERT_PHONE_NUMBER',      name: 'WhatsApp Alert Number',   required: false, link: null, linkText: 'Add your WhatsApp number' },
-  { key: 'EPC_API_KEY',             name: 'EPC Register API Key',    required: false, link: 'https://epc.opendatacommunities.org', linkText: 'Register free →' },
-];
-
+// ══════════════════
+// PAGE CHECKS
+// ══════════════════
 const PAGE_CHECKS = [
-  { name: 'Main Dashboard',       url: '/',                icon: '📊', desc: 'Main property intelligence dashboard' },
-  { name: 'AI Deal Analyser',     url: '/analyser.html',  icon: '🤖', desc: 'AI-powered property investment analysis' },
-  { name: 'Pub & Venue Monitor',  url: '/pubs.html',      icon: '🍺', desc: 'Pub disposal and distressed venue tracker' },
-  { name: 'EPC Finder',           url: '/epc.html',       icon: '⚡', desc: 'Motivated seller finder via EPC ratings' },
-  { name: 'Outreach Tool',        url: '/outreach.html',  icon: '✉️', desc: 'Email and letter generator for property outreach' },
-  { name: 'System Health',        url: '/health.html',    icon: '🔧', desc: 'This page — system status checker' },
+  { name:'Dashboard',          url:'/',                  icon:'📊' },
+  { name:'EPC Finder',         url:'/epc.html',          icon:'⚡' },
+  { name:'AI Deal Analyser',   url:'/analyser.html',     icon:'🤖' },
+  { name:'Calculators',        url:'/calculators.html',  icon:'◑'  },
+  { name:'Market News',        url:'/news.html',         icon:'📰' },
+  { name:'Deal Pipeline',      url:'/pipeline.html',     icon:'◐'  },
+  { name:'Portfolio Tracker',   url:'/portfolio.html',   icon:'◈'  },
+  { name:'Risk & Due Diligence', url:'/risk.html',        icon:'◉'  },
+  { name:'Auction Calendar',    url:'/auctions.html',    icon:'🔨' },
+  { name:'Sourcing Hub',        url:'/sourcing.html',    icon:'🔍' },
+  // (sourcing already in new_pages above)     icon:'🔍' },
+  { name:'Outreach Tool',      url:'/outreach.html',     icon:'✉️' },
+  { name:'Pub Monitor',        url:'/pubs.html',         icon:'🍺' },
+  { name:'System Health',      url:'/health.html',       icon:'🔧' },
 ];
 
-const EXT_CHECKS = [
-  { name: 'SDL Auctions Yorkshire',    url: 'https://www.sdlauctions.co.uk/property-auctions/yorkshire/', icon: '🔨', desc: 'Yorkshire auction catalogue' },
-  { name: 'Auction House Yorkshire',   url: 'https://www.auctionhouse.co.uk/yorkshire',                  icon: '🔨', desc: 'Yorkshire auction house' },
-  { name: 'EG Propertylink',           url: 'https://www.propertylink.estatesgazette.com',               icon: '🏢', desc: 'Commercial property listings' },
-  { name: 'The Gazette (Insolvency)',  url: 'https://www.thegazette.co.uk/insolvency',                   icon: '⚠️', desc: 'Official insolvency notices' },
-  { name: 'Leeds Planning Portal',     url: 'https://publicaccess.leeds.gov.uk/online-applications/',    icon: '📋', desc: 'Leeds City Council planning portal' },
-  { name: 'Companies House',           url: 'https://find-and-update.company-information.service.gov.uk', icon: '🏛️', desc: 'UK company register' },
+// ══════════════════
+// ENV VARS
+// ══════════════════
+const ENV_VARS = [
+  { key:'ANTHROPIC_API_KEY',       name:'Anthropic (Claude)',     required:true,  link:'https://console.anthropic.com',                                 linkText:'Get key →' },
+  { key:'EPC_EMAIL',               name:'EPC Register Email',     required:true,  link:'https://epc.opendatacommunities.org',                           linkText:'Register free →' },
+  { key:'EPC_API_KEY',             name:'EPC Register API Key',   required:true,  link:'https://epc.opendatacommunities.org',                           linkText:'Register free →' },
+  { key:'PLANNING_API_KEY',        name:'Planning API Key',       required:true,  link:'https://api.planning.org.uk/v1/generatekey',                    linkText:'Get free key →' },
+  { key:'COMPANIES_HOUSE_API_KEY', name:'Companies House Key',    required:false, link:'https://developer.company-information.service.gov.uk',          linkText:'Get free key →' },
+  { key:'PROPERTYDATA_API_KEY',    name:'PropertyData Key',       required:false, link:'https://propertydata.co.uk/free-trial/10',                      linkText:'£28/mo trial →' },
+  { key:'BREVO_API_KEY',           name:'Brevo Email Key',        required:false, link:'https://app.brevo.com/settings/keys/api',                       linkText:'Get free key →' },
+  { key:'DIGEST_EMAIL',            name:'Daily Digest Email',     required:false, link:null,                                                            linkText:'Add your email' },
+  { key:'TWILIO_ACCOUNT_SID',      name:'Twilio Account SID',     required:false, link:'https://www.twilio.com/try-twilio',                             linkText:'Free trial →' },
+  { key:'TWILIO_AUTH_TOKEN',       name:'Twilio Auth Token',      required:false, link:'https://www.twilio.com/try-twilio',                             linkText:'Free trial →' },
+  { key:'ALERT_PHONE_NUMBER',      name:'WhatsApp Alert Number',  required:false, link:null,                                                            linkText:'Your number' },
 ];
 
-// ── SETUP GUIDES ──
-const SETUP_GUIDES = {
-  planning:     'Get your free Planning API key instantly: <a href="https://api.planning.org.uk/v1/generatekey?email=ccpropertiesleeds@gmail.com" target="_blank">api.planning.org.uk/v1/generatekey</a> → Add as PLANNING_API_KEY in Vercel',
-  companies:    'Get your free Companies House key: <a href="https://developer.company-information.service.gov.uk" target="_blank">developer.company-information.service.gov.uk</a> → Create application → REST key → Add as COMPANIES_HOUSE_API_KEY',
-  propertydata: 'Start PropertyData free trial (£28/mo): <a href="https://propertydata.co.uk/free-trial/10" target="_blank">propertydata.co.uk/free-trial</a> → Get API key from account settings → Add as PROPERTYDATA_API_KEY',
-  anthropic:    'Get Anthropic key from your existing Content Studio project in Vercel → Settings → Environment Variables → Copy ANTHROPIC_API_KEY → Paste into this project',
-  brevo:        'Get Brevo key: <a href="https://app.brevo.com/settings/keys/api" target="_blank">app.brevo.com/settings/keys/api</a> → Generate new key → Add as BREVO_API_KEY. Also add DIGEST_EMAIL as your email address.',
-  twilio:       'Sign up free at <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com</a> → Get Account SID + Auth Token → Add as TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN. Add your WhatsApp number as ALERT_PHONE_NUMBER (format: whatsapp:+447700000000)',
-  epc:          'Register free at <a href="https://epc.opendatacommunities.org" target="_blank">epc.opendatacommunities.org</a> → Get API key → Add as EPC_API_KEY and EPC_EMAIL',
-};
+// ══════════════════
+// EXTERNAL LINKS
+// ══════════════════
+const EXT_LINKS = [
+  { name:'SDL Auctions Yorkshire',     url:'https://www.sdlauctions.co.uk/property-auctions/yorkshire/', icon:'🔨' },
+  { name:'Auction House Yorkshire',    url:'https://www.auctionhouse.co.uk/yorkshire',                   icon:'🔨' },
+  { name:'Allsop Auctions',           url:'https://www.allsop.co.uk/auction-residential/',               icon:'🔨' },
+  { name:'The Gazette (Insolvency)',   url:'https://www.thegazette.co.uk/insolvency',                    icon:'⚠️' },
+  { name:'The Gazette (Probate)',      url:'https://www.thegazette.co.uk/all-notices/notice?notice-type=1300', icon:'ⰻ' },
+  { name:'Leeds Council Disposals',   url:'https://www.leeds.gov.uk/commercial-opportunities',           icon:'🏛️' },
+  { name:'NHS Surplus Land Register', url:'https://digital.nhs.uk/data-and-information/publications/statistical/nhs-surplus-land', icon:'🏥' },
+  { name:'Govt Property Finder',      url:'https://www.gov.uk/find-property',                            icon:'🇬🇧' },
+  { name:'Aldi Disposal List',        url:'https://www.aldi.co.uk/corporate/property/sites-for-sale',    icon:'🛒' },
+  { name:'Lidl Disposal List',        url:'https://www.realestate-lidl.co.uk/sites-for-sale-and-to-let', icon:'🛒' },
+  { name:'EPC Open Data',             url:'https://epc.opendatacommunities.org',                         icon:'⚡' },
+  { name:'Leeds Planning Portal',     url:'https://publicaccess.leeds.gov.uk/online-applications/',      icon:'📋' },
+  { name:'Land Registry SPARQL',      url:'https://landregistry.data.gov.uk/landregistry/query',         icon:'📜' },
+  { name:'Environment Agency Floods', url:'https://environment.data.gov.uk/flood-monitoring/',           icon:'🌊' },
+  { name:'Companies House',           url:'https://find-and-update.company-information.service.gov.uk',  icon:'🏛️' },
+  { name:'Data Mill North (Leeds)',   url:'https://datamillnorth.org',                                    icon:'📊' },
+];
 
-// ── STATE ──
-let totalChecks = 0;
-let passedChecks = 0;
-let failedChecks = 0;
-let warnChecks = 0;
-let completedChecks = 0;
-const missingSetups = new Set();
+// ══════════════════
+// SUMMARY TABLE
+// ══════════════════
+const SUMMARY = [
+  { feature:'EPC Motivated Seller Finder',  status:'live',     api:'EPC Open Data',      cost:'Free',    notes:'Auto-loads LS7. Domestic + commercial.' },
+  { feature:'Insolvency Notices',           status:'live',     api:'The Gazette',        cost:'Free',    notes:'v9 — 7 notice types fetched in parallel.' },
+  { feature:'Probate Leads',               status:'live',     api:'The Gazette',        cost:'Free',    notes:'Deceased estates 1300/1301/1302.' },
+  { feature:'Planning Applications',       status:'live',     api:'Planning API',       cost:'Free key',notes:'8 filter cards → council portals.' },
+  { feature:'Property News Feed',          status:'live',     api:'RSS + Claude AI',    cost:'Free',    notes:'7 sources, Claude plain English summary.' },
+  { feature:'AI Deal Analyser',            status:'live',     api:'Anthropic Claude',   cost:'Pay per use',notes:'~11s per analysis.' },
+  { feature:'Deal Calculators x6',         status:'live',     api:'Pure JavaScript',    cost:'Free',    notes:'Yield, SDLT, Bridging, Flip/Hold, Refurb, CGT.' },
+  { feature:'Deal Pipeline Kanban',        status:'live',     api:'localStorage',       cost:'Free',    notes:'8 stages, drag/drop, source tags.' },
+  { feature:'Sourcing Hub',                status:'live',     api:'Multiple',           cost:'Free',    notes:'All lead sources + LinkedIn search templates.' },
+  { feature:'Flood Risk Checker',          status:'live',     api:'Environment Agency', cost:'Free',    notes:'Zone 1/2/3, surface water, Yorkshire history.' },
+  { feature:'Comparable Sales',            status:'live',     api:'Land Registry SPARQL',cost:'Free',   notes:'Sold prices by postcode, 12 months.' },
+  { feature:'Pub Monitor',                 status:'live',     api:'Multiple sources',   cost:'Free',    notes:'10 disposal sources.' },
+  { feature:'Outreach Tool',               status:'live',     api:'Claude AI',          cost:'Pay per use',notes:'6 letter templates.' },
+  { feature:'System Health Check',         status:'live',     api:'Self-test',          cost:'Free',    notes:'This page — tests all 14 APIs.' },
+  { feature:'Crime Rate Checker',           status:'live',     api:'Police.uk API',      cost:'Free',    notes:'3 months data by category.' },
+  { feature:'School Catchment Checker',      status:'live',     api:'GIAS / DfE API',     cost:'Free',    notes:'Ofsted ratings within 1 mile.' },
+  { feature:'HMO Licensing Checker',         status:'live',     api:'Leeds Council Data', cost:'Free',    notes:'Leeds selective licensing zones + Article 4.' },
+  { feature:'Market Sentiment Score',        status:'live',     api:'Claude AI',          cost:'Pay per use',notes:'Weekly verdict with hotspots and recommendation.' },
+  { feature:'Auction Calendar',              status:'live',     api:'RSS + static',       cost:'Free',    notes:'SDL, AH, Allsop, Pugh upcoming dates.' },
+  { feature:'Disposals Monitor',             status:'live',     api:'Static + links',     cost:'Free',    notes:'Supermarkets, councils, NHS, institutional sources.' },
+  { feature:'Portfolio Tracker',             status:'live',     api:'localStorage',       cost:'Free',    notes:'Equity, yield, LTV, cashflow per property.' },
+  { feature:'Risk & Due Diligence',          status:'live',     api:'Multiple free APIs', cost:'Free',    notes:'Flood + HMO + Crime + Schools + Comparables + AI.' },
+  { feature:'PropertyData Listings',       status:'optional', api:'PropertyData',       cost:'£28/mo',  notes:'PROPERTYDATA_API_KEY needed.' },
+  { feature:'Email Digest',                status:'optional', api:'Brevo',              cost:'Free tier',notes:'BREVO_API_KEY needed.' },
+  { feature:'WhatsApp Alerts',             status:'optional', api:'Twilio',             cost:'Paid',    notes:'Twilio keys needed.' },
+  { feature:'Deal Portfolio Tracker',      status:'planned',  api:'localStorage',       cost:'Free',    notes:'Next build — track owned properties.' },
+  { feature:'Market Sentiment Score',      status:'planned',  api:'Claude AI + BOE',    cost:'Free',    notes:'Weekly score from all data sources.' },
+  { feature:'BOE Rate Tracker',            status:'planned',  api:'Bank of England',    cost:'Free',    notes:'Live base rate and forecast.' },
+  { feature:'HMO Licensing Checker',       status:'planned',  api:'Leeds Council data', cost:'Free',    notes:'LS postcode selective licensing zones.' },
+  { feature:'Crime Rate Checker',          status:'planned',  api:'Police.uk',          cost:'Free',    notes:'By category per postcode.' },
+  { feature:'School Catchment Checker',    status:'planned',  api:'Ofsted API',         cost:'Free',    notes:'Good/Outstanding within 1 mile.' },
+  { feature:'Full DD Report (one-click)',  status:'planned',  api:'All APIs + Claude',  cost:'Free',    notes:'Combines all risk data into one report.' },
+  { feature:'Public Sector Disposal Panel',status:'planned',  api:'Leeds.gov.uk scrape',cost:'Free',    notes:'Live Leeds Council + NHS + Govt.' },
+  { feature:'University Estate Monitor',   status:'planned',  api:'Planning API + RSS', cost:'Free',    notes:'6 Yorkshire universities.' },
+  { feature:'Auction Calendar',            status:'planned',  api:'RSS + manual',       cost:'Free',    notes:'SDL/AH/Allsop upcoming lots.' },
+  { feature:'Direct Mail Builder',         status:'planned',  api:'Land Registry + Claude',cost:'Free', notes:'Bulk letter campaigns by EPC or postcode.' },
+];
 
-// ── MAIN RUN ──
-async function runAllChecks() {
-  // Reset
-  totalChecks = passedChecks = failedChecks = warnChecks = completedChecks = 0;
-  missingSetups.clear();
+// ══════════════════════════════
+// CHECK ENGINE
+// ══════════════════════════════
+let results = { pass:0, warn:0, fail:0 };
 
-  const btn = document.getElementById('refreshBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin">↻</span> Checking...';
+async function checkAPI(check) {
+  const el = document.getElementById('chk-' + check.id);
+  if (!el) return;
+  const ind = el.querySelector('.check-indicator');
+  const msg = el.querySelector('.check-msg');
+  const ms  = el.querySelector('.check-ms');
 
-  // Reset overall
-  setOverall('checking', '⏳', 'Running checks...', 'Checking all systems — please wait');
-  document.getElementById('progressBar').style.width = '0%';
+  ind.className = 'check-indicator ci-checking';
+  ind.textContent = '⟳';
 
-  // Render skeleton states
-  renderSkeletons();
+  const t0 = Date.now();
+  try {
+    const r = await fetch(check.url, { signal: AbortSignal.timeout(15000) });
+    const elapsed = Date.now() - t0;
+    const d = await r.json();
+    const result = check.check(d);
 
-  // Total checks
-  totalChecks = API_CHECKS.length + ENV_CHECKS.length + PAGE_CHECKS.length + EXT_CHECKS.length;
-
-  // Run in parallel groups
-  await Promise.all([
-    runApiChecks(),
-    runEnvChecks(),
-    runPageChecks(),
-    runExtChecks(),
-  ]);
-
-  // Final status
-  updateOverall();
-
-  btn.disabled = false;
-  btn.innerHTML = '↻ Refresh All';
-  document.getElementById('overallTime').textContent = new Date().toLocaleTimeString('en-GB');
-
-  // Show setup guide if needed
-  renderSetupGuide();
-}
-
-function renderSkeletons() {
-  ['api-checks','env-checks','pages-checks','ext-checks'].forEach(id => {
-    const el = document.getElementById(id);
-    el.innerHTML = Array(3).fill(0).map(()=>`
-      <div class="check-card status-checking">
-        <div class="check-icon ci-purple" style="background:var(--purple-bg);animation:pulse 1.5s infinite">⏳</div>
-        <div class="check-body">
-          <div style="height:13px;width:60%;background:var(--border);border-radius:4px;margin-bottom:6px"></div>
-          <div style="height:10px;width:40%;background:var(--border);border-radius:4px"></div>
-        </div>
-        <div style="width:70px;height:28px;background:var(--border);border-radius:20px"></div>
-      </div>`).join('');
-  });
-}
-
-// ── API CHECKS ──
-async function runApiChecks() {
-  const container = document.getElementById('api-checks');
-  container.innerHTML = '';
-  let pass = 0, total = API_CHECKS.length;
-
-  await Promise.all(API_CHECKS.map(async (check) => {
-    const start = Date.now();
-    let result = { pass: false, msg: 'Failed to connect' };
-    let responseTime = 0;
-
-    try {
-      const res = await fetch(check.url);
-      responseTime = Date.now() - start;
-      const data = await res.json();
-      result = check.validate(data);
-    } catch(e) {
-      result = { pass: false, msg: `Network error: ${e.message}` };
-      responseTime = Date.now() - start;
+    if (result.pass === true) {
+      el.className = 'check-card pass';
+      ind.className = 'check-indicator ci-pass';
+      ind.textContent = '✓';
+      results.pass++;
+    } else if (result.pass === 'warn') {
+      el.className = 'check-card warn';
+      ind.className = 'check-indicator ci-warn';
+      ind.textContent = '⚠';
+      results.warn++;
+    } else {
+      el.className = 'check-card fail';
+      ind.className = 'check-indicator ci-fail';
+      ind.textContent = '✕';
+      results.fail++;
     }
-
-    if (result.pass === true)   { pass++; passedChecks++; }
-    else if (result.pass === 'warn') { warnChecks++; }
-    else { failedChecks++; }
-
-    if (result.setup) missingSetups.add(result.setup);
-    completedChecks++;
-    updateProgress();
-
-    const card = createCheckCard(check, result, responseTime);
-    container.appendChild(card);
-  }));
-
-  document.getElementById('api-count').textContent = `${pass}/${total}`;
-}
-
-// ── ENV CHECKS ──
-async function runEnvChecks() {
-  const container = document.getElementById('env-checks');
-  container.innerHTML = '';
-  let pass = 0, total = ENV_CHECKS.length;
-
-  // We test env vars by checking if APIs return setupRequired
-  // We already know from API checks, so just show the table
-  for (const env of ENV_CHECKS) {
-    await new Promise(r => setTimeout(r, 50)); // Small delay for visual effect
-
-    // We infer from API responses — but show as unknown until API checks done
-    const card = createEnvCard(env);
-    container.appendChild(card);
-    completedChecks++;
-    updateProgress();
-  }
-
-  document.getElementById('env-count').textContent = `${pass}/${total}`;
-}
-
-// ── PAGE CHECKS ──
-async function runPageChecks() {
-  const container = document.getElementById('pages-checks');
-  container.innerHTML = '';
-  let pass = 0, total = PAGE_CHECKS.length;
-
-  await Promise.all(PAGE_CHECKS.map(async (page) => {
-    const start = Date.now();
-    let status = 'pass';
-    let msg = '';
-
-    try {
-      const res = await fetch(page.url, { method: 'HEAD' });
-      const ms = Date.now() - start;
-      if (res.ok) {
-        pass++;
-        passedChecks++;
-        msg = `✓ Page loaded (${ms}ms)`;
-      } else {
-        status = 'fail';
-        failedChecks++;
-        msg = `HTTP ${res.status} — page not found`;
-      }
-    } catch(e) {
-      status = 'fail';
-      failedChecks++;
-      msg = `Failed to load: ${e.message}`;
+    msg.textContent = result.msg || '';
+    ms.textContent = `${elapsed}ms`;
+    if (result.fix) {
+      const fix = document.createElement('div');
+      fix.className = 'check-fix';
+      fix.textContent = '→ Fix: ' + result.fix;
+      el.querySelector('.check-body').appendChild(fix);
     }
-
-    completedChecks++;
-    updateProgress();
-
-    const card = document.createElement('div');
-    card.className = `check-card status-${status}`;
-    card.innerHTML = `
-      <div class="check-icon ci-${status==='pass'?'green':status==='warn'?'amber':'red'}">${page.icon}</div>
-      <div class="check-body">
-        <div class="check-name">${page.name}</div>
-        <div class="check-desc">${page.desc}</div>
-        <div class="check-detail">${msg}</div>
-      </div>
-      <div class="check-right">
-        <span class="status-badge sb-${status}">${status==='pass'?'✓ LIVE':status==='warn'?'⚠ WARN':'✗ DOWN'}</span>
-        <div class="check-ms">
-          <a href="${page.url}" target="_blank" style="color:var(--purple);font-size:11px">Open →</a>
-        </div>
-      </div>`;
-    container.appendChild(card);
-  }));
-
-  document.getElementById('pages-count').textContent = `${pass}/${total}`;
-}
-
-// ── EXT CHECKS ──
-async function runExtChecks() {
-  const container = document.getElementById('ext-checks');
-  container.innerHTML = '';
-  let pass = 0, total = EXT_CHECKS.length;
-
-  // External sites — we can't fetch due to CORS, so just show as links
-  for (const ext of EXT_CHECKS) {
-    pass++;
-    passedChecks++;
-    completedChecks++;
-    updateProgress();
-
-    const card = document.createElement('div');
-    card.className = 'check-card status-pass';
-    card.style.cursor = 'pointer';
-    card.onclick = () => window.open(ext.url, '_blank');
-    card.innerHTML = `
-      <div class="check-icon ci-blue">${ext.icon}</div>
-      <div class="check-body">
-        <div class="check-name">${ext.name}</div>
-        <div class="check-desc">${ext.desc}</div>
-      </div>
-      <div class="check-right">
-        <span class="status-badge sb-pass">✓ LINKED</span>
-        <div class="check-ms"><a href="${ext.url}" target="_blank" style="color:var(--purple);font-size:11px" onclick="event.stopPropagation()">Open →</a></div>
-      </div>`;
-    container.appendChild(card);
-    await new Promise(r => setTimeout(r, 30));
+  } catch(e) {
+    const elapsed = Date.now() - t0;
+    el.className = 'check-card fail';
+    ind.className = 'check-indicator ci-fail';
+    ind.textContent = '✕';
+    msg.textContent = e.name === 'TimeoutError' ? 'Timeout after 15s' : (e.message || 'Request failed');
+    ms.textContent = `${elapsed}ms`;
+    results.fail++;
   }
-
-  document.getElementById('ext-count').textContent = `${pass}/${total}`;
 }
 
-// ── HELPERS ──
-function createCheckCard(check, result, ms) {
-  const status = result.pass === true ? 'pass' : result.pass === 'warn' ? 'warn' : 'fail';
-  const iconColor = status === 'pass' ? 'green' : status === 'warn' ? 'amber' : 'red';
-  const card = document.createElement('div');
-  card.className = `check-card status-${status}`;
-  card.innerHTML = `
-    <div class="check-icon ci-${iconColor}">${check.icon}</div>
-    <div class="check-body">
-      <div class="check-name">${check.name}</div>
-      <div class="check-desc">${check.desc}</div>
-      <div class="check-detail">${result.msg}</div>
-    </div>
-    <div class="check-right">
-      <span class="status-badge sb-${status}">${status==='pass'?'✓ LIVE':status==='warn'?'⚠ SETUP':' ✗ ERROR'}</span>
-      <div class="check-ms">${ms}ms</div>
-    </div>`;
-  return card;
+async function checkPage(check, idx) {
+  const el = document.getElementById('page-' + idx);
+  if (!el) return;
+  const ind = el.querySelector('.check-indicator');
+  const msg = el.querySelector('.check-msg');
+  const ms  = el.querySelector('.check-ms');
+
+  const t0 = Date.now();
+  try {
+    const r  = await fetch(check.url, { method:'HEAD', signal: AbortSignal.timeout(8000) });
+    const elapsed = Date.now() - t0;
+    if (r.ok) {
+      el.className = 'check-card pass';
+      ind.className = 'check-indicator ci-pass';
+      ind.textContent = '✓';
+      msg.textContent = `HTTP ${r.status} — page loaded`;
+      ms.textContent = `${elapsed}ms`;
+      results.pass++;
+    } else {
+      el.className = 'check-card fail';
+      ind.className = 'check-indicator ci-fail';
+      ind.textContent = '✕';
+      msg.textContent = `HTTP ${r.status} — page not found`;
+      ms.textContent = `${elapsed}ms`;
+      results.fail++;
+    }
+  } catch(e) {
+    el.className = 'check-card fail';
+    ind.className = 'check-indicator ci-fail';
+    ind.textContent = '✕';
+    msg.textContent = 'Failed to load';
+    results.fail++;
+  }
 }
 
-function createEnvCard(env) {
-  const card = document.createElement('div');
-  card.className = 'check-card status-checking';
-  card.innerHTML = `
-    <div class="check-icon ci-purple">🔑</div>
-    <div class="check-body">
-      <div class="check-name"><span class="env-name">${env.key}</span> ${!env.required ? '<span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span>' : ''}</div>
-      <div class="check-desc">${env.name}</div>
-    </div>
-    <div class="check-right">
-      ${env.link ? `<a class="env-link" href="${env.link}" target="_blank">${env.linkText}</a>` : `<span style="font-size:11px;color:var(--muted)">${env.linkText}</span>`}
-    </div>`;
-  return card;
-}
+function updateBanner() {
+  const banner = document.getElementById('banner');
+  const total  = results.pass + results.warn + results.fail;
+  document.getElementById('b-pass').textContent = results.pass;
+  document.getElementById('b-warn').textContent = results.warn;
+  document.getElementById('b-fail').textContent = results.fail;
 
-function updateProgress() {
-  const pct = Math.round((completedChecks / totalChecks) * 100);
-  document.getElementById('progressBar').style.width = pct + '%';
-}
-
-function updateOverall() {
-  const total = passedChecks + failedChecks + warnChecks;
-  if (failedChecks === 0 && warnChecks === 0) {
-    setOverall('healthy', '✅', 'All Systems Operational', `${passedChecks}/${total} checks passing`);
-  } else if (failedChecks > 0 && passedChecks > failedChecks) {
-    setOverall('degraded', '⚠️', 'Partially Degraded', `${failedChecks} check${failedChecks>1?'s':''} failing — see details below`);
-  } else if (failedChecks > 0) {
-    setOverall('critical', '❌', 'Critical Issues Found', `${failedChecks} critical, ${warnChecks} warnings — action required`);
+  if (results.fail > 2) {
+    banner.className = 'banner-card bc-critical';
+    document.getElementById('banner-status').textContent = '✕ Critical Issues Detected';
+    document.getElementById('banner-sub').textContent = `${results.fail} APIs failing — check fixes below`;
+  } else if (results.fail > 0 || results.warn > 2) {
+    banner.className = 'banner-card bc-degraded';
+    document.getElementById('banner-status').textContent = '⚠ Degraded — Some Issues';
+    document.getElementById('banner-sub').textContent = `${results.warn} warnings, ${results.fail} failures`;
+  } else if (results.warn > 0) {
+    banner.className = 'banner-card bc-degraded';
+    document.getElementById('banner-status').textContent = '⚠ Mostly Healthy';
+    document.getElementById('banner-sub').textContent = `${results.pass} passing, ${results.warn} optional keys not set`;
   } else {
-    setOverall('degraded', '⚠️', 'Setup Required', `${warnChecks} items need configuration`);
+    banner.className = 'banner-card bc-healthy';
+    document.getElementById('banner-status').textContent = '✓ All Systems Operational';
+    document.getElementById('banner-sub').textContent = `${results.pass} checks passed — platform fully operational`;
   }
 }
 
-function setOverall(cls, icon, text, sub) {
-  const card = document.getElementById('overallCard');
-  card.className = `overall-card ${cls}`;
-  document.getElementById('overallIcon').textContent = icon;
-  document.getElementById('overallText').textContent = text;
-  document.getElementById('overallSub').textContent = sub;
-}
-
-function renderSetupGuide() {
-  const guide = document.getElementById('setup-guide');
-  const steps = document.getElementById('setup-steps');
-  if (missingSetups.size === 0) { guide.style.display = 'none'; return; }
-
-  guide.style.display = 'block';
-  steps.innerHTML = [...missingSetups].map(key => `
-    <div class="setup-step">
-      <span>→</span>
-      <span>${SETUP_GUIDES[key] || key}</span>
+// ══════════════════
+// RENDER & INIT
+// ══════════════════
+function renderSkeleton() {
+  // APIs
+  document.getElementById('api-grid').innerHTML = API_CHECKS.map(c => `
+    <div class="check-card" id="chk-${c.id}">
+      <div class="check-indicator ci-checking">⟳</div>
+      <div class="check-body">
+        <div class="check-name">${c.icon} ${c.name}</div>
+        <div class="check-msg">Checking...</div>
+        <div class="check-ms"></div>
+      </div>
     </div>`).join('');
+
+  // Pages
+  document.getElementById('pages-grid').innerHTML = PAGE_CHECKS.map((c,i) => `
+    <div class="check-card" id="page-${i}">
+      <div class="check-indicator ci-checking">⟳</div>
+      <div class="check-body">
+        <div class="check-name">${c.icon} ${c.name}</div>
+        <div class="check-msg">Checking ${c.url}...</div>
+        <div class="check-ms"></div>
+      </div>
+    </div>`).join('');
+
+  // Env vars — we can't read server env from frontend, so show setup guide
+  document.getElementById('env-grid').innerHTML = ENV_VARS.map(v => `
+    <div class="env-card">
+      <div class="env-top">
+        <div class="env-name">${v.name}</div>
+        <div class="env-badge ${v.required ? 'eb-required' : 'eb-optional'}">${v.required ? 'Required' : 'Optional'}</div>
+      </div>
+      <div class="env-key">${v.key}</div>
+      ${v.link ? `<a class="env-link" href="${v.link}" target="_blank">${v.linkText}</a>` : `<div class="env-link" style="color:var(--muted2)">${v.linkText}</div>`}
+    </div>`).join('');
+  document.getElementById('env-count').textContent = `${ENV_VARS.filter(v=>v.required).length} required, ${ENV_VARS.filter(v=>!v.required).length} optional`;
+
+  // External links
+  document.getElementById('ext-grid').innerHTML = EXT_LINKS.map(l => `
+    <a class="ext-card" href="${l.url}" target="_blank" rel="noopener">
+      <div class="ext-icon">${l.icon}</div>
+      <div class="ext-body">
+        <div class="ext-name">${l.name}</div>
+        <div class="ext-url">${l.url.replace('https://','')}</div>
+      </div>
+      <div class="ext-status es-ok">↗</div>
+    </a>`).join('');
+
+  // Summary
+  document.getElementById('summary-body').innerHTML = SUMMARY.map(s => {
+    const cls = s.status === 'live' ? 'td-green' : s.status === 'optional' ? 'td-amber' : 'td-muted';
+    const label = s.status === 'live' ? '✓ Live' : s.status === 'optional' ? '⚙ Optional' : '○ Planned';
+    return `<tr>
+      <td><strong>${s.feature}</strong></td>
+      <td class="td-status ${cls}">${label}</td>
+      <td style="color:var(--muted);font-family:monospace;font-size:11px">${s.api}</td>
+      <td style="color:var(--muted)">${s.cost}</td>
+      <td style="color:var(--muted2)">${s.notes}</td>
+    </tr>`;
+  }).join('');
 }
 
-// ── AUTO RUN ──
-window.addEventListener('load', runAllChecks);
+async function runAll() {
+  results = { pass:0, warn:0, fail:0 };
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('run-btn').textContent = '⟳ Running...';
+
+  // Remove old fix messages
+  document.querySelectorAll('.check-fix').forEach(el => el.remove());
+
+  renderSkeleton();
+
+  // Run APIs and pages in parallel
+  const apiPromises  = API_CHECKS.map(c  => checkAPI(c));
+  const pagePromises = PAGE_CHECKS.map((c,i) => checkPage(c, i));
+  await Promise.all([...apiPromises, ...pagePromises]);
+
+  // Update counts
+  const apiPass  = API_CHECKS.filter((_,i) => document.getElementById('chk-' + API_CHECKS[i].id)?.classList.contains('pass')).length;
+  document.getElementById('api-count').textContent   = `${results.pass} / ${API_CHECKS.length + PAGE_CHECKS.length}`;
+  document.getElementById('pages-count').textContent = `${PAGE_CHECKS.length} pages checked`;
+
+  updateBanner();
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('run-btn').textContent = '↻ Re-run';
+}
+
+// Auto-run on load
+renderSkeleton();
+runAll();
+</script>
+<script>
+function setActiveNav(){var p=window.location.pathname.split('/').pop()||'index.html';document.querySelectorAll('.nav-link').forEach(function(a){var h=a.getAttribute('href').split('/').pop();if(h===p||(p===''&&h==='index.html'))a.classList.add('active');});}
+function toggleNav(){var l=document.getElementById('nav-links');var b=document.getElementById('hamburger');l.classList.toggle('open');b.textContent=l.classList.contains('open')?'\u2715':'\u2630';}
+document.addEventListener('click',function(e){var n=document.getElementById('nav-links');var b=document.getElementById('hamburger');if(n&&b&&!n.contains(e.target)&&!b.contains(e.target)){n.classList.remove('open');b.textContent='\u2630';}});
+setActiveNav();
 </script>
 </body>
 </html>

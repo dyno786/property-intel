@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+/* ═══════════════════════════════════════
+   CC PROPERTY INTEL — SHARED STYLES v2
+   ═══════════════════════════════════════ */
+:root {
+  --bg:       #0c0f1a;
+  --surface:  #131728;
+  --surface2: #191e32;
+  --surface3: #1f253d;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.16);
+
+  --gold:     #d4a843;
+  --gold2:    #f0c060;
+  --gold-dim: rgba(212,168,67,0.12);
+  --gold-border: rgba(212,168,67,0.35);
+
+  --white:    #f0eeea;
+  --text:     #e8e6e0;
+  --muted:    #9098b4;
+  --muted2:   #606888;
+
+  --green:    #22c55e;
+  --green-dim:rgba(34,197,94,0.12);
+  --red:      #ef4444;
+  --red-dim:  rgba(239,68,68,0.12);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.12);
+  --blue:     #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --purple:   #a855f7;
+  --purple-dim:rgba(168,85,247,0.12);
+  --teal:     #14b8a6;
+  --teal-dim: rgba(20,184,166,0.12);
+
+  --r:  12px;
+  --r2:  8px;
+  --r3:  6px;
+
+  --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-size: 15px;
+  --line-height: 1.6;
+}
+
+/* RESET */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:var(--font-size); }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:1rem;
+  line-height:var(--line-height);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAVIGATION ── */
+.topnav {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center;
+  padding:0 16px;
+  min-height:56px;
+  gap:12px;
+}
+.nav-left { display:flex; align-items:center; flex-shrink:0; }
+.nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.nav-logo {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--gold); color:#0c0f1a;
+  font-size:14px; font-weight:900; letter-spacing:0.5px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.nav-name { font-size:15px; font-weight:700; color:var(--white); line-height:1; }
+.nav-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+.nav-brand-text { display:flex; flex-direction:column; }
+
+/* Hamburger */
+.nav-hamburger {
+  display:none; background:none; border:1px solid var(--border);
+  color:var(--muted); font-size:20px; cursor:pointer;
+  padding:4px 10px; border-radius:var(--r3);
+  margin-left:auto;
+}
+.nav-hamburger:hover { color:var(--gold); border-color:var(--gold-border); }
+
+/* Nav links */
+.nav-links {
+  display:flex; align-items:center; gap:2px;
+  overflow-x:auto; flex:1;
+  scrollbar-width:none; padding:8px 0;
+}
+.nav-links::-webkit-scrollbar { display:none; }
+.nav-link {
+  flex-shrink:0;
+  font-size:12px; font-weight:600;
+  color:var(--muted); text-decoration:none;
+  padding:6px 10px; border-radius:var(--r3);
+  transition:all 0.15s; white-space:nowrap;
+  border:1px solid transparent;
+}
+.nav-link:hover { color:var(--white); background:var(--surface2); }
+.nav-link.active {
+  color:var(--gold); background:var(--gold-dim);
+  border-color:var(--gold-border);
+}
+
+/* Mobile nav */
+@media (max-width:768px) {
+  .nav-hamburger { display:flex; align-items:center; }
+  .nav-links {
+    display:none; position:fixed;
+    top:56px; left:0; right:0; bottom:0;
+    background:var(--surface); z-index:199;
+    flex-direction:column; align-items:stretch;
+    overflow-y:auto; padding:12px;
+    gap:4px; border-top:1px solid var(--border);
+  }
+  .nav-links.open { display:flex; }
+  .nav-link {
+    font-size:15px; padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    border-radius:var(--r2);
+  }
+  .nav-link:last-child { border-bottom:none; }
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  padding:24px 16px 0;
+  max-width:1100px; margin:0 auto;
+  display:flex; align-items:flex-start;
+  justify-content:space-between; gap:12px;
+  flex-wrap:wrap;
+}
+.page-title { font-size:clamp(20px,4vw,26px); font-weight:800; color:var(--white); margin-bottom:4px; }
+.page-sub   { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* ── CONTENT WRAPPER ── */
+.content { padding:16px 16px 80px; max-width:1100px; margin:0 auto; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); overflow:hidden;
+  margin-bottom:14px;
+}
+.card-hdr {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.card-title { font-size:14px; font-weight:700; color:var(--white); display:flex; align-items:center; gap:8px; }
+.card-body  { padding:16px 18px; }
+
+/* ── GRID ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.auto-grid-sm { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.auto-grid-md { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.auto-grid-lg { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+@media(max-width:600px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+}
+
+/* ── STATS ── */
+.stat-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r2); padding:14px 16px;
+}
+.stat-val { font-size:clamp(20px,3vw,26px); font-weight:800; color:var(--gold); line-height:1; margin-bottom:4px; }
+.stat-lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; }
+.stat-change { font-size:12px; color:var(--muted); margin-top:3px; }
+.stat-card.green { border-color:rgba(34,197,94,0.25); }
+.stat-card.green .stat-val { color:var(--green); }
+
+/* ── BADGES ── */
+.badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:0.3px; display:inline-block; }
+.b-gold   { background:var(--gold-dim);   color:var(--gold);   border:1px solid var(--gold-border); }
+.b-green  { background:var(--green-dim);  color:var(--green);  }
+.b-red    { background:var(--red-dim);    color:var(--red);    }
+.b-amber  { background:var(--amber-dim);  color:var(--amber);  }
+.b-blue   { background:var(--blue-dim);   color:var(--blue);   }
+.b-purple { background:var(--purple-dim); color:var(--purple); }
+.b-muted  { background:var(--surface3);   color:var(--muted);  }
+
+/* ── RISK BADGES ── */
+.risk-low    { background:var(--green-dim);  color:var(--green);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-medium { background:var(--amber-dim);  color:var(--amber);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-high   { background:var(--red-dim);    color:var(--red);    font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-unknown{ background:var(--surface3);   color:var(--muted);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+
+/* ── FORM FIELDS ── */
+.field { margin-bottom:14px; }
+.field-label {
+  font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.7px;
+  color:var(--muted); margin-bottom:6px; display:block;
+}
+.field-hint { font-weight:400; color:var(--muted2); }
+.field-input, .field-select, .field-textarea {
+  width:100%; background:var(--surface2);
+  border:1px solid var(--border); border-radius:var(--r2);
+  padding:11px 14px; font-size:15px; color:var(--white);
+  outline:none; font-family:var(--font);
+  transition:border-color 0.15s;
+  -webkit-appearance:none;
+}
+.field-input:focus, .field-select:focus, .field-textarea:focus { border-color:var(--gold); }
+.field-input::placeholder, .field-textarea::placeholder { color:var(--muted2); }
+.field-select { cursor:pointer; }
+.field-select option { background:var(--surface2); }
+.field-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:11px 20px; border-radius:var(--r2); font-size:14px; font-weight:700; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; font-family:var(--font); }
+.btn-gold   { background:var(--gold);     color:#0c0f1a; }
+.btn-gold:hover { background:var(--gold2); }
+.btn-ghost  { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--white); border-color:var(--border2); }
+.btn-red    { background:var(--red-dim);  color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+.btn-green  { background:var(--green-dim);color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-sm { padding:7px 14px; font-size:12px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.75);
+  z-index:500; display:flex; align-items:center;
+  justify-content:center; padding:16px;
+}
+.modal {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--r); width:100%; max-width:520px;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-hdr {
+  padding:18px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; background:var(--surface); z-index:1;
+}
+.modal-title { font-size:16px; font-weight:700; color:var(--white); }
+.modal-close { font-size:22px; color:var(--muted); cursor:pointer; line-height:1; background:none; border:none; }
+.modal-close:hover { color:var(--white); }
+.modal-body { padding:20px; }
+.modal-footer {
+  padding:16px 20px; border-top:1px solid var(--border);
+  display:flex; gap:8px; justify-content:flex-end;
+  position:sticky; bottom:0; background:var(--surface);
+}
+
+/* ── TABLES ── */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.5px; color:var(--muted);
+  padding:10px 14px; text-align:left;
+  background:var(--surface2); border-bottom:1px solid var(--border);
+}
+.data-table td { padding:11px 14px; border-top:1px solid var(--border); vertical-align:top; line-height:1.5; }
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.data-table a { color:var(--gold); text-decoration:none; }
+.data-table a:hover { text-decoration:underline; }
+
+/* ── ALERT BOXES ── */
+.alert { border-radius:var(--r2); padding:14px 16px; margin-bottom:14px; display:flex; gap:12px; align-items:flex-start; }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-body {}
+.alert-title { font-size:13px; font-weight:700; margin-bottom:3px; }
+.alert-text  { font-size:12px; line-height:1.6; color:var(--muted); }
+.alert-gold   { background:var(--gold-dim);   border:1px solid var(--gold-border); }
+.alert-gold .alert-title { color:var(--gold); }
+.alert-red    { background:var(--red-dim);    border:1px solid rgba(239,68,68,0.3); }
+.alert-red .alert-title { color:var(--red); }
+.alert-green  { background:var(--green-dim);  border:1px solid rgba(34,197,94,0.3); }
+.alert-green .alert-title { color:var(--green); }
+.alert-amber  { background:var(--amber-dim);  border:1px solid rgba(245,158,11,0.3); }
+.alert-amber .alert-title { color:var(--amber); }
+
+/* ── LOADING ── */
+.loading-spinner { display:inline-block; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--r2); }
+@keyframes shimmer { to { background-position:-200% 0; } }
+
+/* ── SECTION HEADER ── */
+.section-hdr { display:flex; align-items:center; justify-content:space-between; margin:20px 0 12px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:14px; font-weight:700; color:var(--white); }
+.section-sub   { font-size:12px; color:var(--muted); margin-top:2px; }
+.section-action { font-size:12px; font-weight:700; color:var(--gold); cursor:pointer; text-decoration:none; }
+.section-action:hover { text-decoration:underline; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ── COLOURS ── */
+.text-gold   { color:var(--gold);   }
+.text-green  { color:var(--green);  }
+.text-red    { color:var(--red);    }
+.text-amber  { color:var(--amber);  }
+.text-muted  { color:var(--muted);  }
+.text-white  { color:var(--white);  }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ── NAV JS ── */
+/* (toggleNav function shared inline) */
+
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC Property — Risk & Due Diligence</title>
+
+</head>
+<body>
+<nav class="topnav">
+  <div class="nav-left"><a class="nav-brand" href="/index.html">
+    <div class="nav-logo">CC</div>
+    <div class="nav-brand-text"><div class="nav-name">Property Intel</div><div class="nav-sub">CC Properties Leeds</div></div>
+  </a></div>
+  <button class="nav-hamburger" onclick="toggleNav()" id="hamburger">&#9776;</button>
+  <div class="nav-links" id="nav-links">
+    <a class="nav-link" href="/index.html">📊 Dashboard</a>
+    <a class="nav-link" href="/epc.html">⚡ EPC Finder</a>
+    <a class="nav-link" href="/news.html">📰 News</a>
+    <a class="nav-link" href="/pipeline.html">◐ Pipeline</a>
+    <a class="nav-link" href="/portfolio.html">◈ Portfolio</a>
+    <a class="nav-link" href="/risk.html">◉ Risk Check</a>
+    <a class="nav-link" href="/calculators.html">◑ Calculators</a>
+    <a class="nav-link" href="/analyser.html">🤖 AI Analyser</a>
+    <a class="nav-link" href="/sourcing.html">🔍 Sourcing</a>
+    <a class="nav-link" href="/disposals.html">🏛️ Disposals</a>
+    <a class="nav-link" href="/auctions.html">🔨 Auctions</a>
+    <a class="nav-link" href="/outreach.html">✉️ Outreach</a>
+    <a class="nav-link" href="/pubs.html">🍺 Pubs</a>
+    <a class="nav-link" href="/health.html">🔧 Health</a>
+    <a class="nav-link" href="/bmv.html">📉 BMV</a>
+    <a class="nav-link" href="/rates.html">💰 Rates</a>
+    <a class="nav-link" href="/regeneration.html">🏙️ Regen</a>
+    <a class="nav-link" href="/directmail.html">📬 Mail</a>
+    <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
+  </div>
+</nav>
+
+
+<div class="header">
+  <div class="h-title">◉ Risk & Due Diligence</div>
+  <div class="h-sub">Enter any UK postcode — full risk report in under 30 seconds</div>
+</div>
+
+<div class="search-bar">
+  <input class="search-input" id="postcode-input" placeholder="Enter postcode e.g. LS7 4EH" onkeydown="if(event.key==='Enter')runCheck()">
+  <button class="search-btn" onclick="runCheck()">Run Full Check</button>
+</div>
+
+<div class="content" id="content">
+  <div class="placeholder">
+    <div class="ph-icon">◉</div>
+    <div class="ph-title">Full Due Diligence in One Click</div>
+    <div class="ph-sub">Enter a postcode above to instantly check:</div>
+    <div class="ph-checks">
+      <div class="ph-check">🌊 Flood Risk</div>
+      <div class="ph-check">⚠️ HMO Licensing</div>
+      <div class="ph-check">🚔 Crime Rate</div>
+      <div class="ph-check">🏫 School Ratings</div>
+      <div class="ph-check">📊 Sold Prices</div>
+      <div class="ph-check">🤖 AI DD Summary</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Pre-fill from URL param
+const urlParams = new URLSearchParams(window.location.search);
+const pcParam   = urlParams.get('postcode');
+if (pcParam) { document.getElementById('postcode-input').value = pcParam; runCheck(); }
+
+async function runCheck() {
+  const pc = document.getElementById('postcode-input').value.trim().toUpperCase();
+  if (!pc || pc.length < 4) { alert('Please enter a valid UK postcode'); return; }
+
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:16px">
+      ${['🌊 Flood Risk','⚠️ HMO Licensing','🚔 Crime Rate','🏫 School Ratings'].map(t=>`
+        <div class="loading-card">⟳ Checking ${t}...</div>`).join('')}
+    </div>
+    <div class="loading-card" style="margin-bottom:12px">⟳ Fetching comparable sales from Land Registry...</div>
+    <div class="loading-card">⟳ Generating AI due diligence summary...</div>`;
+
+  // Fetch all in parallel
+  const [flood, hmo, crime, schools, comps] = await Promise.allSettled([
+    fetch(`/api/floodrisk?postcode=${encodeURIComponent(pc)}`).then(r=>r.json()),
+    fetch(`/api/hmo?postcode=${encodeURIComponent(pc)}`).then(r=>r.json()),
+    fetch(`/api/crime?postcode=${encodeURIComponent(pc)}`).then(r=>r.json()),
+    fetch(`/api/schools?postcode=${encodeURIComponent(pc)}`).then(r=>r.json()),
+    fetch(`/api/comparables?postcode=${encodeURIComponent(pc)}&months=12`).then(r=>r.json()),
+  ]);
+
+  const fd = flood.value    || {};
+  const hd = hmo.value      || {};
+  const cd = crime.value    || {};
+  const sd = schools.value  || {};
+  const compd = comps.value || {};
+
+  // Risk cards
+  const riskBadge = r => `<div class="risk-badge rb-${r||'unknown'}">${r ? r.charAt(0).toUpperCase()+r.slice(1)+' Risk' : 'Unknown'}</div>`;
+  const colour    = r => r==='low'?'var(--green)':r==='medium'?'var(--amber)':'var(--red)';
+
+  let html = `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Due Diligence — ${pc}</div>
+  <div class="results">`;
+
+  // FLOOD
+  html += `<div class="risk-card">
+    <div class="rc-hdr"><div class="rc-icon">🌊</div><div class="rc-title">Flood Risk</div></div>
+    <div class="rc-body">
+      ${fd.floodRisk ? riskBadge(fd.floodRisk.colour === 'green' ? 'low' : fd.floodRisk.colour === 'amber' ? 'medium' : 'high') : riskBadge()}
+      <div class="risk-detail">${fd.floodRisk?.label || 'Could not determine flood zone. Check EA flood map manually.'}</div>
+      ${fd.recommendation ? `<div class="risk-note">${fd.recommendation}</div>` : ''}
+      ${fd.yorkshireNote ? `<div class="risk-note" style="color:var(--amber)">${fd.yorkshireNote}</div>` : ''}
+      <a class="rc-link" href="https://check-long-term-flood-risk.service.gov.uk/map?postcode=${encodeURIComponent(pc)}" target="_blank">→ EA Flood Map</a>
+    </div>
+  </div>`;
+
+  // HMO
+  const hmoRisk = hd.selectiveLicensing ? 'medium' : 'low';
+  html += `<div class="risk-card">
+    <div class="rc-hdr"><div class="rc-icon">⚠️</div><div class="rc-title">HMO & Licensing</div></div>
+    <div class="rc-body">
+      ${riskBadge(hmoRisk)}
+      <div class="risk-detail">${hd.licensingType || 'Standard rules'} — ${hd.zoneName || pc}</div>
+      ${hd.selectiveLicensing ? `<div class="risk-note">Selective licensing fee: £${hd.licenceFee}/property</div>` : ''}
+      ${hd.article4Direction ? `<div class="risk-note" style="color:var(--red)">⚠️ Article 4 Direction — planning permission required before converting to HMO</div>` : ''}
+      ${hd.investorNote ? `<div class="risk-detail" style="margin-top:6px">${hd.investorNote}</div>` : ''}
+      <a class="rc-link" href="${hd.link || 'https://www.leeds.gov.uk/planning/licensing-of-houses-in-multiple-occupation'}" target="_blank">→ Leeds HMO Info</a>
+    </div>
+  </div>`;
+
+  // CRIME
+  html += `<div class="risk-card">
+    <div class="rc-hdr"><div class="rc-icon">🚔</div><div class="rc-title">Crime Rate</div></div>
+    <div class="rc-body">
+      ${cd.overallRisk ? riskBadge(cd.overallRisk) : riskBadge()}
+      <div class="risk-detail">${cd.total||0} crimes in last 3 months · Burglary: ${cd.burglary||0} · ASB: ${cd.asb||0} · Violent: ${cd.violent||0}</div>
+      ${cd.investorNote ? `<div class="risk-note">${cd.investorNote}</div>` : ''}
+    </div>
+  </div>`;
+
+  // SCHOOLS
+  html += `<div class="risk-card">
+    <div class="rc-hdr"><div class="rc-icon">🏫</div><div class="rc-title">School Catchment</div></div>
+    <div class="rc-body">
+      ${riskBadge(sd.outstanding + sd.good > sd.concern ? 'low' : sd.concern > 0 ? 'medium' : 'low')}
+      <div class="risk-detail">${sd.count||0} schools within 1 mile · Outstanding: ${sd.outstanding||0} · Good: ${sd.good||0} · Concerns: ${sd.concern||0}</div>
+      ${sd.investorNote ? `<div class="risk-note">${sd.investorNote}</div>` : ''}
+      ${sd.schools?.slice(0,3).map(s=>`<div style="font-size:10px;color:var(--muted);margin-top:3px">${s.name} — <span style="color:${s.risk==='low'?'var(--green)':s.risk==='high'?'var(--red)':'var(--amber)'}">${s.ofstedLabel}</span> (${s.distanceMiles}mi)</div>`).join('')||''}
+    </div>
+  </div>`;
+
+  html += '</div>'; // end results grid
+
+  // COMPARABLES
+  if (compd.success && compd.sales?.length > 0) {
+    html += `<div class="comparables">
+      <div class="comp-hdr">
+        <div class="comp-title">📊 Comparable Sales — ${pc} (last 12 months)</div>
+        <div style="font-size:11px;color:var(--muted)">${compd.count} sales found</div>
+      </div>
+      <div class="comp-stats">
+        <div class="comp-stat"><div class="cs-val">${compd.stats?.average||'—'}</div><div class="cs-lbl">Average</div></div>
+        <div class="comp-stat"><div class="cs-val">${compd.stats?.median||'—'}</div><div class="cs-lbl">Median</div></div>
+        <div class="comp-stat"><div class="cs-val">${compd.stats?.lowest||'—'}</div><div class="cs-lbl">Lowest</div></div>
+        <div class="comp-stat"><div class="cs-val">${compd.stats?.highest||'—'}</div><div class="cs-lbl">Highest</div></div>
+      </div>
+      <table class="comp-table">
+        <thead><tr><th>Address</th><th>Type</th><th>Date</th><th>Price</th></tr></thead>
+        <tbody>
+          ${compd.sales.slice(0,8).map(s=>`<tr>
+            <td>${s.address||'Not disclosed'}</td>
+            <td style="color:var(--muted)">${s.propertyType||'—'} ${s.tenure?'('+s.tenure+')':''}</td>
+            <td style="color:var(--muted2)">${s.date}</td>
+            <td class="price">${s.priceFormatted}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      ${compd.tip ? `<div style="font-size:11px;color:var(--gold);padding:10px 12px;border-top:1px solid var(--border)">${compd.tip}</div>` : ''}
+    </div>`;
+  } else {
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px;font-size:12px;color:var(--muted)">
+      📊 No sold prices found for ${pc} in the last 12 months — try a nearby postcode or check Land Registry directly.
+      <a href="https://landregistry.data.gov.uk/app/ppd" target="_blank" style="color:var(--gold);display:inline-block;margin-top:6px">→ Land Registry Price Paid</a>
+    </div>`;
+  }
+
+  // AI DD SUMMARY
+  html += `<div class="dd-report" id="dd-report">
+    <div class="ddr-title">🤖 AI Due Diligence Summary</div>
+    <div class="ddr-body" id="dd-body">⟳ Generating summary...</div>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  // Now get AI DD summary
+  try {
+    const ddPayload = {
+      postcode: pc,
+      flood:    fd.floodRisk?.label || 'Unknown',
+      hmo:      hd.licensingType || 'Standard',
+      article4: hd.article4Direction || false,
+      crime:    cd.overallRisk || 'Unknown',
+      burglary: cd.burglary || 0,
+      schools:  `${sd.outstanding||0} Outstanding, ${sd.good||0} Good, ${sd.concern||0} Concerns`,
+      avgPrice: compd.stats?.average || 'Unknown',
+      salesCount: compd.count || 0,
+    };
+
+    const r = await fetch('/api/analyse', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        address: pc, postcode: pc, price:'Unknown', type:'Due Diligence Check',
+        ddContext: `Flood: ${ddPayload.flood}. HMO: ${ddPayload.hmo}. Article 4: ${ddPayload.article4}. Crime: ${ddPayload.crime} (Burglary: ${ddPayload.burglary}/3mo). Schools: ${ddPayload.schools}. Comparable sales avg: ${ddPayload.avgPrice} (${ddPayload.salesCount} sales found).`,
+      })
+    });
+    if (r.ok) {
+      const d = await r.json();
+      document.getElementById('dd-body').innerHTML = (d.analysis || d.message || 'Analysis complete.').replace(/\n/g,'<br>');
+    } else {
+      document.getElementById('dd-body').textContent = 'AI summary unavailable — check ANTHROPIC_API_KEY is set in Vercel.';
+    }
+  } catch(e) {
+    document.getElementById('dd-body').textContent = 'Could not generate AI summary: ' + e.message;
+  }
+}
+</script>
+<script>
+function setActiveNav(){var p=window.location.pathname.split('/').pop()||'index.html';document.querySelectorAll('.nav-link').forEach(function(a){var h=a.getAttribute('href').split('/').pop();if(h===p||(p===''&&h==='index.html'))a.classList.add('active');});}
+function toggleNav(){var l=document.getElementById('nav-links');var b=document.getElementById('hamburger');l.classList.toggle('open');b.textContent=l.classList.contains('open')?'\u2715':'\u2630';}
+document.addEventListener('click',function(e){var n=document.getElementById('nav-links');var b=document.getElementById('hamburger');if(n&&b&&!n.contains(e.target)&&!b.contains(e.target)){n.classList.remove('open');b.textContent='\u2630';}});
+setActiveNav();
+</script>
+</body>
+</html>

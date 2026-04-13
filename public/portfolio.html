@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+/* ═══════════════════════════════════════
+   CC PROPERTY INTEL — SHARED STYLES v2
+   ═══════════════════════════════════════ */
+:root {
+  --bg:       #0c0f1a;
+  --surface:  #131728;
+  --surface2: #191e32;
+  --surface3: #1f253d;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.16);
+
+  --gold:     #d4a843;
+  --gold2:    #f0c060;
+  --gold-dim: rgba(212,168,67,0.12);
+  --gold-border: rgba(212,168,67,0.35);
+
+  --white:    #f0eeea;
+  --text:     #e8e6e0;
+  --muted:    #9098b4;
+  --muted2:   #606888;
+
+  --green:    #22c55e;
+  --green-dim:rgba(34,197,94,0.12);
+  --red:      #ef4444;
+  --red-dim:  rgba(239,68,68,0.12);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.12);
+  --blue:     #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --purple:   #a855f7;
+  --purple-dim:rgba(168,85,247,0.12);
+  --teal:     #14b8a6;
+  --teal-dim: rgba(20,184,166,0.12);
+
+  --r:  12px;
+  --r2:  8px;
+  --r3:  6px;
+
+  --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-size: 15px;
+  --line-height: 1.6;
+}
+
+/* RESET */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:var(--font-size); }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:1rem;
+  line-height:var(--line-height);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAVIGATION ── */
+.topnav {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center;
+  padding:0 16px;
+  min-height:56px;
+  gap:12px;
+}
+.nav-left { display:flex; align-items:center; flex-shrink:0; }
+.nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.nav-logo {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--gold); color:#0c0f1a;
+  font-size:14px; font-weight:900; letter-spacing:0.5px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.nav-name { font-size:15px; font-weight:700; color:var(--white); line-height:1; }
+.nav-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+.nav-brand-text { display:flex; flex-direction:column; }
+
+/* Hamburger */
+.nav-hamburger {
+  display:none; background:none; border:1px solid var(--border);
+  color:var(--muted); font-size:20px; cursor:pointer;
+  padding:4px 10px; border-radius:var(--r3);
+  margin-left:auto;
+}
+.nav-hamburger:hover { color:var(--gold); border-color:var(--gold-border); }
+
+/* Nav links */
+.nav-links {
+  display:flex; align-items:center; gap:2px;
+  overflow-x:auto; flex:1;
+  scrollbar-width:none; padding:8px 0;
+}
+.nav-links::-webkit-scrollbar { display:none; }
+.nav-link {
+  flex-shrink:0;
+  font-size:12px; font-weight:600;
+  color:var(--muted); text-decoration:none;
+  padding:6px 10px; border-radius:var(--r3);
+  transition:all 0.15s; white-space:nowrap;
+  border:1px solid transparent;
+}
+.nav-link:hover { color:var(--white); background:var(--surface2); }
+.nav-link.active {
+  color:var(--gold); background:var(--gold-dim);
+  border-color:var(--gold-border);
+}
+
+/* Mobile nav */
+@media (max-width:768px) {
+  .nav-hamburger { display:flex; align-items:center; }
+  .nav-links {
+    display:none; position:fixed;
+    top:56px; left:0; right:0; bottom:0;
+    background:var(--surface); z-index:199;
+    flex-direction:column; align-items:stretch;
+    overflow-y:auto; padding:12px;
+    gap:4px; border-top:1px solid var(--border);
+  }
+  .nav-links.open { display:flex; }
+  .nav-link {
+    font-size:15px; padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    border-radius:var(--r2);
+  }
+  .nav-link:last-child { border-bottom:none; }
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  padding:24px 16px 0;
+  max-width:1100px; margin:0 auto;
+  display:flex; align-items:flex-start;
+  justify-content:space-between; gap:12px;
+  flex-wrap:wrap;
+}
+.page-title { font-size:clamp(20px,4vw,26px); font-weight:800; color:var(--white); margin-bottom:4px; }
+.page-sub   { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* ── CONTENT WRAPPER ── */
+.content { padding:16px 16px 80px; max-width:1100px; margin:0 auto; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); overflow:hidden;
+  margin-bottom:14px;
+}
+.card-hdr {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.card-title { font-size:14px; font-weight:700; color:var(--white); display:flex; align-items:center; gap:8px; }
+.card-body  { padding:16px 18px; }
+
+/* ── GRID ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.auto-grid-sm { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.auto-grid-md { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.auto-grid-lg { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+@media(max-width:600px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+}
+
+/* ── STATS ── */
+.stat-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r2); padding:14px 16px;
+}
+.stat-val { font-size:clamp(20px,3vw,26px); font-weight:800; color:var(--gold); line-height:1; margin-bottom:4px; }
+.stat-lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; }
+.stat-change { font-size:12px; color:var(--muted); margin-top:3px; }
+.stat-card.green { border-color:rgba(34,197,94,0.25); }
+.stat-card.green .stat-val { color:var(--green); }
+
+/* ── BADGES ── */
+.badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:0.3px; display:inline-block; }
+.b-gold   { background:var(--gold-dim);   color:var(--gold);   border:1px solid var(--gold-border); }
+.b-green  { background:var(--green-dim);  color:var(--green);  }
+.b-red    { background:var(--red-dim);    color:var(--red);    }
+.b-amber  { background:var(--amber-dim);  color:var(--amber);  }
+.b-blue   { background:var(--blue-dim);   color:var(--blue);   }
+.b-purple { background:var(--purple-dim); color:var(--purple); }
+.b-muted  { background:var(--surface3);   color:var(--muted);  }
+
+/* ── RISK BADGES ── */
+.risk-low    { background:var(--green-dim);  color:var(--green);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-medium { background:var(--amber-dim);  color:var(--amber);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-high   { background:var(--red-dim);    color:var(--red);    font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+.risk-unknown{ background:var(--surface3);   color:var(--muted);  font-size:12px; font-weight:700; padding:3px 10px; border-radius:8px; display:inline-block; }
+
+/* ── FORM FIELDS ── */
+.field { margin-bottom:14px; }
+.field-label {
+  font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.7px;
+  color:var(--muted); margin-bottom:6px; display:block;
+}
+.field-hint { font-weight:400; color:var(--muted2); }
+.field-input, .field-select, .field-textarea {
+  width:100%; background:var(--surface2);
+  border:1px solid var(--border); border-radius:var(--r2);
+  padding:11px 14px; font-size:15px; color:var(--white);
+  outline:none; font-family:var(--font);
+  transition:border-color 0.15s;
+  -webkit-appearance:none;
+}
+.field-input:focus, .field-select:focus, .field-textarea:focus { border-color:var(--gold); }
+.field-input::placeholder, .field-textarea::placeholder { color:var(--muted2); }
+.field-select { cursor:pointer; }
+.field-select option { background:var(--surface2); }
+.field-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:11px 20px; border-radius:var(--r2); font-size:14px; font-weight:700; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; font-family:var(--font); }
+.btn-gold   { background:var(--gold);     color:#0c0f1a; }
+.btn-gold:hover { background:var(--gold2); }
+.btn-ghost  { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--white); border-color:var(--border2); }
+.btn-red    { background:var(--red-dim);  color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+.btn-green  { background:var(--green-dim);color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-sm { padding:7px 14px; font-size:12px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.75);
+  z-index:500; display:flex; align-items:center;
+  justify-content:center; padding:16px;
+}
+.modal {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--r); width:100%; max-width:520px;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-hdr {
+  padding:18px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; background:var(--surface); z-index:1;
+}
+.modal-title { font-size:16px; font-weight:700; color:var(--white); }
+.modal-close { font-size:22px; color:var(--muted); cursor:pointer; line-height:1; background:none; border:none; }
+.modal-close:hover { color:var(--white); }
+.modal-body { padding:20px; }
+.modal-footer {
+  padding:16px 20px; border-top:1px solid var(--border);
+  display:flex; gap:8px; justify-content:flex-end;
+  position:sticky; bottom:0; background:var(--surface);
+}
+
+/* ── TABLES ── */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.5px; color:var(--muted);
+  padding:10px 14px; text-align:left;
+  background:var(--surface2); border-bottom:1px solid var(--border);
+}
+.data-table td { padding:11px 14px; border-top:1px solid var(--border); vertical-align:top; line-height:1.5; }
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.data-table a { color:var(--gold); text-decoration:none; }
+.data-table a:hover { text-decoration:underline; }
+
+/* ── ALERT BOXES ── */
+.alert { border-radius:var(--r2); padding:14px 16px; margin-bottom:14px; display:flex; gap:12px; align-items:flex-start; }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-body {}
+.alert-title { font-size:13px; font-weight:700; margin-bottom:3px; }
+.alert-text  { font-size:12px; line-height:1.6; color:var(--muted); }
+.alert-gold   { background:var(--gold-dim);   border:1px solid var(--gold-border); }
+.alert-gold .alert-title { color:var(--gold); }
+.alert-red    { background:var(--red-dim);    border:1px solid rgba(239,68,68,0.3); }
+.alert-red .alert-title { color:var(--red); }
+.alert-green  { background:var(--green-dim);  border:1px solid rgba(34,197,94,0.3); }
+.alert-green .alert-title { color:var(--green); }
+.alert-amber  { background:var(--amber-dim);  border:1px solid rgba(245,158,11,0.3); }
+.alert-amber .alert-title { color:var(--amber); }
+
+/* ── LOADING ── */
+.loading-spinner { display:inline-block; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--r2); }
+@keyframes shimmer { to { background-position:-200% 0; } }
+
+/* ── SECTION HEADER ── */
+.section-hdr { display:flex; align-items:center; justify-content:space-between; margin:20px 0 12px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:14px; font-weight:700; color:var(--white); }
+.section-sub   { font-size:12px; color:var(--muted); margin-top:2px; }
+.section-action { font-size:12px; font-weight:700; color:var(--gold); cursor:pointer; text-decoration:none; }
+.section-action:hover { text-decoration:underline; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ── COLOURS ── */
+.text-gold   { color:var(--gold);   }
+.text-green  { color:var(--green);  }
+.text-red    { color:var(--red);    }
+.text-amber  { color:var(--amber);  }
+.text-muted  { color:var(--muted);  }
+.text-white  { color:var(--white);  }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ── NAV JS ── */
+/* (toggleNav function shared inline) */
+
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC Property — Portfolio Tracker</title>
+
+</head>
+<body>
+<nav class="topnav">
+  <div class="nav-left"><a class="nav-brand" href="/index.html">
+    <div class="nav-logo">CC</div>
+    <div class="nav-brand-text"><div class="nav-name">Property Intel</div><div class="nav-sub">CC Properties Leeds</div></div>
+  </a></div>
+  <button class="nav-hamburger" onclick="toggleNav()" id="hamburger">&#9776;</button>
+  <div class="nav-links" id="nav-links">
+    <a class="nav-link" href="/index.html">📊 Dashboard</a>
+    <a class="nav-link" href="/epc.html">⚡ EPC Finder</a>
+    <a class="nav-link" href="/news.html">📰 News</a>
+    <a class="nav-link" href="/pipeline.html">◐ Pipeline</a>
+    <a class="nav-link" href="/portfolio.html">◈ Portfolio</a>
+    <a class="nav-link" href="/risk.html">◉ Risk Check</a>
+    <a class="nav-link" href="/calculators.html">◑ Calculators</a>
+    <a class="nav-link" href="/analyser.html">🤖 AI Analyser</a>
+    <a class="nav-link" href="/sourcing.html">🔍 Sourcing</a>
+    <a class="nav-link" href="/disposals.html">🏛️ Disposals</a>
+    <a class="nav-link" href="/auctions.html">🔨 Auctions</a>
+    <a class="nav-link" href="/outreach.html">✉️ Outreach</a>
+    <a class="nav-link" href="/pubs.html">🍺 Pubs</a>
+    <a class="nav-link" href="/health.html">🔧 Health</a>
+    <a class="nav-link" href="/bmv.html">📉 BMV</a>
+    <a class="nav-link" href="/rates.html">💰 Rates</a>
+    <a class="nav-link" href="/regeneration.html">🏙️ Regen</a>
+    <a class="nav-link" href="/directmail.html">📬 Mail</a>
+    <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
+  </div>
+</nav>
+
+
+<div class="header">
+  <div>
+    <div class="h-title">◈ Portfolio Tracker</div>
+    <div class="h-sub">Track equity, yield and cashflow across every property you own</div>
+  </div>
+  <button class="add-btn" onclick="openAdd()">+ Add Property</button>
+</div>
+
+<div class="stats" id="stats-bar">
+  <div class="stat"><div class="stat-val" id="s-count">0</div><div class="stat-lbl">Properties</div></div>
+  <div class="stat highlight"><div class="stat-val" id="s-equity">£0</div><div class="stat-lbl">Total Equity</div></div>
+  <div class="stat"><div class="stat-val" id="s-value">£0</div><div class="stat-lbl">Portfolio Value</div></div>
+  <div class="stat"><div class="stat-val" id="s-debt">£0</div><div class="stat-lbl">Total Debt</div></div>
+  <div class="stat"><div class="stat-val" id="s-yield">0%</div><div class="stat-lbl">Avg Gross Yield</div></div>
+  <div class="stat highlight"><div class="stat-val" id="s-cashflow">£0</div><div class="stat-lbl">Monthly Cashflow</div></div>
+  <div class="stat"><div class="stat-val" id="s-ltv">0%</div><div class="stat-lbl">Portfolio LTV</div></div>
+</div>
+
+<div class="content">
+  <div class="prop-grid" id="prop-grid">
+    <div class="empty" id="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">No properties tracked yet</div>
+      <div class="empty-sub">Add your first property to start tracking equity,<br>yield and monthly cashflow across your portfolio.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="closeOut(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-title">Add Property</div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="field"><div class="field-label">Address</div><input class="field-input" id="f-addr" placeholder="14 Spencer Place, LS7 4EH"></div>
+      <div class="grid-2">
+        <div class="field"><div class="field-label">Property Type</div>
+          <select class="field-select" id="f-type">
+            <option>Terraced</option><option>Semi-Detached</option><option>Detached</option>
+            <option>Flat</option><option>Commercial</option><option>HMO</option><option>Mixed Use</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">Status</div>
+          <select class="field-select" id="f-status">
+            <option value="let">Tenanted (let)</option>
+            <option value="vacant">Vacant</option>
+            <option value="refurb">Under Refurb</option>
+            <option value="owner">Owner Occupied</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><div class="field-label">Purchase Price (£)</div><input class="field-input" id="f-purchase" type="number" placeholder="120000" oninput="calcPreview()"></div>
+        <div class="field"><div class="field-label">Current Value (£)</div><input class="field-input" id="f-value" type="number" placeholder="145000" oninput="calcPreview()"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><div class="field-label">Outstanding Mortgage (£)</div><input class="field-input" id="f-mortgage" type="number" placeholder="90000" oninput="calcPreview()"></div>
+        <div class="field"><div class="field-label">Monthly Mortgage Payment (£)</div><input class="field-input" id="f-mtgpay" type="number" placeholder="473" oninput="calcPreview()"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><div class="field-label">Monthly Rent (£)</div><input class="field-input" id="f-rent" type="number" placeholder="850" oninput="calcPreview()"></div>
+        <div class="field"><div class="field-label">Monthly Costs (£) <span style="font-weight:400;color:var(--muted2)">(mgmt, ins, maint)</span></div><input class="field-input" id="f-costs" type="number" placeholder="120" oninput="calcPreview()"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><div class="field-label">Purchase Date</div><input class="field-input" id="f-date" type="date"></div>
+        <div class="field"><div class="field-label">Tenant / Notes</div><input class="field-input" id="f-notes" placeholder="e.g. Mr Smith, rolling AST"></div>
+      </div>
+      <!-- LIVE PREVIEW -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:12px;margin-top:4px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+        <div><div style="font-size:18px;font-weight:800;color:var(--gold)" id="prev-equity">£0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase">Equity</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--green)" id="prev-cf">£0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase">Mo. Cashflow</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--white)" id="prev-yield">0%</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase">Gross Yield</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="del-btn" style="display:none;margin-right:auto" onclick="deleteProp()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveProp()">Save Property</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const fmt = n => '£' + Math.round(n).toLocaleString('en-GB');
+const pct = n => n.toFixed(1) + '%';
+let properties = JSON.parse(localStorage.getItem('cc_portfolio_v1') || '[]');
+let editId = null;
+
+function save() { localStorage.setItem('cc_portfolio_v1', JSON.stringify(properties)); render(); }
+function genId() { return 'P' + Date.now(); }
+
+function calcMetrics(p) {
+  const value    = +p.value    || 0;
+  const mortgage = +p.mortgage || 0;
+  const purchase = +p.purchase || 0;
+  const rent     = +p.rent     || 0;
+  const costs    = +p.costs    || 0;
+  const mtgpay   = +p.mtgpay  || 0;
+  const equity   = value - mortgage;
+  const ltv      = value > 0 ? (mortgage / value) * 100 : 0;
+  const annualRent = rent * 12;
+  const grossYield = value > 0 ? (annualRent / value) * 100 : 0;
+  const monthlyCashflow = rent - mtgpay - costs;
+  const growth   = value - purchase;
+  return { equity, ltv, grossYield, monthlyCashflow, growth, annualRent };
+}
+
+function calcPreview() {
+  const p = {
+    value:    document.getElementById('f-value').value,
+    mortgage: document.getElementById('f-mortgage').value,
+    purchase: document.getElementById('f-purchase').value,
+    rent:     document.getElementById('f-rent').value,
+    costs:    document.getElementById('f-costs').value,
+    mtgpay:   document.getElementById('f-mtgpay').value,
+  };
+  const m = calcMetrics(p);
+  document.getElementById('prev-equity').textContent = fmt(m.equity);
+  document.getElementById('prev-cf').textContent     = (m.monthlyCashflow >= 0 ? '+' : '') + fmt(m.monthlyCashflow);
+  document.getElementById('prev-cf').style.color     = m.monthlyCashflow >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('prev-yield').textContent  = pct(m.grossYield);
+}
+
+function render() {
+  // Stats
+  let totalValue=0,totalDebt=0,totalRent=0,totalCF=0,propCount=properties.length;
+  for (const p of properties) {
+    const m = calcMetrics(p);
+    totalValue += +p.value||0;
+    totalDebt  += +p.mortgage||0;
+    totalRent  += +p.rent||0;
+    totalCF    += m.monthlyCashflow;
+  }
+  const totalEquity = totalValue - totalDebt;
+  const avgYield    = totalValue > 0 ? (totalRent*12/totalValue)*100 : 0;
+  const portfolioLTV= totalValue > 0 ? (totalDebt/totalValue)*100 : 0;
+
+  document.getElementById('s-count').textContent    = propCount;
+  document.getElementById('s-equity').textContent   = fmt(totalEquity);
+  document.getElementById('s-value').textContent    = fmt(totalValue);
+  document.getElementById('s-debt').textContent     = fmt(totalDebt);
+  document.getElementById('s-yield').textContent    = pct(avgYield);
+  document.getElementById('s-cashflow').textContent = (totalCF>=0?'+':'') + fmt(totalCF);
+  document.getElementById('s-ltv').textContent      = pct(portfolioLTV);
+
+  // Cards
+  if (properties.length === 0) {
+    document.getElementById('prop-grid').innerHTML = `<div class="empty" id="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">No properties tracked yet</div>
+      <div class="empty-sub">Add your first property to start tracking equity,<br>yield and monthly cashflow across your portfolio.</div>
+    </div>`;
+    return;
+  }
+
+  document.getElementById('prop-grid').innerHTML = properties.map(p => {
+    const m = calcMetrics(p);
+    const statusColors = { let:'var(--green)', vacant:'var(--amber)', refurb:'var(--blue)', owner:'var(--gold)' };
+    const statusLabels = { let:'Tenanted', vacant:'Vacant', refurb:'Under Refurb', owner:'Owner Occ.' };
+    return `
+    <div class="prop-card">
+      <div class="prop-hdr">
+        <div>
+          <div class="prop-addr">${p.address}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">${p.type||''} · <span style="color:${statusColors[p.status]||'var(--gold)'}">${statusLabels[p.status]||'Unknown'}</span>${p.date ? ' · Bought '+new Date(p.date).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : ''}</div>
+        </div>
+        <div class="prop-type">${p.type||'Property'}</div>
+      </div>
+      <div class="prop-metrics">
+        <div class="metric gold"><div class="metric-val">${fmt(m.equity)}</div><div class="metric-lbl">Equity</div></div>
+        <div class="metric ${m.grossYield>=6?'good':m.grossYield>=4?'':''}"><div class="metric-val">${pct(m.grossYield)}</div><div class="metric-lbl">Gross Yield</div></div>
+        <div class="metric ${m.ltv<=75?'good':m.ltv<=85?'warn':''}"><div class="metric-val">${pct(m.ltv)}</div><div class="metric-lbl">LTV</div></div>
+        <div class="metric"><div class="metric-val">${fmt(+p.value||0)}</div><div class="metric-lbl">Current Value</div></div>
+        <div class="metric"><div class="metric-val">${fmt(+p.mortgage||0)}</div><div class="metric-lbl">Mortgage</div></div>
+        <div class="metric ${m.growth>=0?'good':''}"><div class="metric-val">${m.growth>=0?'+':''}${fmt(m.growth)}</div><div class="metric-lbl">Capital Growth</div></div>
+      </div>
+      <div class="prop-footer">
+        <div class="prop-cf ${m.monthlyCashflow>=0?'cf-pos':'cf-neg'}">${m.monthlyCashflow>=0?'▲':'▼'} ${fmt(Math.abs(m.monthlyCashflow))}/mo cashflow</div>
+        <div class="prop-btns">
+          <button class="prop-btn" onclick="openEdit('${p.id}')">Edit</button>
+          <a class="prop-btn" href="calculators.html" target="_blank">Calc</a>
+          <a class="prop-btn" href="risk.html?postcode=${encodeURIComponent((p.address||'').match(/[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2}/i)?.[0]||'')}" target="_blank">Risk</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAdd() {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Add Property';
+  document.getElementById('del-btn').style.display = 'none';
+  ['f-addr','f-purchase','f-value','f-mortgage','f-mtgpay','f-rent','f-costs','f-notes'].forEach(id => { const el=document.getElementById(id); if(el)el.value=''; });
+  document.getElementById('f-type').value='Terraced';
+  document.getElementById('f-status').value='let';
+  document.getElementById('f-date').value='';
+  calcPreview();
+  document.getElementById('modal').style.display='flex';
+}
+
+function openEdit(id) {
+  editId = id;
+  const p = properties.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('modal-title').textContent = 'Edit Property';
+  document.getElementById('del-btn').style.display = 'block';
+  document.getElementById('f-addr').value     = p.address  || '';
+  document.getElementById('f-type').value     = p.type     || 'Terraced';
+  document.getElementById('f-status').value   = p.status   || 'let';
+  document.getElementById('f-purchase').value = p.purchase || '';
+  document.getElementById('f-value').value    = p.value    || '';
+  document.getElementById('f-mortgage').value = p.mortgage || '';
+  document.getElementById('f-mtgpay').value   = p.mtgpay   || '';
+  document.getElementById('f-rent').value     = p.rent     || '';
+  document.getElementById('f-costs').value    = p.costs    || '';
+  document.getElementById('f-date').value     = p.date     || '';
+  document.getElementById('f-notes').value    = p.notes    || '';
+  calcPreview();
+  document.getElementById('modal').style.display='flex';
+}
+
+function closeModal() { document.getElementById('modal').style.display='none'; editId=null; }
+function closeOut(e) { if(e.target===document.getElementById('modal')) closeModal(); }
+
+function saveProp() {
+  const addr = document.getElementById('f-addr').value.trim();
+  if (!addr) { alert('Please enter an address'); return; }
+  const prop = {
+    id:       editId || genId(),
+    address:  addr,
+    type:     document.getElementById('f-type').value,
+    status:   document.getElementById('f-status').value,
+    purchase: document.getElementById('f-purchase').value,
+    value:    document.getElementById('f-value').value,
+    mortgage: document.getElementById('f-mortgage').value,
+    mtgpay:   document.getElementById('f-mtgpay').value,
+    rent:     document.getElementById('f-rent').value,
+    costs:    document.getElementById('f-costs').value,
+    date:     document.getElementById('f-date').value,
+    notes:    document.getElementById('f-notes').value,
+    updated:  new Date().toISOString(),
+  };
+  if (editId) { const i=properties.findIndex(x=>x.id===editId); if(i>-1)properties[i]=prop; }
+  else properties.unshift(prop);
+  save(); closeModal();
+}
+
+function deleteProp() {
+  if (!editId || !confirm('Delete this property?')) return;
+  properties = properties.filter(p=>p.id!==editId);
+  save(); closeModal();
+}
+
+// Demo data
+if (properties.length === 0) {
+  properties = [
+    { id:'PP1', address:'14 Spencer Place, LS7 4EH', type:'Terraced', status:'let', purchase:'118000', value:'145000', mortgage:'88000', mtgpay:'465', rent:'850', costs:'120', date:'2021-06-15', notes:'Mr & Mrs Patel. Rolling AST.' },
+    { id:'PP2', address:'8 Reginald Street, LS7 2JG', type:'HMO', status:'let', purchase:'95000', value:'130000', mortgage:'70000', mtgpay:'370', rent:'1400', costs:'250', date:'2020-03-20', notes:'5-bed HMO. Selective licence held.' },
+  ];
+  save();
+}
+render();
+</script>
+<script>
+function setActiveNav(){var p=window.location.pathname.split('/').pop()||'index.html';document.querySelectorAll('.nav-link').forEach(function(a){var h=a.getAttribute('href').split('/').pop();if(h===p||(p===''&&h==='index.html'))a.classList.add('active');});}
+function toggleNav(){var l=document.getElementById('nav-links');var b=document.getElementById('hamburger');l.classList.toggle('open');b.textContent=l.classList.contains('open')?'\u2715':'\u2630';}
+document.addEventListener('click',function(e){var n=document.getElementById('nav-links');var b=document.getElementById('hamburger');if(n&&b&&!n.contains(e.target)&&!b.contains(e.target)){n.classList.remove('open');b.textContent='\u2630';}});
+setActiveNav();
+</script>
+</body>
+</html>
