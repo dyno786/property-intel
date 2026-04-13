@@ -131,8 +131,8 @@ export default async function handler(req, res) {
     },
     {
       name:        'EG Propertylink (Leisure)',
-      url:         `https://www.propertylink.estatesgazette.com/search?q=pub+leeds`,
-      searchUrl:   `https://www.propertylink.estatesgazette.com/search?q=pub+leeds`,
+      url:         `https://www.costar.com/en-gb/commercial-real-estate-listings/search?q=pub+leeds`,
+      searchUrl:   `https://www.costar.com/en-gb/commercial-real-estate-listings/search?q=pub+leeds`,
       description: 'Commercial property portal — leisure and licensed',
       logo:        '📊',
       type:        'portal'

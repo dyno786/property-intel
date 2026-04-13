@@ -29,9 +29,9 @@ export default async function handler(req, res) {
   }
 
   const alertMessages = {
-    planning:   `🏗️ *CC Property Intel*\n📋 *${count || 'New'} Planning Applications* in ${region || 'Leeds'}\nNew applications in the last 24hrs — check your dashboard now.\n\nhttps://property-intel.vercel.app`,
-    insolvency: `⚠️ *CC Property Intel*\n🚨 *${count || 'New'} Insolvency Alerts* in ${region || 'Leeds'}\nNew companies in distress — potential property opportunities.\n\nhttps://property-intel.vercel.app`,
-    pub:        `🍺 *CC Property Intel*\n🔔 *New Pub Disposal Alert*\n${message || 'A new pub has appeared on a disposal list in your target area.'}\n\nhttps://property-intel.vercel.app/pubs`,
+    planning:   `🏗️ *CC Property Intel*\n📋 *${count || 'New'} Planning Applications* in ${region || 'Leeds'}\nNew applications in the last 24hrs — check your dashboard now.\n\nhttps://property-intel-beige.vercel.app`,
+    insolvency: `⚠️ *CC Property Intel*\n🚨 *${count || 'New'} Insolvency Alerts* in ${region || 'Leeds'}\nNew companies in distress — potential property opportunities.\n\nhttps://property-intel-beige.vercel.app`,
+    pub:        `🍺 *CC Property Intel*\n🔔 *New Pub Disposal Alert*\n${message || 'A new pub has appeared on a disposal list in your target area.'}\n\nhttps://property-intel-beige.vercel.app/pubs`,
     auction:    `🔨 *CC Property Intel*\n📅 *New Auction Catalogue*\n${message || 'New Yorkshire auction lots have been published.'}\n\nhttps://www.sdlauctions.co.uk/property-auctions/yorkshire/`,
     digest:     buildDailyDigest(data),
     custom:     message || 'CC Property Intelligence Alert'
@@ -84,7 +84,7 @@ function buildDailyDigest(data) {
 🏠 Properties: ${data.listings || '—'} for sale
 
 Open dashboard:
-https://property-intel.vercel.app
+https://property-intel-beige.vercel.app
 
 _CC Properties Leeds_`;
 }

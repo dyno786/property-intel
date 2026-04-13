@@ -127,7 +127,7 @@ function buildEmailHtml(data, date) {
           <div style="display:flex;flex-wrap:wrap;gap:8px">
             <a href="https://www.sdlauctions.co.uk/property-auctions/yorkshire/" style="font-size:11px;color:#4da8f0;text-decoration:none;padding:4px 10px;border:1px solid #e5e7eb;border-radius:4px">🔨 SDL Auctions</a>
             <a href="https://www.auctionhouse.co.uk/yorkshire" style="font-size:11px;color:#4da8f0;text-decoration:none;padding:4px 10px;border:1px solid #e5e7eb;border-radius:4px">🔨 Auction House</a>
-            <a href="https://www.propertylink.estatesgazette.com/search?q=leeds" style="font-size:11px;color:#4da8f0;text-decoration:none;padding:4px 10px;border:1px solid #e5e7eb;border-radius:4px">🏢 EG Propertylink</a>
+            <a href="https://www.costar.com/en-gb/search?q=leeds" style="font-size:11px;color:#4da8f0;text-decoration:none;padding:4px 10px;border:1px solid #e5e7eb;border-radius:4px">🏢 EG Propertylink</a>
             <a href="https://www.thegazette.co.uk/insolvency" style="font-size:11px;color:#4da8f0;text-decoration:none;padding:4px 10px;border:1px solid #e5e7eb;border-radius:4px">⚠️ The Gazette</a>
           </div>
         </div>
@@ -149,7 +149,7 @@ export default async function handler(req, res) {
   // Allow GET (for testing) or POST (for cron)
   const brevoKey   = process.env.BREVO_API_KEY;
   const digestEmail = process.env.DIGEST_EMAIL;
-  const baseUrl    = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+  const baseUrl    = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://https://property-intel-beige.vercel.app';
 
   if (!brevoKey || !digestEmail) {
     return res.status(200).json({
