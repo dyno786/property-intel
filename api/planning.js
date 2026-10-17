@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/planning.js
 // Leeds planning portal - weekly list URLs actually work and show results
 // Free - no credits used
@@ -105,9 +106,7 @@ function fmtDisplay(d) {
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+async function handler(req, res) {
 
   const region  = (req.query.region  || 'leeds').toLowerCase();
   const apiKey  = process.env.PLANNING_API_KEY;
@@ -152,3 +151,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString()
   });
 }
+
+export default withApi(handler, ['GET']);

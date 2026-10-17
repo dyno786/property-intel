@@ -632,6 +632,8 @@ body {
 .ddr-body{font-size:13px;color:var(--muted);line-height:1.8;}
 
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -698,13 +700,13 @@ async function runCheck() {
   const pc = document.getElementById('postcode-input').value.trim().toUpperCase();
   if (!pc || pc.length < 4) { alert('Please enter a valid UK postcode'); return; }
 
-  document.getElementById('content').innerHTML = `
+  setHTML(document.getElementById('content'), `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:16px">
       ${['🌊 Flood Risk','⚠️ HMO Licensing','🚔 Crime Rate','🏫 School Ratings'].map(t=>`
         <div class="loading-card">⟳ Checking ${t}...</div>`).join('')}
     </div>
     <div class="loading-card" style="margin-bottom:12px">⟳ Fetching comparable sales from Land Registry...</div>
-    <div class="loading-card">⟳ Generating AI due diligence summary...</div>`;
+    <div class="loading-card">⟳ Generating AI due diligence summary...</div>`);
 
   // Fetch all in parallel
   const [flood, hmo, crime, schools, comps] = await Promise.allSettled([
@@ -732,7 +734,7 @@ async function runCheck() {
   html += `<div class="risk-card">
     <div class="rc-hdr"><div class="rc-icon">🌊</div><div class="rc-title">Flood Risk</div></div>
     <div class="rc-body">
-      ${fd.floodRisk ? riskBadge(fd.floodRisk.colour === 'green' ? 'low' : fd.floodRisk.colour === 'amber' ? 'medium' : 'high') : riskBadge()}
+      ${fd.floodRisk ? riskBadge(fd.floodRisk.colour === 'green' ? 'low' : fd.floodRisk.colour === 'amber' ? 'medium' : fd.floodRisk.colour === 'red' ? 'high' : null) : riskBadge()}
       <div class="risk-detail">${fd.floodRisk?.label || 'Could not determine flood zone. Check EA flood map manually.'}</div>
       ${fd.recommendation ? `<div class="risk-note">${fd.recommendation}</div>` : ''}
       ${fd.yorkshireNote ? `<div class="risk-note" style="color:var(--amber)">${fd.yorkshireNote}</div>` : ''}
@@ -741,7 +743,7 @@ async function runCheck() {
   </div>`;
 
   // HMO
-  const hmoRisk = hd.selectiveLicensing ? 'medium' : 'low';
+  const hmoRisk = !hd.success || hd.selectiveLicensing == null ? null : hd.selectiveLicensing ? 'medium' : 'low';
   html += `<div class="risk-card">
     <div class="rc-hdr"><div class="rc-icon">⚠️</div><div class="rc-title">HMO & Licensing</div></div>
     <div class="rc-body">
@@ -759,7 +761,7 @@ async function runCheck() {
     <div class="rc-hdr"><div class="rc-icon">🚔</div><div class="rc-title">Crime Rate</div></div>
     <div class="rc-body">
       ${cd.overallRisk ? riskBadge(cd.overallRisk) : riskBadge()}
-      <div class="risk-detail">${cd.total||0} crimes in last 3 months · Burglary: ${cd.burglary||0} · ASB: ${cd.asb||0} · Violent: ${cd.violent||0}</div>
+      <div class="risk-detail">${cd.success ? cd.total : 'Unknown'} crimes · ${cd.period || 'data unavailable'} · Burglary: ${cd.burglary||0} · ASB: ${cd.asb||0} · Violent: ${cd.violent||0}</div>
       ${cd.investorNote ? `<div class="risk-note">${cd.investorNote}</div>` : ''}
     </div>
   </div>`;
@@ -768,8 +770,8 @@ async function runCheck() {
   html += `<div class="risk-card">
     <div class="rc-hdr"><div class="rc-icon">🏫</div><div class="rc-title">School Catchment</div></div>
     <div class="rc-body">
-      ${riskBadge(sd.outstanding + sd.good > sd.concern ? 'low' : sd.concern > 0 ? 'medium' : 'low')}
-      <div class="risk-detail">${sd.count||0} schools within 1 mile · Outstanding: ${sd.outstanding||0} · Good: ${sd.good||0} · Concerns: ${sd.concern||0}</div>
+      ${riskBadge(!sd.success || !sd.count ? null : sd.outstanding + sd.good > sd.concern ? 'low' : sd.concern > 0 ? 'medium' : null)}
+      <div class="risk-detail">${sd.success ? sd.count : 'Unknown'} schools within 1 mile · Outstanding: ${sd.outstanding||0} · Good: ${sd.good||0} · Concerns: ${sd.concern||0}</div>
       ${sd.investorNote ? `<div class="risk-note">${sd.investorNote}</div>` : ''}
       ${sd.schools?.slice(0,3).map(s=>`<div style="font-size:10px;color:var(--muted);margin-top:3px">${s.name} — <span style="color:${s.risk==='low'?'var(--green)':s.risk==='high'?'var(--red)':'var(--amber)'}">${s.ofstedLabel}</span> (${s.distanceMiles}mi)</div>`).join('')||''}
     </div>
@@ -816,15 +818,15 @@ async function runCheck() {
     <div class="ddr-body" id="dd-body">⟳ Generating summary...</div>
   </div>`;
 
-  document.getElementById('content').innerHTML = html;
+  setHTML(document.getElementById('content'), html);
 
   // Now get AI DD summary
   try {
     const ddPayload = {
       postcode: pc,
       flood:    fd.floodRisk?.label || 'Unknown',
-      hmo:      hd.licensingType || 'Standard',
-      article4: hd.article4Direction || false,
+      hmo: hd.licensingType || 'Unknown',
+      article4: hd.article4Direction ?? 'Unknown',
       crime:    cd.overallRisk || 'Unknown',
       burglary: cd.burglary || 0,
       schools:  `${sd.outstanding||0} Outstanding, ${sd.good||0} Good, ${sd.concern||0} Concerns`,
@@ -842,7 +844,10 @@ async function runCheck() {
     });
     if (r.ok) {
       const d = await r.json();
-      document.getElementById('dd-body').innerHTML = (d.analysis || d.message || 'Analysis complete.').replace(/\n/g,'<br>');
+      if (!d.success) throw new Error(d.error || 'AI summary unavailable');
+      const a = d.analysis;
+      document.getElementById('dd-body').style.whiteSpace = 'pre-wrap';
+      document.getElementById('dd-body').textContent = typeof a === 'string' ? a : [a.headline, a.marketContext, ...(a.risks || []), ...(a.dueDiligence || [])].filter(Boolean).join('\n\n');
     } else {
       document.getElementById('dd-body').textContent = 'AI summary unavailable — check ANTHROPIC_API_KEY is set in Vercel.';
     }

@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/directmail.js - Bulk Direct Mail Campaign Builder
 // Takes EPC data or postcode list → generates personalised letters → returns CSV for mail merge
 
@@ -77,15 +78,14 @@ function generateLetter(template, property) {
 function toCSV(rows) {
   if (!rows.length) return '';
   const headers = Object.keys(rows[0]);
-  const escape  = v => '"' + String(v || '').replace(/"/g, '""') + '"';
+  const escape = v => { let text = String(v ?? ''); if (/^[\s]*[=+@-]/.test(text)) text = "'" + text; return '"' + text.replace(/"/g, '""') + '"'; };
   return [
     headers.map(escape).join(','),
     ...rows.map(r => headers.map(h => escape(r[h])).join(',')),
   ].join('\n');
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
 
   if (req.method === 'GET') {
     // Return template list and usage info
@@ -108,7 +108,9 @@ export default async function handler(req, res) {
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
   catch { return res.status(400).json({ error:'Invalid JSON body' }); }
 
+  if (!Array.isArray(body.properties) || body.properties.length > 200 || body.properties.some(p => !p || typeof p !== 'object' || ['address', 'postcode', 'ownerName'].some(key => p[key] != null && (typeof p[key] !== 'string' || p[key].length > 1000)))) return res.status(400).json({ success: false, error: 'Provide up to 200 properties with text fields' });
   const templateName = body.template || 'epc';
+  if (typeof templateName !== 'string' || !Object.hasOwn(TEMPLATES, templateName)) return res.status(400).json({ success: false, error: 'Unknown template' });
   const properties   = (body.properties || []).slice(0, 200);
   const template     = TEMPLATES[templateName] || TEMPLATES.epc;
 
@@ -138,3 +140,5 @@ export default async function handler(req, res) {
     fetchedAt:  new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET', 'POST']);

@@ -1,3 +1,4 @@
+import { withApi, requireToken, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/listings.js
 // Fetches live property listings + market stats from PropertyData API
 // Sign up at https://propertydata.co.uk/free-trial/10
@@ -17,30 +18,33 @@ const REGION_POSTCODES = {
 async function fetchPostcodeStats(postcode, apiKey) {
   const url = `${PD_BASE}/postcode-key-stats?key=${apiKey}&postcode=${encodeURIComponent(postcode)}`;
   const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error('Property data provider unavailable');
   const json = await res.json();
+  if (json.status !== 'success') throw new Error('Property data provider rejected this query');
   return json.status === 'success' ? json : null;
 }
 
 async function fetchSourcedProperties(postcode, apiKey) {
   const url = `${PD_BASE}/sourced-properties?key=${apiKey}&postcode=${encodeURIComponent(postcode)}&listing_status=for_sale`;
   const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error('Property data provider unavailable');
   const json = await res.json();
+  if (json.status !== 'success') throw new Error('Property data provider rejected this query');
   return json.status === 'success' ? (json.data || []) : [];
 }
 
 async function fetchCommercialRents(postcode, apiKey) {
   const url = `${PD_BASE}/rents-commercial?key=${apiKey}&postcode=${encodeURIComponent(postcode)}`;
   const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error('Property data provider unavailable');
   const json = await res.json();
+  if (json.status !== 'success') throw new Error('Property data provider rejected this query');
   return json.status === 'success' ? json : null;
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+async function handler(req, res) {
+  if (req.query.check === '1') { const configured = Boolean(process.env.PROPERTYDATA_API_KEY && process.env.API_ACCESS_TOKEN); res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ success: true, configured, setupRequired: !configured }); }
+  if (!requireToken(req, res)) return;
 
   const region       = (req.query.region   || 'leeds').toLowerCase();
   const postcode     = (req.query.postcode || 'all').toUpperCase();
@@ -125,3 +129,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success: false, error: err.message, data: [] });
   }
 }
+
+export default withApi(handler, ['GET']);

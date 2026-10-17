@@ -630,6 +630,8 @@ body {
 .add-btn:hover{background:var(--gold2);}
 
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -660,6 +662,7 @@ body {
     <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
   </div>
 </nav>
+<div role="note" style="padding:10px 20px;color:#aeb8cc">Saved in this browser only. Export a backup before clearing browser data or switching devices. <button class="btn btn-ghost" onclick="exportSavedData('cc_portfolio_v1')">Export backup</button></div>
 <div class="header">
   <div>
     <div class="h-title">◈ Portfolio Tracker</div>
@@ -748,7 +751,8 @@ body {
 <script>
 const fmt = n => '£' + Math.round(n).toLocaleString('en-GB');
 const pct = n => n.toFixed(1) + '%';
-let properties = JSON.parse(localStorage.getItem('cc_portfolio_v1') || '[]');
+document.addEventListener('click', event => { const button = event.target.closest('[data-edit-property]'); if (button) openEdit(button.dataset.editProperty); });
+let properties = loadSavedList('cc_portfolio_v1');
 let editId = null;
 
 function save() { localStorage.setItem('cc_portfolio_v1', JSON.stringify(properties)); render(); }
@@ -810,15 +814,15 @@ function render() {
 
   // Cards
   if (properties.length === 0) {
-    document.getElementById('prop-grid').innerHTML = `<div class="empty" id="empty-state">
+    setHTML(document.getElementById('prop-grid'), `<div class="empty" id="empty-state">
       <div class="empty-icon">◈</div>
       <div class="empty-title">No properties tracked yet</div>
       <div class="empty-sub">Add your first property to start tracking equity,<br>yield and monthly cashflow across your portfolio.</div>
-    </div>`;
+    </div>`);
     return;
   }
 
-  document.getElementById('prop-grid').innerHTML = properties.map(p => {
+  setHTML(document.getElementById('prop-grid'), properties.map(p => {
     const m = calcMetrics(p);
     const statusColors = { let:'var(--green)', vacant:'var(--amber)', refurb:'var(--blue)', owner:'var(--gold)' };
     const statusLabels = { let:'Tenanted', vacant:'Vacant', refurb:'Under Refurb', owner:'Owner Occ.' };
@@ -842,13 +846,13 @@ function render() {
       <div class="prop-footer">
         <div class="prop-cf ${m.monthlyCashflow>=0?'cf-pos':'cf-neg'}">${m.monthlyCashflow>=0?'▲':'▼'} ${fmt(Math.abs(m.monthlyCashflow))}/mo cashflow</div>
         <div class="prop-btns">
-          <button class="prop-btn" onclick="openEdit('${p.id}')">Edit</button>
+          <button class="prop-btn" data-edit-property="${escapeText(p.id)}">Edit</button>
           <a class="prop-btn" href="calculators.html" target="_blank">Calc</a>
           <a class="prop-btn" href="risk.html?postcode=${encodeURIComponent((p.address||'').match(/[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2}/i)?.[0]||'')}" target="_blank">Risk</a>
         </div>
       </div>
     </div>`;
-  }).join('');
+  }).join(''));
 }
 
 function openAdd() {
@@ -916,14 +920,7 @@ function deleteProp() {
   save(); closeModal();
 }
 
-// Demo data
-if (properties.length === 0) {
-  properties = [
-    { id:'PP1', address:'14 Spencer Place, LS7 4EH', type:'Terraced', status:'let', purchase:'118000', value:'145000', mortgage:'88000', mtgpay:'465', rent:'850', costs:'120', date:'2021-06-15', notes:'Mr & Mrs Patel. Rolling AST.' },
-    { id:'PP2', address:'8 Reginald Street, LS7 2JG', type:'HMO', status:'let', purchase:'95000', value:'130000', mortgage:'70000', mtgpay:'370', rent:'1400', costs:'250', date:'2020-03-20', notes:'5-bed HMO. Selective licence held.' },
-  ];
-  save();
-}
+
 render();
 </script>
 <script>

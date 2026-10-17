@@ -318,6 +318,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -395,6 +397,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 setActiveNav();
 </script>
 
+<script>
 let allAlerts = [];
 async function loadAlerts(){
   try{
@@ -403,7 +406,7 @@ async function loadAlerts(){
     allAlerts = d.alerts||[];
     renderAlerts(allAlerts);
   }catch(e){
-    document.getElementById('alerts-grid').innerHTML='<div style="color:var(--red);padding:20px">Could not load alerts — check /api/alerts is deployed.</div>';
+    setHTML(document.getElementById('alerts-grid'), '<div style="color:var(--red);padding:20px">Could not load alerts — check /api/alerts is deployed.</div>');
   }
 }
 
@@ -416,17 +419,18 @@ function showCat(cat, btn){
 
 function renderAlerts(alerts){
   const freqColour = {daily:'b-red',weekly:'b-amber'};
-  document.getElementById('alerts-grid').innerHTML = alerts.map(a=>
+  setHTML(document.getElementById('alerts-grid'), alerts.map(a=>
     '<div class="card"><div class="card-hdr"><div class="card-title" style="font-size:12px">'+a.category+'</div>'+
     '<span class="badge '+freqColour[a.freq]+'">'+a.freq+'</span></div>'+
     '<div class="card-body">'+
     '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:var(--gold);font-family:monospace;margin-bottom:10px;word-break:break-word">'+a.query+'</div>'+
     '<a href="https://alerts.google.com/#:~:text='+encodeURIComponent(a.query)+'" target="_blank" class="btn btn-ghost btn-sm" style="width:100%;text-align:center">→ Set Up This Alert</a>'+
     '</div></div>'
-  ).join('');
+  ).join(''));
 }
 
 loadAlerts();
 
+</script>
 </body>
 </html>

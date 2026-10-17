@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/alerts.js - Google Alerts search terms for property intelligence
 // Returns pre-built search queries the user can set up as Google Alerts
 
@@ -44,8 +45,7 @@ const ALERT_SETS = {
   ],
 };
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=86400');
 
   const category = (req.query.category || 'all').toLowerCase();
@@ -82,3 +82,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);

@@ -3,5 +3,20 @@
   "version": "2.0.0",
   "description": "CC Property Intelligence Dashboard",
   "private": true,
-  "engines": { "node": "24.x" }
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "dompurify": "3.4.17"
+  },
+  "devDependencies": {
+    "acorn": "8.15.0",
+    "jsdom": "26.1.0"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node scripts/check.mjs"
+  }
 }

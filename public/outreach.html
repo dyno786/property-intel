@@ -594,6 +594,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -793,7 +795,7 @@ let generatedLetter = '';
 function setType(type, el) {
   currentType = type;
   document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
 }
 
 const TEMPLATES = {
@@ -1128,11 +1130,11 @@ function generate() {
 
 function copyEmail() {
   if (!generatedEmail) return;
-  navigator.clipboard.writeText(generatedEmail).then(() => showCopied('copyEmail'));
+  navigator.clipboard.writeText(generatedEmail);
 }
 function copyLetter() {
   if (!generatedLetter) return;
-  navigator.clipboard.writeText(generatedLetter).then(() => showCopied('copyLetter'));
+  navigator.clipboard.writeText(generatedLetter);
 }
 function openMailto() {
   if (!generatedEmail) return;
@@ -1141,9 +1143,18 @@ function openMailto() {
 }
 function printLetter() {
   if (!generatedLetter) return;
-  const w = window.open('','_blank');
-  w.document.write(`<html><body><pre style="font-family:Georgia,serif;font-size:14px;line-height:1.8;max-width:700px;margin:40px auto;white-space:pre-wrap">${generatedLetter}</pre>`
-  w.document.close();
+  const w = window.open('', '_blank');
+  if (!w) return;
+  const pre = w.document.createElement('pre');
+  pre.style.cssText = 'font-family:Georgia,serif;font-size:14px;line-height:1.8;max-width:700px;margin:40px auto;white-space:pre-wrap';
+  pre.textContent = generatedLetter;
+  w.document.body.append(pre);
+  w.print();
 }
+const prefill = new URLSearchParams(location.search);
+if (TEMPLATES[prefill.get('type')]) setType(prefill.get('type'), document.querySelector(`[onclick="setType('${prefill.get('type')}',this)"]`));
+for (const [param, id] of [['address','propAddress'],['postcode','propTown'],['name','propName']]) if (prefill.has(param)) document.getElementById(id).value = prefill.get(param);
+function toggleNav() { document.getElementById('nav-links').classList.toggle('open'); }
+</script>
 </body>
 </html>

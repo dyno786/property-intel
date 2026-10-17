@@ -594,6 +594,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -738,11 +740,11 @@ async function search() {
 
   document.getElementById('stats-row').style.display = 'none';
   document.getElementById('insight-box').style.display = 'none';
-  document.getElementById('results').innerHTML = `
+  setHTML(document.getElementById('results'), `
     <div class="empty">
       <div class="spinner"></div>
       <div style="font-size:13px;color:var(--muted);margin-top:8px">Searching EPC register for ${pc}...</div>
-    </div>`;
+    </div>`);
 
   try {
     const url = `/api/epc?postcode=${encodeURIComponent(pc)}&certType=${certType}&band=${band}&size=${size}`;
@@ -750,7 +752,7 @@ async function search() {
     const data = await res.json();
 
     if (data.setupRequired) {
-      document.getElementById('results').innerHTML = `
+      setHTML(document.getElementById('results'), `
         <div class="empty">
           <div class="empty-icon">⚙️</div>
           <div style="font-size:14px;font-weight:600">EPC API Keys Required</div>
@@ -759,7 +761,8 @@ async function search() {
             Your email: <strong>ccpropertiesleeds@gmail.com</strong><br>
             Get key from: <a href="https://epc.opendatacommunities.org" target="_blank" style="color:var(--purple)">epc.opendatacommunities.org</a>
           </div>
-        </div>`;
+        </div>`);
+      btn.disabled = false; btn.textContent = '⚡ Find Properties';
       return;
     }
 
@@ -768,12 +771,12 @@ async function search() {
     renderResults(data);
 
   } catch(err) {
-    document.getElementById('results').innerHTML = `
+    setHTML(document.getElementById('results'), `
       <div class="empty">
         <div class="empty-icon">❌</div>
         <div style="font-size:13px;font-weight:600">Search Failed</div>
         <div style="font-size:12px;color:var(--muted)">${err.message}</div>
-      </div>`;
+      </div>`);
   }
 
   btn.disabled = false; btn.textContent = '⚡ Find Properties';
@@ -797,12 +800,12 @@ function renderResults(data) {
   document.getElementById('insight-sub').textContent   = `${data.total} certificates found in ${pc} · ${data.domestic} domestic · ${data.commercial} commercial · Sorted by motivation score`;
 
   if (!allData.length) {
-    document.getElementById('results').innerHTML = `
+    setHTML(document.getElementById('results'), `
       <div class="empty">
         <div class="empty-icon">✅</div>
         <div style="font-size:14px;font-weight:600">No matching properties found</div>
         <div style="font-size:12px">Try "All Ratings" filter or a different postcode</div>
-      </div>`;
+      </div>`);
     return;
   }
 
@@ -811,10 +814,10 @@ function renderResults(data) {
 
 function renderGrid(items) {
   const r = document.getElementById('results');
-  r.innerHTML = `
+  setHTML(r, `
     <div class="results-hdr">
       <div class="results-title">📋 ${items.length} Properties Found</div>
-      <select class="sort-select" onchange="sortResults(this.value)">
+      <select class="sort-select" data-epc-sort="true">
         <option value="motivation">Sort: Motivation Score</option>
         <option value="rating-worst">Sort: Rating (Worst First)</option>
         <option value="rating-best">Sort: Rating (Best First)</option>
@@ -823,7 +826,7 @@ function renderGrid(items) {
     </div>
     <div class="epc-grid">
       ${items.map(p => renderCard(p)).join('')}
-    </div>`;
+    </div>`);
 }
 
 function renderCard(p) {
@@ -881,6 +884,8 @@ function sortResults(by) {
   if (by === 'address')      sorted.sort((a,b) => (a.address||'').localeCompare(b.address||''));
   renderGrid(sorted);
 }
+
+document.addEventListener('change', event => { if (event.target.matches('[data-epc-sort]')) sortResults(event.target.value); });
 
 // Auto search LS7 on load
 window.addEventListener('load', () => {

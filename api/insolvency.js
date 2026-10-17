@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/insolvency.js — v9 FINAL
 // Uses specific Gazette notice-type codes fetched in parallel
 // No category filter — shows all real insolvency notices, sorted by priority
@@ -76,12 +77,11 @@ async function fetchFeed(url) {
     });
     if (!r.ok) return null;
     const text = await r.text();
-    return text.includes('<entry') ? text : null;
+    return text.includes('<feed') ? text : null;
   } catch { return null; }
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
   const region    = (req.query.region || 'leeds').toLowerCase();
@@ -122,9 +122,12 @@ export default async function handler(req, res) {
     }
   }));
 
+  if (!debugFeeds.some(feed => feed.ok)) return res.status(502).json({ success: false, error: 'Gazette feeds unavailable', data: [] });
+
   const PORDER = { high: 0, medium: 1, low: 2 };
 
-  const formatted = allItems.map(item => {
+  const cutoff = Date.now() - months * 30 * 864e5;
+  const formatted = allItems.filter(item => item.pubDate && new Date(item.pubDate).getTime() >= cutoff).map(item => {
     const area = (region === 'national' || region === 'yorkshire')
       ? detectArea(item.title + ' ' + item.description)
       : region;
@@ -169,3 +172,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);

@@ -1,7 +1,11 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
+import { requireToken } from '../lib/http.js';
 // api/digest.js
 // Generates and sends morning digest email via Brevo (free tier)
 // Add BREVO_API_KEY and DIGEST_EMAIL to Vercel environment variables
 // Set up a daily cron via Vercel or Make.com to POST /api/digest each morning at 7am
+
+function escapeHtml(value) { return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]); }
 
 const BREVO_BASE = 'https://api.brevo.com/v3';
 
@@ -10,10 +14,15 @@ const BASE_URL = 'https://property-intel-beige.vercel.app';
 async function fetchEndpoint(baseUrl, path) {
   try {
     const res = await fetch(`${baseUrl}${path}`, {
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json', ...(process.env.API_ACCESS_TOKEN ? { Authorization: `Bearer ${process.env.API_ACCESS_TOKEN}` } : {}) }
     });
     if (!res.ok) return { data: [] };
-    return await res.json();
+    const payload = await res.json();
+    if (Array.isArray(payload.data)) payload.data = payload.data.map(item => Object.fromEntries(Object.entries(item).map(([key, value]) => {
+      if (key === 'link') { try { const url = new URL(value); return [key, ['https:', 'http:'].includes(url.protocol) ? escapeHtml(url.href) : '']; } catch { return [key, '']; } }
+      return [key, typeof value === 'string' ? escapeHtml(value) : value];
+    })));
+    return payload;
   } catch {
     return { data: [] };
   }
@@ -145,13 +154,17 @@ function buildEmailHtml(data, date) {
   `;
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  const configured = Boolean(process.env.BREVO_API_KEY && process.env.DIGEST_EMAIL && (process.env.API_ACCESS_TOKEN || process.env.CRON_SECRET));
+  // Ordinary GET requests only report configuration. Authenticated GET supports Vercel Cron.
+  if (req.method === 'GET' && !req.headers?.authorization) return res.status(200).json({ success: true, configured, setupRequired: !configured, statusOnly: true });
+  if (!requireToken(req, res, ['API_ACCESS_TOKEN', 'CRON_SECRET'])) return;
 
   // Allow GET (for testing) or POST (for cron)
   const brevoKey   = process.env.BREVO_API_KEY;
   const digestEmail = process.env.DIGEST_EMAIL;
-  const baseUrl    = 'https://property-intel-beige.vercel.app';
+  const baseUrl    = process.env.APP_BASE_URL || BASE_URL;
 
   if (!brevoKey || !digestEmail) {
     return res.status(200).json({
@@ -168,6 +181,8 @@ export default async function handler(req, res) {
       fetchEndpoint(baseUrl, '/api/planning?region=leeds'),
       fetchEndpoint(baseUrl, '/api/listings?region=leeds&type=listings')
     ]);
+
+    if ([insolvency, planning, listings].every(source => !source.success)) return res.status(502).json({ success: false, error: 'No digest sources are available; email was not sent' });
 
     const date = new Date().toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -192,13 +207,12 @@ export default async function handler(req, res) {
     });
 
     if (!emailRes.ok) {
-      const errText = await emailRes.text();
-      throw new Error(`Brevo error: ${errText}`);
+      throw new Error('Email provider rejected the digest');
     }
 
     res.status(200).json({
       success: true,
-      message: `Digest sent to ${digestEmail}`,
+      message: 'Digest sent',
       summary: {
         insolvency: insolvency?.count || 0,
         planning:   planning?.count || 0,
@@ -211,3 +225,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
+export default withApi(handler, ['GET', 'POST']);

@@ -318,6 +318,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -348,6 +350,7 @@ body {
     <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
   </div>
 </nav>
+<div role="note" style="padding:12px 20px;color:#fbbf24;background:#1c2130">Research reference: manually curated information and estimates may be out of date. Confirm availability, figures and scheme status with the linked source.</div>
 
 <div class="page-header">
   <div>
@@ -373,6 +376,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 setActiveNav();
 </script>
 
+<script>
 async function loadRegen(){
   try{
     const r = await fetch('/api/regeneration');
@@ -380,7 +384,7 @@ async function loadRegen(){
     const impactColour = {high:'b-red',medium:'b-amber',low:'b-blue'};
     const statusColour = {Active:'b-green',Planning:'b-amber',Political:'b-muted'};
 
-    document.getElementById('regen-grid').innerHTML = (d.schemes||[]).map(s=>
+    setHTML(document.getElementById('regen-grid'), (d.schemes||[]).map(s=>
       '<div class="card">'+
       '<div class="card-hdr">'+
       '<div class="card-title">'+s.name+'</div>'+
@@ -405,12 +409,13 @@ async function loadRegen(){
       '<a href="'+s.newsUrl+'" target="_blank" class="btn btn-ghost btn-sm">📰 Latest News</a>'+
       '</div>'+
       '</div></div>'
-    ).join('');
+    ).join(''));
   }catch(e){
-    document.getElementById('regen-grid').innerHTML='<div style="color:var(--red);padding:20px">Could not load regeneration data.</div>';
+    setHTML(document.getElementById('regen-grid'), '<div style="color:var(--red);padding:20px">Could not load regeneration data.</div>');
   }
 }
 loadRegen();
 
+</script>
 </body>
 </html>

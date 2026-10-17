@@ -1,3 +1,5 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
+import { postcodeValue, median as calculateMedian } from '../lib/http.js';
 // api/bmv.js - Below Market Value Finder
 // Compares postcode Land Registry average vs typical asking prices
 // Flags properties priced below comparable sold prices
@@ -28,7 +30,7 @@ SELECT ?amount ?date ?propertyType WHERE {
     const prices = bindings.map(b => parseInt(b.amount?.value || 0)).filter(p => p > 0);
     if (!prices.length) return null;
     const avg    = Math.round(prices.reduce((a,b) => a+b, 0) / prices.length);
-    const median = prices.sort((a,b) => a-b)[Math.floor(prices.length/2)];
+    const median = calculateMedian(prices);
     const byType = {};
     bindings.forEach(b => {
       const type  = (b.propertyType?.value || '').split('/').pop();
@@ -56,21 +58,20 @@ function bmvAnalysis(askingPrice, lrData) {
     discountAmount: discount,
     isBMV,
     verdict: isBMV
-      ? `✅ ${Math.abs(pct)}% below market average — genuine BMV opportunity. ${discount > 0 ? '£'+discount.toLocaleString() : ''} discount vs comparables.`
+      ? `Screening signal: ${Math.abs(pct)}% below the postcode sample average. Verify property type, condition and size before treating this as below market value.`
       : parseFloat(pct) < 5
       ? `⚠️ Priced at market value — little room for BMV. Negotiate using the comparables data.`
       : `❌ ${pct}% above market average. Overprice — use comparables to negotiate down.`,
   };
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600');
 
-  const postcode    = (req.query.postcode || '').trim().toUpperCase();
-  const askingPrice = parseInt(req.query.price || '0');
+  const postcode    = postcodeValue(req.query.postcode);
+  const askingPrice = Number(req.query.price || '0');
 
-  if (!postcode || postcode.length < 3) return res.status(400).json({ success:false, error:'Postcode required' });
+  if (!postcode || !Number.isFinite(askingPrice) || askingPrice < 0) return res.status(400).json({ success:false, error:'Full postcode and a valid non-negative price required' });
 
   const lrData = await getLandRegistryAvg(postcode);
 
@@ -102,3 +103,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);

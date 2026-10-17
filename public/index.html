@@ -647,6 +647,8 @@ body {
 .insol-desc { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:3px; }
 .insol-date { font-size:11px; color:var(--muted2); }
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -696,22 +698,17 @@ body {
       <svg width="90" height="90" viewBox="0 0 90 90">
         <circle cx="45" cy="45" r="30" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
         <circle id="sent-arc" cx="45" cy="45" r="30" fill="none" stroke="#f59e0b" stroke-width="8"
-          stroke-dasharray="188" stroke-dashoffset="72" stroke-linecap="round"/>
+          stroke-dasharray="188" stroke-dashoffset="188" stroke-linecap="round"/>
       </svg>
       <div class="sent-gauge-text">
-        <div class="sent-score" id="sent-score">62</div>
+        <div class="sent-score" id="sent-score">—</div>
         <div class="sent-label">Score</div>
       </div>
     </div>
     <div class="sent-body">
-      <div class="sent-verdict" id="sent-verdict">⚠️ Cautious — Good time to buy in Leeds</div>
-      <div class="sent-desc" id="sent-desc">Sellers negotiable. Rental demand strong. Refurb costs up 8% — budget carefully. Watch cashflow on BTL mortgage rates.</div>
-      <div class="sent-indicators">
-        <div class="ind"><div class="ind-val">4.5%</div><div class="ind-lbl">BOE Rate</div></div>
-        <div class="ind"><div class="ind-val">6.2%</div><div class="ind-lbl">Leeds Yield</div></div>
-        <div class="ind"><div class="ind-val">5.2%</div><div class="ind-lbl">BTL Rate</div></div>
-        <div class="ind"><div class="ind-val">£214k</div><div class="ind-lbl">Leeds Price</div></div>
-      </div>
+      <div class="sent-verdict" id="sent-verdict">Market sentiment unavailable</div>
+      <div class="sent-desc" id="sent-desc">No verified current market dataset is connected.</div>
+      <div class="sent-indicators">Check dated market sources before investing.</div>
     </div>
     <a href="/news.html" class="btn btn-ghost btn-sm" style="align-self:flex-start">Full Report →</a>
   </div>
@@ -785,12 +782,13 @@ body {
 
 
 
+<script>
 async function loadDashboard() {
   // Load sentiment
   try {
     const r = await fetch('/api/sentiment');
     const d = await r.json();
-    if (d.score) {
+    if (d.success && Number.isFinite(d.score)) {
       document.getElementById('sent-score').textContent = d.score;
       document.getElementById('sent-verdict').textContent = (d.colourBand==='green'?'✅':d.colourBand==='amber'?'⚠️':'🔴') + ' ' + (d.verdict||'Cautious') + ' — ' + (d.headline||'');
       document.getElementById('sent-desc').textContent = d.recommendation || d.headline || '';
@@ -807,8 +805,8 @@ async function loadDashboard() {
     const items = (d.news||[]).slice(0,4);
     const colours = {good:'#22c55e', bad:'#ef4444', neutral:'#8890aa'};
     const tagCls  = {good:'b-green',  bad:'b-red',    neutral:'b-muted'};
-    document.getElementById('news-list').innerHTML = items.map(item =>
-      '<div class="news-item" onclick="window.open(\'' + (item.link||'#') + '\',\'_blank\')">'+
+    setHTML(document.getElementById('news-list'), items.map(item =>
+      '<div class="news-item" data-open-url="' + escapeText(item.link||'#') + '">'+
       '<div class="news-dot" style="background:' + (colours[item.sentiment]||'#8890aa') + '"></div>'+
       '<div class="news-body">'+
       '<div class="news-source">' + item.source + '</div>'+
@@ -818,24 +816,24 @@ async function loadDashboard() {
       '</div>'+
       '<div class="news-tag badge ' + (tagCls[item.sentiment]||'b-muted') + '">' + (item.sentiment==='good'?'Good':item.sentiment==='bad'?'Watch':'Note') + '</div>'+
       '</div>'
-    ).join('');
+    ).join(''));
     document.getElementById('news-count').textContent = (d.count||0) + ' stories';
   } catch(e) {
-    document.getElementById('news-list').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">News feed unavailable — check /api/news is deployed.</div>';
+    setHTML(document.getElementById('news-list'), '<div style="color:var(--muted);font-size:13px;padding:12px 0">News feed unavailable — check /api/news is deployed.</div>');
   }
 
   // Load EPC preview
   try {
-    const r = await fetch('/api/epc?postcode=LS7&filter=poor&limit=4');
+    const r = await fetch('/api/epc?postcode=LS7&band=poor&size=4');
     const d = await r.json();
     const grades = {G:'eg-g',F:'eg-f',E:'eg-e'};
-    document.getElementById('epc-list').innerHTML = (d.properties||d.data||[]).slice(0,4).map(p =>
-      '<div class="epc-item" onclick="window.location=\'/epc.html\'">'+
-      '<div class="epc-grade ' + (grades[p.currentEnergyRating||p.rating]||'eg-f') + '">' + (p.currentEnergyRating||p.rating||'F') + '</div>'+
+    setHTML(document.getElementById('epc-list'), (d.properties||d.data||[]).slice(0,4).map(p =>
+      '<div class="epc-item" data-open-url="/epc.html">'+
+      '<div class="epc-grade ' + (grades[p.currentRating||p.currentEnergyRating||p.rating]||'eg-f') + '">' + (p.currentRating||p.currentEnergyRating||p.rating||'F') + '</div>'+
       '<div><div class="epc-addr">' + (p.address||p['address1']||'Address not available') + '</div>'+
       '<div class="epc-meta">' + (p.propertyType||'') + (p.tenureType?' · '+p.tenureType:'') + '</div></div>'+
       '</div>'
-    ).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">Load EPC Finder to see motivated sellers.</div>';
+    ).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">Load EPC Finder to see motivated sellers.</div>');
   } catch(e) {}
 
   // Load insolvency preview
@@ -843,18 +841,19 @@ async function loadDashboard() {
     const r = await fetch('/api/insolvency?region=leeds');
     const d = await r.json();
     const items = (d.data||[]).filter(i=>i.priority==='high').slice(0,3);
-    document.getElementById('insol-list').innerHTML = items.map(item =>
-      '<div class="insol-item" onclick="window.open(\'' + (item.link||'#') + '\',\'_blank\')">'+
+    setHTML(document.getElementById('insol-list'), items.map(item =>
+      '<div class="insol-item" data-open-url="' + escapeText(item.link||'#') + '">'+
       '<div class="insol-top"><div class="insol-name">' + item.title + '</div>'+
       '<span class="badge b-amber">' + (item.noticeType||item.category||'Insolvency') + '</span></div>'+
       '<div class="insol-desc">' + (item.description||'').substring(0,120) + '</div>'+
       '<div class="insol-date">' + (item.date||'') + '</div>'+
       '</div>'
-    ).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">No high-priority insolvency notices found for Leeds today.</div>';
+    ).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">No high-priority insolvency notices found for Leeds today.</div>');
     document.getElementById('insol-count').textContent = (d.count||0) + ' notices';
   } catch(e) {}
 }
 loadDashboard();
+</script>
 <script>
 function setActiveNav(){var p=window.location.pathname.split('/').pop()||'index.html';document.querySelectorAll('.nav-link').forEach(function(a){var h=a.getAttribute('href').split('/').pop();if(h===p||(p===''&&h==='index.html'))a.classList.add('active');});}
 function toggleNav(){var l=document.getElementById('nav-links');var b=document.getElementById('hamburger');l.classList.toggle('open');b.textContent=l.classList.contains('open')?'✕':'☰';}

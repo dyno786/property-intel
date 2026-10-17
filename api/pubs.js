@@ -1,11 +1,10 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/pubs.js
 // Monitors pub company disposal lists for Yorkshire pubs
 // Checks Star Pubs, Admiral Taverns, Greene King, Punch Taverns
 // Also searches Companies House for licensed premises in liquidation
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+async function handler(req, res) {
 
   const region = (req.query.region || 'leeds').toLowerCase();
   const chKey  = process.env.COMPANIES_HOUSE_API_KEY;
@@ -163,3 +162,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString()
   });
 }
+
+export default withApi(handler, ['GET']);

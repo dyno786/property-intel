@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/crime.js - Police.uk free API - no key needed
 // Returns crime counts by category for a postcode
 
@@ -40,8 +41,7 @@ function riskLevel(count, category) {
   return 'high';
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=86400');
 
   const postcode = (req.query.postcode || '').trim();
@@ -59,6 +59,7 @@ export default async function handler(req, res) {
     });
 
     const allCrimes = [];
+    const availableMonths = [];
     await Promise.all(dates.map(async date => {
       try {
         const r = await fetch(
@@ -67,10 +68,12 @@ export default async function handler(req, res) {
         );
         if (r.ok) {
           const crimes = await r.json();
-          if (Array.isArray(crimes)) allCrimes.push(...crimes);
+          if (Array.isArray(crimes)) { allCrimes.push(...crimes); availableMonths.push(date); }
         }
       } catch {}
     }));
+
+    if (!availableMonths.length) return res.status(502).json({ success: false, error: 'Crime data unavailable for the requested months', overallRisk: 'unknown' });
 
     // Aggregate by category
     const counts = {};
@@ -106,7 +109,9 @@ export default async function handler(req, res) {
     res.status(200).json({
       success: true,
       postcode: postcode.toUpperCase(),
-      period:  '3 months',
+      period: `${availableMonths.length} months of available data`,
+      availableMonths: availableMonths.sort(),
+      partial: availableMonths.length < dates.length,
       total,
       overallRisk,
       burglary,
@@ -121,3 +126,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success:false, error: e.message });
   }
 }
+
+export default withApi(handler, ['GET']);

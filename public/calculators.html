@@ -594,6 +594,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -1059,13 +1061,13 @@ function calcYield() {
   const v = document.getElementById('yield-verdict');
   const vt = document.getElementById('yield-verdict-text');
   if (grossYield >= 7) {
-    v.className = 'verdict good'; vt.innerHTML = `<strong>Excellent yield.</strong> ${pct(grossYield)} gross is strong for Leeds. Proceed with full due diligence.`;
+    v.className = 'verdict good'; setHTML(vt, `<strong>Excellent yield.</strong> ${pct(grossYield)} gross is strong for Leeds. Proceed with full due diligence.`);
   } else if (grossYield >= 5.5) {
-    v.className = 'verdict info'; vt.innerHTML = `<strong>Decent yield.</strong> ${pct(grossYield)} gross is acceptable. Watch your net cashflow closely with mortgage costs.`;
+    v.className = 'verdict info'; setHTML(vt, `<strong>Decent yield.</strong> ${pct(grossYield)} gross is acceptable. Watch your net cashflow closely with mortgage costs.`);
   } else if (grossYield >= 4) {
-    v.className = 'verdict warn'; vt.innerHTML = `<strong>Marginal yield.</strong> ${pct(grossYield)} is below Leeds average for BTL. Negotiate harder on price.`;
+    v.className = 'verdict warn'; setHTML(vt, `<strong>Marginal yield.</strong> ${pct(grossYield)} is below Leeds average for BTL. Negotiate harder on price.`);
   } else {
-    v.className = 'verdict bad'; vt.innerHTML = `<strong>Poor yield.</strong> ${pct(grossYield)} won't cover costs in most scenarios. Only viable as a flip or if you can significantly reduce the price.`;
+    v.className = 'verdict bad'; setHTML(vt, `<strong>Poor yield.</strong> ${pct(grossYield)} won't cover costs in most scenarios. Only viable as a flip or if you can significantly reduce the price.`);
   }
 }
 
@@ -1135,7 +1137,7 @@ function calcSDLT() {
 
   // Band table
   const tbody = document.getElementById('sdlt-bands');
-  tbody.innerHTML = `<tr><th>Band</th><th>Rate</th><th>Taxable Amount</th><th>Tax</th></tr>` +
+  setHTML(tbody, `<tr><th>Band</th><th>Rate</th><th>Taxable Amount</th><th>Tax</th></tr>` +
     bandCalcs.filter(b => b.taxable > 0 || b.from === 0).map(b => {
       const active = b.taxable > 0 && price > b.from;
       return `<tr class="${active ? 'active-band' : ''}">
@@ -1147,7 +1149,7 @@ function calcSDLT() {
     }).join('') +
     (surcharge > 0 ? `<tr class="active-band"><td colspan="3">3% Additional Property Surcharge</td><td class="amt">${fmt(surcharge)}</td></tr>` : '') +
     (overseasAdd > 0 ? `<tr class="active-band"><td colspan="3">2% Non-UK Resident Surcharge</td><td class="amt">${fmt(overseasAdd)}</td></tr>` : '') +
-    `<tr style="font-weight:700"><td colspan="3">Total SDLT</td><td class="amt">${fmt(total)}</td></tr>`;
+    `<tr style="font-weight:700"><td colspan="3">Total SDLT</td><td class="amt">${fmt(total)}</td></tr>`);
 }
 
 // ── BRIDGING CALCULATOR ──
@@ -1179,13 +1181,13 @@ function calcBridging() {
   const vt = document.getElementById('bridge-verdict-text');
   if (ltv > 75) {
     v.className = 'verdict bad';
-    vt.innerHTML = `<strong>LTV too high.</strong> Most bridging lenders cap at 70–75% LTV. You may need a larger deposit or negotiate a lower purchase price.`;
+    setHTML(vt, `<strong>LTV too high.</strong> Most bridging lenders cap at 70–75% LTV. You may need a larger deposit or negotiate a lower purchase price.`);
   } else if (totalCost > loan * 0.12) {
     v.className = 'verdict warn';
-    vt.innerHTML = `<strong>High total cost.</strong> ${fmt(totalCost)} is over 12% of the loan. Make sure your refurb adds at least this much value on top.`;
+    setHTML(vt, `<strong>High total cost.</strong> ${fmt(totalCost)} is over 12% of the loan. Make sure your refurb adds at least this much value on top.`);
   } else {
     v.className = 'verdict good';
-    vt.innerHTML = `<strong>Manageable cost.</strong> ${fmt(totalCost)} total for ${term} months. Book your builder before you draw down — delays cost you ${fmt(monthly)}/month.`;
+    setHTML(vt, `<strong>Manageable cost.</strong> ${fmt(totalCost)} total for ${term} months. Book your builder before you draw down — delays cost you ${fmt(monthly)}/month.`);
   }
 }
 
@@ -1225,13 +1227,13 @@ function calcFlipHold() {
   const vt = document.getElementById('fh-verdict-text');
   if (holdTotal > flipProfit * 1.3) {
     v.className = 'verdict good';
-    vt.innerHTML = `<strong>Hold wins clearly.</strong> 5-year return of ${fmt(holdTotal)} beats flip profit of ${fmt(flipProfit)}. Hold if you have the capital available.`;
+    setHTML(vt, `<strong>Hold wins clearly.</strong> 5-year return of ${fmt(holdTotal)} beats flip profit of ${fmt(flipProfit)}. Hold if you have the capital available.`);
   } else if (flipProfit > holdTotal) {
     v.className = 'verdict info';
-    vt.innerHTML = `<strong>Flip wins.</strong> Profit of ${fmt(flipProfit)} vs ${fmt(holdTotal)} hold return. Flip and redeploy the cash into more deals.`;
+    setHTML(vt, `<strong>Flip wins.</strong> Profit of ${fmt(flipProfit)} vs ${fmt(holdTotal)} hold return. Flip and redeploy the cash into more deals.`);
   } else {
     v.className = 'verdict warn';
-    vt.innerHTML = `<strong>Close call.</strong> Flip (${fmt(flipProfit)}) vs Hold (${fmt(holdTotal)}). Consider your cashflow needs — do you need the lump sum now?`;
+    setHTML(vt, `<strong>Close call.</strong> Flip (${fmt(flipProfit)}) vs Hold (${fmt(holdTotal)}). Consider your cashflow needs — do you need the lump sum now?`);
   }
 }
 
@@ -1254,15 +1256,17 @@ const REFURB_ITEMS = [
   { id:'electrics', label:'Consumer Unit + Part',  low:800,   mid:1500,  high:3000  },
 ];
 
+document.addEventListener('change', event => { if (event.target.matches('[data-refurb-item]')) calcRefurb(); });
+
 function buildRefurbItems() {
   const container = document.getElementById('refurb-items');
-  container.innerHTML = REFURB_ITEMS.map(item => `
+  setHTML(container, REFURB_ITEMS.map(item => `
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-      <input type="checkbox" id="rf-${item.id}" style="accent-color:var(--gold);width:16px;height:16px;cursor:pointer;" onchange="calcRefurb()">
+      <input type="checkbox" id="rf-${item.id}" style="accent-color:var(--gold);width:16px;height:16px;cursor:pointer;" data-refurb-item="true">
       <label for="rf-${item.id}" style="flex:1;font-size:12px;color:var(--white);cursor:pointer;">${item.label}</label>
       <span style="font-size:10px;color:var(--muted);">${fmt(item.mid)}</span>
     </div>
-  `).join('');
+  `).join(''));
 }
 
 function calcRefurb() {
@@ -1291,7 +1295,7 @@ function calcRefurb() {
     }
   }
 
-  breakdownEl.innerHTML = bdHtml || `<div style="font-size:11px;color:var(--muted);padding:8px 0">Tick items on the left to add to estimate</div>`;
+  setHTML(breakdownEl, bdHtml || `<div style="font-size:11px;color:var(--muted);padding:8px 0">Tick items on the left to add to estimate</div>`);
 
   document.getElementById('rf-low').textContent  = fmt(totalLow);
   document.getElementById('rf-mid').textContent  = fmt(totalMid);

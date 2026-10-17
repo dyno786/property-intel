@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/regeneration.js - Yorkshire Regeneration Tracker
 // Tracks major schemes: South Bank Leeds, East Leeds Extension, Bradford City Village etc
 
@@ -112,8 +113,7 @@ const SCHEMES = [
   },
 ];
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600');
 
   const city   = (req.query.city || 'all').toLowerCase();
@@ -136,3 +136,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);

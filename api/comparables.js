@@ -1,3 +1,5 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
+import { postcodeValue, median as calculateMedian, propertyType as getTypeLabel } from '../lib/http.js';
 // api/comparables.js - Land Registry Price Paid Data
 // Free SPARQL endpoint - no API key needed
 // Returns sold prices for same postcode, last 12 months
@@ -29,31 +31,21 @@ ORDER BY DESC(?date)
 LIMIT 50`;
 }
 
-function getTypeLabel(uri) {
-  if (!uri) return 'Unknown';
-  if (uri.includes('detached'))        return 'Detached';
-  if (uri.includes('semi-detached'))   return 'Semi-detached';
-  if (uri.includes('terraced'))        return 'Terraced';
-  if (uri.includes('flat'))            return 'Flat / Maisonette';
-  if (uri.includes('otherPropertyType'))return 'Other';
-  return uri.split('/').pop() || 'Unknown';
-}
-
 function getEstateLabel(uri) {
   if (!uri) return '';
+  uri = uri.toLowerCase();
   if (uri.includes('freehold'))  return 'Freehold';
   if (uri.includes('leasehold')) return 'Leasehold';
   return '';
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600');
 
-  const postcode = (req.query.postcode || '').trim().toUpperCase();
-  const months   = Math.min(parseInt(req.query.months || '12'), 24);
+  const postcode = postcodeValue(req.query.postcode);
+  const months   = Number(req.query.months || '12');
 
-  if (!postcode || postcode.length < 4) {
+  if (!postcode || !Number.isInteger(months) || months < 1 || months > 24) {
     return res.status(400).json({ success: false, error: 'Please provide a valid UK postcode' });
   }
 
@@ -105,7 +97,7 @@ export default async function handler(req, res) {
     const avg     = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0) / prices.length) : 0;
     const min     = prices.length ? Math.min(...prices) : 0;
     const max     = prices.length ? Math.max(...prices) : 0;
-    const median  = prices.length ? prices.sort((a,b)=>a-b)[Math.floor(prices.length/2)] : 0;
+    const median  = calculateMedian(prices);
 
     res.status(200).json({
       success: true,
@@ -131,3 +123,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success: false, error: e.message });
   }
 }
+
+export default withApi(handler, ['GET']);

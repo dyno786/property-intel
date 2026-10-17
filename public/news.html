@@ -638,6 +638,8 @@ body {
 .ind-change{font-size:11px;font-weight:500;color:var(--muted);}
 
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -677,58 +679,10 @@ body {
 </div>
 
 <!-- SENTIMENT + INDICATORS -->
-<div class="sentiment-bar">
-  <div class="sent-score">
-    <div class="sent-num">62</div>
-    <div class="sent-lbl">Sentiment</div>
-  </div>
-  <div class="sent-body">
-    <div class="sent-status">⚠️ Cautious — Good time to buy in Leeds</div>
-    <div class="sent-desc">Sellers negotiable. Rental demand strong. Watch refurb costs — materials up 8% this quarter.</div>
-  </div>
-  <div class="indicators">
-    <div class="ind">
-      <div class="ind-label">BOE Rate</div>
-      <div class="ind-val">4.5%</div>
-      <div class="ind-change flat">Hold</div>
-    </div>
-    <div class="ind">
-      <div class="ind-label">Inflation</div>
-      <div class="ind-val">3.4%</div>
-      <div class="ind-change up">↓ Falling</div>
-    </div>
-    <div class="ind">
-      <div class="ind-label">Leeds Yield</div>
-      <div class="ind-val">6.2%</div>
-      <div class="ind-change up">↑ Rising</div>
-    </div>
-    <div class="ind">
-      <div class="ind-label">BTL Rate</div>
-      <div class="ind-val">5.2%</div>
-      <div class="ind-change up">↓ Easing</div>
-    </div>
-    <div class="ind">
-      <div class="ind-label">Leeds Price</div>
-      <div class="ind-val">£214k</div>
-      <div class="ind-change flat">→ Flat</div>
-    </div>
-  </div>
-</div>
+<div class="sentiment-bar"><div class="sent-body"><div class="sent-status">Market sentiment unavailable</div><div class="sent-desc">The previous static score and economic figures were unverified. Check current official market sources.</div></div></div>
 
 <div class="content">
-  <!-- BUILD COSTS -->
-  <div class="section-hdr">
-    <div class="section-title">🏗️ Build Cost Updates</div>
-  </div>
-  <div class="build-card">
-    <div class="bc-top"><div class="bc-icon">⚠️</div><div class="bc-title">Timber & Structural Materials — Q1 2026</div></div>
-    <div class="bc-body">Up 8% this quarter. If you're using 2025 refurb budgets, add at least 8-10% on materials now. Labour costs are more stable — it's materials that jumped. Update your deal models.</div>
-  </div>
-  <div class="build-card">
-    <div class="bc-top"><div class="bc-icon">📅</div><div class="bc-title">Yorkshire Builder Availability</div></div>
-    <div class="bc-body">Good tradespeople in Leeds and Bradford booked 5-6 weeks ahead. Always secure your builder before you exchange — delays on bridging finance cost real money at 1%/month.</div>
-  </div>
-
+  <div class="build-card"><div class="bc-body">Build-cost estimates require current quotes from your tradespeople. No verified construction-cost feed is connected.</div></div>
   <!-- LIVE NEWS -->
   <div class="section-hdr" style="margin-top:24px">
     <div class="section-title">📰 Latest Property News</div>
@@ -745,22 +699,22 @@ body {
 <script>
 async function loadNews() {
   document.getElementById('news-count').textContent = 'Loading...';
-  document.getElementById('news-container').innerHTML = `
+  setHTML(document.getElementById('news-container'), `
     <div class="loading">
       <span class="loading-spinner">⟳</span>
       Fetching latest news and generating Yorkshire investor summaries...
-    </div>`;
+    </div>`);
   try {
     const r = await fetch('/api/news');
     if (!r.ok) throw new Error(`API error ${r.status}`);
     const d = await r.json();
     renderNews(d);
   } catch(e) {
-    document.getElementById('news-container').innerHTML = `
+    setHTML(document.getElementById('news-container'), `
       <div class="error-box">
         Could not load news feed: ${e.message}<br>
         <small>Check /api/news is deployed and ANTHROPIC_API_KEY is set in Vercel.</small>
-      </div>`;
+      </div>`);
     document.getElementById('news-count').textContent = 'Error';
   }
 }
@@ -780,10 +734,10 @@ function renderNews(data) {
   const items = data.news || [];
   document.getElementById('news-count').textContent = `${items.length} stories`;
   if (items.length === 0) {
-    document.getElementById('news-container').innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">No news loaded — RSS feeds may be temporarily unavailable.</div>`;
+    setHTML(document.getElementById('news-container'), `<div style="padding:24px;text-align:center;color:var(--muted)">No news loaded — RSS feeds may be temporarily unavailable.</div>`);
     return;
   }
-  document.getElementById('news-container').innerHTML = `
+  setHTML(document.getElementById('news-container'), `
     <div class="news-grid">
       ${items.map(item => `
         <a class="news-card" href="${item.link || '#'}" target="_blank" rel="noopener">
@@ -799,7 +753,7 @@ function renderNews(data) {
           </div>
         </a>
       `).join('')}
-    </div>`;
+    </div>`);
 }
 
 loadNews();
