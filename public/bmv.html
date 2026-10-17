@@ -318,6 +318,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -382,14 +384,15 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 setActiveNav();
 </script>
 
-function clearResults(){ document.getElementById('bmv-results').innerHTML=''; }
+<script>
+function clearResults(){ setHTML(document.getElementById('bmv-results'), ''); }
 
 async function runBMV(){
   const pc    = document.getElementById('bmv-pc').value.trim().toUpperCase();
   const price = document.getElementById('bmv-price').value.trim();
   if(!pc||pc.length<4){alert('Please enter a valid postcode');return;}
 
-  document.getElementById('bmv-results').innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center"><span class="loading-spinner">⟳</span> Fetching Land Registry data...</div>';
+  setHTML(document.getElementById('bmv-results'), '<div style="color:var(--muted);padding:20px;text-align:center"><span class="loading-spinner">⟳</span> Fetching Land Registry data...</div>');
 
   try {
     const url = '/api/bmv?postcode='+encodeURIComponent(pc)+(price?'&price='+price:'');
@@ -397,7 +400,7 @@ async function runBMV(){
     const d   = await r.json();
 
     if(!d.success){
-      document.getElementById('bmv-results').innerHTML = '<div class="alert alert-amber"><div class="alert-icon">⚠️</div><div class="alert-body"><div class="alert-title">No data found</div><div class="alert-text">'+d.message+'</div></div></div>';
+      setHTML(document.getElementById('bmv-results'), '<div class="alert alert-amber"><div class="alert-icon">⚠️</div><div class="alert-body"><div class="alert-title">No data found</div><div class="alert-text">'+(d.message||d.error||'Data unavailable')+'</div></div></div>');
       return;
     }
 
@@ -419,7 +422,7 @@ async function runBMV(){
 
     let tipsHtml = (d.negotiationTips||[]).map(t=>'<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)">💡 '+t+'</div>').join('');
 
-    document.getElementById('bmv-results').innerHTML = analysisHtml +
+    setHTML(document.getElementById('bmv-results'), analysisHtml +
       '<div class="grid-2" style="margin-bottom:12px">'+
       '<div class="card"><div class="card-hdr"><div class="card-title">📊 '+pc+' Sold Prices ('+lr.months+'mo)</div></div><div class="card-body">'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'+
@@ -430,9 +433,9 @@ async function runBMV(){
       '</div><div style="font-size:12px;color:var(--muted)">Based on '+lr.count+' sales</div>'+
       typeHtml+'</div></div>'+
       '<div class="card"><div class="card-hdr"><div class="card-title">💡 Negotiation Tips</div></div><div class="card-body">'+tipsHtml+'</div></div>'+
-      '</div>';
+      '</div>');
   } catch(e){
-    document.getElementById('bmv-results').innerHTML = '<div class="alert alert-red"><div class="alert-icon">❌</div><div class="alert-body"><div class="alert-title">Error</div><div class="alert-text">'+e.message+'</div></div></div>';
+    setHTML(document.getElementById('bmv-results'), '<div class="alert alert-red"><div class="alert-icon">❌</div><div class="alert-body"><div class="alert-title">Error</div><div class="alert-text">'+e.message+'</div></div></div>');
   }
 }
 
@@ -440,5 +443,6 @@ async function runBMV(){
 const p = new URLSearchParams(window.location.search);
 if(p.get('postcode')){ document.getElementById('bmv-pc').value=p.get('postcode'); if(p.get('price'))document.getElementById('bmv-price').value=p.get('price'); runBMV(); }
 
+</script>
 </body>
 </html>

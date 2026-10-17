@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/schools.js - Ofsted / EduBase free API
 // Returns school ratings within radius of postcode
 
@@ -20,12 +21,12 @@ function distanceMiles(lat1, lng1, lat2, lng2) {
 const OFSTED_LABELS = { '1':'Outstanding','2':'Good','3':'Requires Improvement','4':'Inadequate','':'Not yet inspected' };
 const OFSTED_RISK   = { '1':'low','2':'low','3':'medium','4':'high','':'neutral' };
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=86400');
 
   const postcode = (req.query.postcode || '').trim();
   const radiusMiles = parseFloat(req.query.radius || '1');
+  if (!Number.isFinite(radiusMiles) || radiusMiles <= 0 || radiusMiles > 10) return res.status(400).json({ success: false, error: 'Radius must be between 0 and 10 miles' });
   if (!postcode) return res.status(400).json({ success:false, error:'Postcode required' });
 
   const coords = await getCoords(postcode);
@@ -39,11 +40,14 @@ export default async function handler(req, res) {
       signal: AbortSignal.timeout(10000),
     });
 
+    if (!r.ok) return res.status(502).json({ success: false, error: 'School data provider unavailable' });
     let schools = [];
     if (r.ok) {
       const d = await r.json();
       schools = (d.schools || d.results || d || []).slice(0,20);
     }
+
+    if (!Array.isArray(schools)) throw new Error('Invalid schools response');
 
     // Format schools
     const formatted = schools.map(s => {
@@ -65,7 +69,7 @@ export default async function handler(req, res) {
     const good        = formatted.filter(s => s.ofstedRating === '2').length;
     const concern     = formatted.filter(s => ['3','4'].includes(s.ofstedRating)).length;
 
-    const investorNote = outstanding + good > concern
+    const investorNote = !formatted.length ? 'No school data returned. Catchment and inspection status remain unknown.' : outstanding + good > concern
       ? 'Good school catchment — attractive to family tenants, supports rental demand and lower voids.'
       : concern > outstanding + good
       ? 'Weaker school catchment — may deter family tenants. Consider HMO or student lets instead.'
@@ -86,3 +90,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success:false, error: e.message });
   }
 }
+
+export default withApi(handler, ['GET']);

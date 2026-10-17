@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/boe.js - Bank of England + ONS Economic Indicators
 // All free APIs, no key needed
 
@@ -5,7 +6,7 @@ async function fetchBOERate() {
   try {
     // BOE Statistical Interactive Database - IUDBEDR = Bank Rate
     const r = await fetch(
-      'https://www.bankofengland.co.uk/boeapps/database/fromshowcolumns.asp?Travel=NIxSUx&FromSeries=1&ToSeries=50&DAT=RNG&FD=1&FM=Jan&FY=2024&TD=31&TM=Dec&TY=2025&VFD=Y&html.x=66&html.y=26&C=IUDBEDR&csv.x=1',
+      `https://www.bankofengland.co.uk/boeapps/database/fromshowcolumns.asp?Travel=NIxSUx&FromSeries=1&ToSeries=50&DAT=RNG&FD=1&FM=Jan&FY=2024&TD=${new Date().getUTCDate()}&TM=${new Date().toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' })}&TY=${new Date().getUTCFullYear()}&VFD=Y&html.x=66&html.y=26&C=IUDBEDR&csv.x=1`,
       { signal: AbortSignal.timeout(6000) }
     );
     if (r.ok) {
@@ -20,7 +21,7 @@ async function fetchBOERate() {
       }
     }
   } catch {}
-  return { rate: 4.5, date: 'Apr 2026', source: 'Bank of England (cached)' };
+  return { rate: null, date: null, source: 'Bank of England', unavailable: true };
 }
 
 async function fetchInflation() {
@@ -34,50 +35,28 @@ async function fetchInflation() {
       const d = await r.json();
       const months = d.months || [];
       const last = months[months.length - 1];
-      if (last) return { rate: parseFloat(last.value), period: last.label, source: 'ONS CPIH' };
+      if (last && Number.isFinite(Number(last.value))) return { rate: Number(last.value), period: last.label, source: 'ONS CPIH' };
     }
   } catch {}
-  return { rate: 3.4, period: 'Feb 2026', source: 'ONS (cached)' };
+  return { rate: null, period: null, source: 'ONS CPIH', unavailable: true };
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600');
 
   const [boe, inflation] = await Promise.allSettled([fetchBOERate(), fetchInflation()]);
-  const boeData = boe.value   || { rate: 4.5, date: 'Apr 2026', source: 'cached' };
-  const cpiData = inflation.value || { rate: 3.4, period: 'Feb 2026', source: 'cached' };
-
-  const baseRate = boeData.rate;
-
-  // Derived metrics
-  const typicalBTLRate  = +(baseRate + 0.75).toFixed(2); // approx spread
-  const realReturn      = +(6.2 - typicalBTLRate).toFixed(2); // Leeds yield minus mortgage
-  const nextMeetingDate = 'May 8, 2026';
-  const rateOutlook     = baseRate > 4.0
-    ? 'Rate cuts expected gradually through 2026. Consider tracker mortgages to benefit when cuts arrive.'
-    : 'Low rate environment — lock in fixed rates before potential rises.';
+  const boeData = boe.value || { rate: null, unavailable: true };
+  const cpiData = inflation.value || { rate: null, unavailable: true };
 
   const indicators = [
-    { label: 'BOE Base Rate',      value: baseRate + '%',         change: 'Hold expected',        colour: 'amber', icon: '🏦' },
-    { label: 'CPI Inflation',      value: cpiData.rate + '%',     change: cpiData.rate < 3 ? '↓ Under control' : '↓ Falling', colour: cpiData.rate < 3 ? 'green' : 'amber', icon: '📈' },
-    { label: 'Typical BTL Rate',   value: typicalBTLRate + '%',   change: '75% LTV 5yr fix',      colour: 'amber', icon: '🏠' },
-    { label: 'Leeds Avg Yield',    value: '6.2%',                 change: '↑ Rising',             colour: 'green', icon: '💰' },
-    { label: 'Net Yield Spread',   value: realReturn + '%',       change: 'Yield minus mortgage',  colour: realReturn > 1 ? 'green' : 'amber', icon: '📊' },
-    { label: 'Leeds Avg Price',    value: '£214,000',             change: '→ Flat Q1 2026',        colour: 'amber', icon: '🏘️' },
-    { label: 'Next MPC Meeting',   value: nextMeetingDate,        change: 'Rate decision',         colour: 'blue',  icon: '📅' },
-    { label: 'Build Cost Index',   value: '+8%',                  change: 'Q1 2026 materials',    colour: 'red',   icon: '🏗️' },
+    { label: 'BOE Base Rate', value: boeData.rate == null ? 'Unavailable' : boeData.rate + '%', change: boeData.date || 'Provider unavailable', colour: 'amber', icon: '🏦' },
+    { label: 'CPIH Inflation', value: cpiData.rate == null ? 'Unavailable' : cpiData.rate + '%', change: cpiData.period || 'Provider unavailable', colour: 'amber', icon: '📈' },
   ];
-
-  res.status(200).json({
-    success:    true,
-    baseRate:   boeData,
-    inflation:  cpiData,
-    indicators,
-    rateOutlook,
-    nextMeetingDate,
-    investorNote: `BOE at ${baseRate}% means typical BTL mortgage ~${typicalBTLRate}%. Leeds gross yield 6.2% gives ${realReturn}% spread — positive cashflow possible with right deal. ${rateOutlook}`,
-    source:     'Bank of England + ONS',
-    fetchedAt:  new Date().toISOString(),
+  res.status(200).json({ success: true, partial: boeData.rate == null || cpiData.rate == null,
+    baseRate: boeData, inflation: cpiData, indicators,
+    rateOutlook: 'No verified forecast connected.', nextMeetingDate: null,
+    investorNote: 'Check observation dates. Mortgage quotes and property yields must be obtained separately.',
+    source: 'Bank of England + ONS', fetchedAt: new Date().toISOString(),
   });
 }
+export default withApi(handler);

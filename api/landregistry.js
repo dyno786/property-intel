@@ -1,15 +1,16 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
+import { postcodeValue, median, propertyType as formatPropertyType } from '../lib/http.js';
 // api/landregistry.js
 // Land Registry Price Paid Data - free, open government data
 // Shows what properties actually sold for in any postcode
 // Updated monthly by HMLR
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+async function handler(req, res) {
 
-  const postcode = (req.query.postcode || 'LS7').trim().toUpperCase();
-  const months   = parseInt(req.query.months || '12');
+  const postcode = postcodeValue(req.query.postcode || 'LS7', true);
+  const months   = Number(req.query.months || '12');
   const type     = req.query.type || 'all'; // all | residential | commercial
+  if (!postcode || !Number.isInteger(months) || months < 1 || months > 120 || !['all', 'residential', 'commercial'].includes(type)) return res.status(400).json({ success: false, error: 'Valid postcode, months (1–120) and type required' });
 
   // Calculate date range
   const dateTo   = new Date();
@@ -22,16 +23,19 @@ export default async function handler(req, res) {
 
   // Use the Land Registry Linked Data API
   const sparqlQuery = `
+    PREFIX lrppi: <http://landregistry.data.gov.uk/def/ppi/>
+    PREFIX lrcommon: <http://landregistry.data.gov.uk/def/common/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     SELECT ?paon ?saon ?street ?town ?postcode ?amount ?date ?category ?propertyType ?newBuild
     WHERE {
       ?transx lrppi:pricePaid ?amount ;
               lrppi:transactionDate ?date ;
               lrppi:propertyAddress ?addr ;
-              lrppi:recordStatus lrppi:add ;
-              lrppi:transactionCategory ?category ;
-              lrppi:propertyType ?propertyType ;
-              lrppi:newBuild ?newBuild .
-      ?addr lrcommon:postcode "${postcode}" .
+              lrppi:propertyType ?propertyType .
+      OPTIONAL { ?transx lrppi:transactionCategory ?category }
+      OPTIONAL { ?transx lrppi:newBuild ?newBuild }
+      ?addr lrcommon:postcode ?postcode .
+      FILTER (${postcode.includes(' ') ? `?postcode = "${postcode}"^^xsd:string` : `STRSTARTS(STR(?postcode), "${postcode} ")`})
       OPTIONAL { ?addr lrcommon:paon ?paon }
       OPTIONAL { ?addr lrcommon:saon ?saon }
       OPTIONAL { ?addr lrcommon:street ?street }
@@ -68,14 +72,14 @@ export default async function handler(req, res) {
       return {
         address:      address || 'Address not disclosed',
         town:         b.town?.value || '—',
-        postcode,
+        postcode: b.postcode?.value || postcode,
         amount,
         formattedPrice: `£${amount.toLocaleString()}`,
         date,
         formattedDate: date !== '—' ? new Date(date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—',
         propertyType: propType,
-        newBuild:     b.newBuild?.value === 'true' ? 'New Build' : 'Existing',
-        category:     b.category?.value?.includes('A') ? 'Standard' : 'Additional'
+        newBuild:     b.newBuild ? (b.newBuild.value === 'true' ? 'New Build' : 'Existing') : 'Unknown',
+        category:     b.category?.value || 'Unknown'
       };
     });
 
@@ -87,7 +91,7 @@ export default async function handler(req, res) {
     // Calculate stats
     const amounts = filtered.map(s => s.amount).filter(a => a > 0);
     const avgPrice    = amounts.length ? Math.round(amounts.reduce((a,b)=>a+b,0)/amounts.length) : 0;
-    const medianPrice = amounts.length ? amounts.sort((a,b)=>a-b)[Math.floor(amounts.length/2)] : 0;
+    const medianPrice = median(amounts);
     const minPrice    = amounts.length ? Math.min(...amounts) : 0;
     const maxPrice    = amounts.length ? Math.max(...amounts) : 0;
 
@@ -132,11 +136,4 @@ export default async function handler(req, res) {
   }
 }
 
-function formatPropertyType(uri) {
-  if (uri.includes('Detached'))     return 'Detached';
-  if (uri.includes('SemiDetached')) return 'Semi-detached';
-  if (uri.includes('Terraced'))     return 'Terraced';
-  if (uri.includes('Flat'))         return 'Flat/Maisonette';
-  if (uri.includes('Other'))        return 'Other/Commercial';
-  return uri.split('/').pop() || 'Unknown';
-}
+export default withApi(handler, ['GET']);

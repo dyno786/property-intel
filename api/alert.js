@@ -1,3 +1,5 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
+import { requireToken } from '../lib/http.js';
 // api/alert.js
 // Sends WhatsApp or SMS alerts via Twilio
 // Add to Vercel env vars:
@@ -6,9 +8,11 @@
 //   TWILIO_WHATSAPP_FROM  (e.g. whatsapp:+14155238886)
 //   ALERT_PHONE_NUMBER    (e.g. whatsapp:+447700000000 or +447700000000 for SMS)
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET');
+async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  const configured = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_WHATSAPP_FROM', 'ALERT_PHONE_NUMBER', 'API_ACCESS_TOKEN'].every(key => Boolean(process.env[key]));
+  if (req.method === 'GET') return res.status(200).json({ success: true, configured, setupRequired: !configured, statusOnly: true });
+  if (!requireToken(req, res)) return;
 
   const sid      = process.env.TWILIO_ACCOUNT_SID;
   const token    = process.env.TWILIO_AUTH_TOKEN;
@@ -16,8 +20,11 @@ export default async function handler(req, res) {
   const to       = process.env.ALERT_PHONE_NUMBER;
 
   // Build alert message from query or body
-  const data = req.method === 'POST' ? req.body : req.query;
+  const data = req.body;
   const { type, message, count, region } = data;
+  if ([type, message, count, region].some(value => value != null && !['string', 'number'].includes(typeof value)) || String(message || '').length > 2000) {
+    return res.status(400).json({ success: false, error: 'Invalid alert fields or message longer than 2000 characters' });
+  }
 
   if (!sid || !token || !from || !to) {
     return res.status(200).json({
@@ -54,8 +61,7 @@ export default async function handler(req, res) {
     );
 
     if (!twilioRes.ok) {
-      const err = await twilioRes.text();
-      throw new Error(`Twilio error: ${err}`);
+      throw new Error('Message provider rejected the alert');
     }
 
     const twilioData = await twilioRes.json();
@@ -63,7 +69,6 @@ export default async function handler(req, res) {
     res.status(200).json({
       success: true,
       messageSid: twilioData.sid,
-      to,
       type,
       sentAt: new Date().toISOString()
     });
@@ -88,3 +93,5 @@ https://property-intel-beige.vercel.app
 
 _CC Properties Leeds_`;
 }
+
+export default withApi(handler, ['GET', 'POST']);

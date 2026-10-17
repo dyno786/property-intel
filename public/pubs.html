@@ -594,6 +594,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -672,7 +674,7 @@ body {
 
 <script>
 async function loadPubs() {
-  document.getElementById('p-companies').innerHTML = skeletons(3);
+  setHTML(document.getElementById('p-companies'), skeletons(3));
 
   try {
     const res = await fetch('/api/pubs?region=leeds');
@@ -685,10 +687,10 @@ async function loadPubs() {
 
     const cp = document.getElementById('p-companies');
     if (!data.companies?.length) {
-      cp.innerHTML = `<div class="empty"><div class="empty-icon">🍺</div><div style="font-size:13px;font-weight:500">No distressed pub businesses found</div><div style="font-size:11px;color:var(--muted)">Check disposal links on the right →</div></div>`;
+      setHTML(cp, `<div class="empty"><div class="empty-icon">🍺</div><div style="font-size:13px;font-weight:500">No distressed pub businesses found</div><div style="font-size:11px;color:var(--muted)">Check disposal links on the right →</div></div>`);
     } else {
-      cp.innerHTML = data.companies.map(c => `
-        <div class="item" onclick="window.open('${c.link}','_blank')">
+      setHTML(cp, data.companies.map(c => `
+        <div class="item" data-open-url="${escapeText(c.link)}">
           <div class="item-dot dot-red">🍺</div>
           <div class="item-body">
             <div class="item-title">${c.name}</div>
@@ -699,15 +701,15 @@ async function loadPubs() {
           </div>
           <div class="item-actions">
             <span class="status-pill sp-${c.status||'dissolved'}">${c.status||'Closed'}</span>
-            <a class="btn-outreach" href="/outreach.html?type=pub&name=${encodeURIComponent(c.name)}" onclick="event.stopPropagation()">✉ Outreach</a>
+            <a class="btn-outreach" href="/outreach.html?type=pub&name=${encodeURIComponent(c.name)}">✉ Outreach</a>
           </div>
-        </div>`).join('');
+        </div>`).join(''));
     }
 
     // Disposal links
     const dp = document.getElementById('p-disposals');
     if (data.disposalLinks?.length) {
-      dp.innerHTML = data.disposalLinks.map(d => `
+      setHTML(dp, data.disposalLinks.map(d => `
         <a class="disposal-card" href="${d.searchUrl}" target="_blank">
           <div class="disposal-icon">${d.logo}</div>
           <div class="disposal-info">
@@ -715,11 +717,11 @@ async function loadPubs() {
             <div class="disposal-desc">${d.description}</div>
           </div>
           <div class="disposal-arrow">→</div>
-        </a>`).join('');
+        </a>`).join(''));
     }
 
   } catch(err) {
-    document.getElementById('p-companies').innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div>${err.message}</div></div>`;
+    setHTML(document.getElementById('p-companies'), `<div class="empty"><div class="empty-icon">❌</div><div>${err.message}</div></div>`);
   }
 }
 

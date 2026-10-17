@@ -634,6 +634,8 @@ body {
 .col-body.drag-over .add-card{border-color:var(--gold);background:var(--gold-dim);}
 
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -664,6 +666,7 @@ body {
     <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
   </div>
 </nav>
+<div role="note" style="padding:10px 20px;color:#aeb8cc">Saved in this browser only. Export a backup before clearing browser data or switching devices. <button class="btn btn-ghost" onclick="exportSavedData('cc_pipeline_v1')">Export backup</button></div>
 <div class="header">
   <div>
     <div class="h-title">◐ Deal Pipeline</div>
@@ -788,7 +791,23 @@ const SOURCE_LABELS = {
   council:'Council', supermarket:'Supermarket', direct:'Direct Mail', other:'Other'
 };
 
-let deals = JSON.parse(localStorage.getItem('cc_pipeline_v1') || '[]');
+document.addEventListener('click', event => {
+  const move = event.target.closest('[data-move-deal]');
+  if (move) { moveTo(move.dataset.moveDeal, move.dataset.moveStage); return; }
+  const add = event.target.closest('[data-add-stage]');
+  if (add) { openAddModal(add.dataset.addStage); return; }
+  const card = event.target.closest('[data-deal-id]');
+  if (card) openEditModal(card.dataset.dealId);
+});
+for (const type of ['dragstart', 'dragover', 'dragleave', 'drop']) document.addEventListener(type, event => {
+  if (type === 'dragstart') { const card = event.target.closest('[data-deal-id]'); if (card) dragStart(event, card.dataset.dealId); return; }
+  const stage = event.target.closest('[data-stage]');
+  if (!stage) return;
+  if (type === 'dragover') dragOver(event, stage.dataset.stage);
+  if (type === 'dragleave') dragLeave(event);
+  if (type === 'drop') drop(event, stage.dataset.stage);
+});
+let deals = loadSavedList('cc_pipeline_v1');
 let editingId = null;
 
 function save() {
@@ -821,7 +840,7 @@ function render() {
   document.getElementById('s-hot').textContent     = hot.length;
 
   // Kanban
-  document.getElementById('kanban').innerHTML = STAGES.map(stage => {
+  setHTML(document.getElementById('kanban'), STAGES.map(stage => {
     const stageDeals = deals.filter(d => d.stage === stage.id);
     const stageVal   = stageDeals.reduce((t,d)=>t+(parseInt(d.price)||0),0);
     return `
@@ -835,14 +854,12 @@ function render() {
         </div>
         ${stageVal > 0 ? `<div style="font-size:10px;color:var(--muted);margin-bottom:8px;padding:0 4px">£${Math.round(stageVal/1000)}k</div>` : ''}
         <div class="col-body" id="col-${stage.id}"
-          ondragover="dragOver(event,'${stage.id}')"
-          ondragleave="dragLeave(event)"
-          ondrop="drop(event,'${stage.id}')">
+          data-stage="${stage.id}">
           ${stageDeals.map(deal => renderCard(deal)).join('')}
-          <div class="add-card" onclick="openAddModal('${stage.id}')">+ Add</div>
+          <div class="add-card" data-add-stage="${stage.id}">+ Add</div>
         </div>
       </div>`;
-  }).join('');
+  }).join(''));
 }
 
 function renderCard(deal) {
@@ -851,8 +868,7 @@ function renderCard(deal) {
   const price = deal.price ? '£'+parseInt(deal.price).toLocaleString('en-GB') : '—';
   return `
     <div class="deal-card" draggable="true"
-      ondragstart="dragStart(event,'${deal.id}')"
-      onclick="openEditModal('${deal.id}')">
+      data-deal-id="${escapeText(deal.id)}">
       <div class="dc-days">${daysAgo(deal.created)}</div>
       <div class="dc-source ${srcClass}">${srcLabel}</div>
       <div class="dc-addr">${deal.address || 'No address'}</div>
@@ -861,7 +877,7 @@ function renderCard(deal) {
       ${deal.notes ? `<div class="dc-meta" style="color:var(--muted2);margin-top:2px">${deal.notes.substring(0,60)}${deal.notes.length>60?'...':''}</div>` : ''}
       <div class="dc-actions">
         ${STAGES.filter(s=>s.id!==deal.stage && s.id!=='dead').slice(0,2).map(s =>
-          `<button class="dc-btn" onclick="event.stopPropagation();moveTo('${deal.id}','${s.id}')">${s.emoji} ${s.label}</button>`
+          `<button class="dc-btn" data-move-deal="${escapeText(deal.id)}" data-move-stage="${s.id}">${s.emoji} ${s.label}</button>`
         ).join('')}
       </div>
     </div>`;
@@ -871,10 +887,10 @@ function renderCard(deal) {
 let draggingId = null;
 function dragStart(e, id) { draggingId = id; e.dataTransfer.effectAllowed = 'move'; }
 function dragOver(e, stageId) { e.preventDefault(); document.getElementById('col-'+stageId)?.classList.add('drag-over'); }
-function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function dragLeave(e) { e.target.closest('[data-stage]')?.classList.remove('drag-over'); }
 function drop(e, stageId) {
   e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
+  e.target.closest('[data-stage]')?.classList.remove('drag-over');
   if (draggingId) { moveTo(draggingId, stageId); draggingId = null; }
 }
 function moveTo(id, stageId) {
@@ -954,16 +970,6 @@ function deleteDeal() {
   closeModal();
 }
 
-// ── SAMPLE DATA on first load ──
-if (deals.length === 0) {
-  deals = [
-    { id:'DEMO1', address:'42 Chapeltown Road, LS7 3AH', price:'145000', offer:'130000', source:'epc', stage:'lead',      type:'Terraced', contact:'Land Registry', phone:'', notes:'G rated — upgrade estimate £15k. Check owner name via Land Registry.', created: new Date(Date.now()-5*86400000).toISOString() },
-    { id:'DEMO2', address:'Unit 4 Harehills Lane, LS8',   price:'85000',  offer:'75000',  source:'insol',stage:'contacted', type:'Commercial',contact:'Admin: Smith & Jones', phone:'0113 xxx', notes:'Sent initial enquiry. Waiting on reply.', created: new Date(Date.now()-12*86400000).toISOString() },
-    { id:'DEMO3', address:'7 Beeston Hill, LS11 8NT',     price:'118000', offer:'105000', source:'direct',stage:'offer',    type:'Terraced', contact:'Mr A Khan',  phone:'07700 900123', notes:'Offer made. Waiting on response. Walk away at £110k.', created: new Date(Date.now()-20*86400000).toISOString() },
-    { id:'DEMO4', address:'22 Armley Road, LS12 2JJ',     price:'95000',  offer:'95000',  source:'auction',stage:'dd',     type:'Terraced', contact:'SDL Auctions', phone:'', notes:'Survey booked 12 Apr. Solicitor instructed: Jones & Co.', created: new Date(Date.now()-30*86400000).toISOString() },
-  ];
-  save();
-}
 
 render();
 </script>

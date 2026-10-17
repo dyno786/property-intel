@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/disposals.js - Public Sector & Institutional Disposals
 // Leeds Council page + static curated lists for NHS, Govt, Universities, Supermarkets
 
@@ -31,8 +32,7 @@ const INSTITUTIONAL_SOURCES = [
   { name:'MoD / DIO Disposals',       status:'active', url:'https://www.gov.uk/guidance/estate-disposals', notes:'Former drill halls, TA centres, barracks.' },
 ];
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=1800');
 
   const type = (req.query.type || 'all').toLowerCase();
@@ -49,3 +49,5 @@ export default async function handler(req, res) {
 
   res.status(200).json(response);
 }
+
+export default withApi(handler, ['GET']);

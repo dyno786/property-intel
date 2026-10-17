@@ -318,6 +318,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -348,11 +350,12 @@ body {
     <a class="nav-link" href="/alerts.html">🔔 Alerts</a>
   </div>
 </nav>
+<div role="note" style="padding:12px 20px;color:#fbbf24;background:#1c2130">Research reference: manually curated information and estimates may be out of date. Confirm availability, figures and scheme status with the linked source.</div>
 
 <div class="page-header">
   <div>
     <div class="page-title">💰 BTL Mortgage Rate Tracker</div>
-    <div class="page-sub">Live Yorkshire-relevant BTL rates — sorted by best rate, updated quarterly</div>
+    <div class="page-sub">Historical unverified rate examples from 13 April 2026 — obtain current lender quotes</div>
   </div>
   <button class="btn btn-gold btn-sm" onclick="loadRates()">↻ Refresh</button>
 </div>
@@ -385,46 +388,49 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 setActiveNav();
 </script>
 
+<script>
 let allRates = [];
 async function loadRates(){
   try{
     const r = await fetch('/api/mortgage');
     const d = await r.json();
     allRates = d.rates||[];
+    document.querySelector('.page-sub').textContent = d.disclaimer || 'Historical examples only';
     const bd = d.bestDeals||{};
     const ms = d.marketSummary||{};
 
     // Best deals
-    document.getElementById('rates-best').innerHTML = [
+    setHTML(document.getElementById('rates-best'), [
       {label:'Best 2yr Fix',rate:bd.twoYear,avg:ms.avg2yr},
       {label:'Best 5yr Fix',rate:bd.fiveYear,avg:ms.avg5yr},
       {label:'Best Tracker', rate:bd.tracker,avg:'N/A'},
-    ].map(b=>'<div class="stat-card green"><div class="stat-val">'+(b.rate?b.rate.rate+'%':'—')+'</div><div class="stat-lbl">'+b.label+'</div><div class="stat-change">'+(b.rate?b.rate.lender:'')+'</div></div>').join('');
+    ].map(b=>'<div class="stat-card green"><div class="stat-val">'+(b.rate?b.rate.rate+'%':'—')+'</div><div class="stat-lbl">'+b.label+'</div><div class="stat-change">'+(b.rate?b.rate.lender:'')+'</div></div>').join(''));
 
     // Advice cards
-    document.getElementById('rates-advice').innerHTML = (d.advice||[]).map(a=>
+    setHTML(document.getElementById('rates-advice'), (d.advice||[]).map(a=>
       '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6">'+a+'</div>'
-    ).join('');
+    ).join(''));
 
     filterRates('all');
   }catch(e){
-    document.getElementById('rates-table').innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">Could not load rates — check /api/mortgage is deployed.</td></tr>';
+    setHTML(document.getElementById('rates-body'), '<tr><td colspan="6" style="color:var(--red);padding:20px">Could not load rates — check /api/mortgage is deployed.</td></tr>');
   }
 }
 
 function filterRates(type){
   const filtered = type==='all'?allRates:allRates.filter(r=>r.type.toLowerCase().includes(type));
-  document.getElementById('rates-body').innerHTML = filtered.map(r=>
+  setHTML(document.getElementById('rates-body'), filtered.map(r=>
     '<tr><td><strong>'+r.lender+'</strong></td>'+
     '<td><span class="badge '+(r.type.includes('5yr')?'b-blue':r.type.includes('Tracker')?'b-purple':'b-amber')+'">'+r.type+'</span></td>'+
     '<td style="font-weight:800;color:var(--gold);font-size:16px">'+r.rate+'%</td>'+
     '<td style="color:var(--muted)">£'+r.fee.toLocaleString()+'</td>'+
     '<td style="color:var(--muted)">£'+(r.maxLoan/1000).toFixed(0)+'k</td>'+
     '<td style="color:var(--muted2);font-size:12px">'+r.notes+'</td></tr>'
-  ).join('');
+  ).join(''));
 }
 
 loadRates();
 
+</script>
 </body>
 </html>

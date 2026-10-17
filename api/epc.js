@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/epc.js
 // EPC Register - Domestic + Non-domestic certificates
 // Searches by postcode, energy band, property type
@@ -114,21 +115,19 @@ async function fetchEPC(url, auth) {
     }
   });
   if (!r.ok) {
-    const text = await r.text();
-    throw new Error(`EPC API ${r.status}: ${text.substring(0,200)}`);
+    throw new Error(`EPC API returned ${r.status}`);
   }
   return await r.json();
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+async function handler(req, res) {
 
   const postcode   = (req.query.postcode || 'LS7').toUpperCase().trim();
   const region     = (req.query.region   || 'leeds').toLowerCase();
   const certType   = req.query.certType  || 'domestic';   // domestic | commercial | both
   const energyBand = req.query.band      || 'poor';        // poor (F/G/E) | all | fg (F/G only)
-  const size       = Math.min(parseInt(req.query.size||'100'), 500);
+  const size = Number(req.query.size || '100');
+  if (!Number.isInteger(size) || size < 1 || size > 500 || !['domestic', 'commercial', 'both'].includes(certType) || !['poor', 'fg', 'all'].includes(energyBand)) return res.status(400).json({ success: false, error: 'Invalid certificate type, energy band or size' });
 
   const epcEmail = process.env.EPC_EMAIL;
   const epcKey   = process.env.EPC_API_KEY;
@@ -190,6 +189,8 @@ export default async function handler(req, res) {
       }
     }
 
+    if ((certType === 'domestic' && results.domesticError) || (certType === 'commercial' && results.commercialError) || (certType === 'both' && results.domesticError && results.commercialError)) return res.status(502).json({ success: false, error: 'EPC data provider unavailable', data: [] });
+
     // Combined + sorted by motivation score
     const all = [...results.domestic, ...results.commercial]
       .sort((a, b) => b.motivationScore - a.motivationScore);
@@ -206,6 +207,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({
       success: true,
+      partial: Boolean(results.domesticError || results.commercialError),
       postcode,
       region,
       certType,
@@ -230,3 +232,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success: false, error: err.message, data: [] });
   }
 }
+
+export default withApi(handler, ['GET']);

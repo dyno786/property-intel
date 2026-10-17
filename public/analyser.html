@@ -594,6 +594,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -700,7 +702,7 @@ async function analyse() {
   btn.textContent = '⏳ Analysing...';
 
   const card = document.getElementById('resultCard');
-  card.innerHTML = `
+  setHTML(card, `
     <div class="loading">
       <div class="spinner"></div>
       <div class="loading-text">AI is analysing this property...</div>
@@ -710,7 +712,7 @@ async function analyse() {
         <div class="loading-step" id="ls3">⏳ Calculating yield potential...</div>
         <div class="loading-step" id="ls4">⏳ Generating AI investment verdict...</div>
       </div>
-    </div>`;
+    </div>`);
 
   // Animate loading steps
   setTimeout(() => document.getElementById('ls2').classList.add('visible'), 800);
@@ -734,12 +736,12 @@ async function analyse() {
     if (!data.success) throw new Error(data.error);
     renderResult(data);
   } catch(err) {
-    card.innerHTML = `
+    setHTML(card, `
       <div class="result-empty">
         <div class="result-empty-icon">❌</div>
         <div class="result-empty-title">Analysis Failed</div>
         <div class="result-empty-sub">${err.message}<br><br>Check ANTHROPIC_API_KEY is set in Vercel env vars.</div>
-      </div>`;
+      </div>`);
   }
 
   btn.disabled = false;
@@ -753,7 +755,7 @@ function renderResult(data) {
   const md = data.marketData || {};
 
   const card = document.getElementById('resultCard');
-  card.innerHTML = `
+  setHTML(card, `
     <div class="verdict-hdr ${verdictClass}">
       <div>
         <div class="verdict-label">${a.verdict || '—'}</div>
@@ -828,7 +830,7 @@ function renderResult(data) {
         <div class="action-steps">${a.actionPlan.map((s,i)=>`<div class="action-step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('')}</div>
       </div>` : ''}
 
-    </div>`;
+    </div>`);
 }
 </script>
 <script>

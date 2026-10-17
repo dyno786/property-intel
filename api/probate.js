@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/probate.js - Probate Leads from The Gazette
 // Deceased estates notices — executors looking to sell quickly
 // Same source as insolvency, notice types 1300/1301 (deceased estates)
@@ -54,12 +55,11 @@ async function fetchFeed(url) {
     });
     if (!r.ok) return null;
     const text = await r.text();
-    return text.includes('<entry') ? text : null;
+    return text.includes('<feed') ? text : null;
   } catch { return null; }
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
   const region = (req.query.region || 'leeds').toLowerCase();
@@ -85,6 +85,8 @@ export default async function handler(req, res) {
     }
   }));
 
+  if (!debug.some(feed => feed.ok)) return res.status(502).json({ success: false, error: 'Gazette feeds unavailable', data: [] });
+
   const PORDER = { high: 0, medium: 1, low: 2 };
   const formatted = allItems.map(item => {
     let date = '—';
@@ -104,3 +106,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);

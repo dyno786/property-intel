@@ -1,94 +1,59 @@
-# CC Property Intelligence Dashboard
+# CC Property Intelligence
 
-A real-time property intelligence tool for Leeds, Bradford, Wakefield, Sheffield and Huddersfield.
+Yorkshire property research dashboard: 19 static pages plus Vercel Node.js API functions.
 
-## Live Data Sources
+## Development and checks
 
-| Panel | Source | API |
-|---|---|---|
-| Insolvency Notices | The Gazette (Crown Copyright) | Free |
-| Planning Applications | api.planning.org.uk | Free (credits for full data) |
-| Live Listings | PropertyData API | £28/month |
-| Companies | Companies House | Free |
-| Email Digest | Brevo | Free tier |
+Requires Node.js 24.
 
-## Setup
-
-### 1. Clone and deploy to Vercel
-
-```bash
-git clone https://github.com/YOUR_USERNAME/property-intelligence
-cd property-intelligence
-vercel --prod
+```sh
+npm ci --ignore-scripts
+npm run build
+npm run check
+npm test
 ```
 
-### 2. Add Environment Variables in Vercel
+`build` copies the pinned DOMPurify distribution and licence into `public/vendor`.
+`check` validates API syntax, inline JavaScript, script boundaries and HTML rendering sinks.
+Tests use mocked providers and a jsdom DOM; they do not send messages or consume paid API credits. GitHub Actions runs these checks on pushes and pull requests.
 
-Go to: Vercel Dashboard → Your Project → Settings → Environment Variables
+Deploy this repository with Vercel. `vercel.json` explicitly selects `public` as the output directory. Server functions remain in `api`.
 
-| Variable | Where to get it |
-|---|---|
-| `PROPERTYDATA_API_KEY` | https://propertydata.co.uk/free-trial/10 |
-| `PLANNING_API_KEY` | https://api.planning.org.uk/v1/generatekey (free, instant) |
-| `COMPANIES_HOUSE_API_KEY` | https://developer.company-information.service.gov.uk/get-started |
-| `BREVO_API_KEY` | https://app.brevo.com → Account → SMTP & API → API Keys |
-| `DIGEST_EMAIL` | Your email address e.g. mohammed@ccbeauty.co.uk |
+## Server configuration
 
-### 3. Redeploy after adding env vars
+Set these in Vercel for the environments where each feature is needed. Never put provider keys in browser code or GitHub.
 
-```bash
-vercel --prod
-```
+| Variable | Purpose |
+| --- | --- |
+| `API_ACCESS_TOKEN` | A long random private access token required for AI analysis, paid PropertyData requests and manual message sends |
+| `ANTHROPIC_API_KEY` | AI property analysis |
+| `PROPERTYDATA_API_KEY` | PropertyData prices, rents, stats and listings |
+| `EPC_EMAIL`, `EPC_API_KEY` | EPC certificates |
+| `COMPANIES_HOUSE_API_KEY` | Companies House searches |
+| `PLANNING_API_KEY` | Planning application counts |
+| `BREVO_API_KEY`, `DIGEST_EMAIL` | Email digest |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, `ALERT_PHONE_NUMBER` | WhatsApp/SMS alerts |
+| `CRON_SECRET` | Optional authenticated Vercel Cron digest trigger |
+| `APP_BASE_URL` | Canonical dashboard origin for digest data requests; defaults to the existing production origin |
 
-### 4. Set up daily digest (optional)
+The browser asks for `API_ACCESS_TOKEN` when a private analysis or listings request receives 401. It retains the token in page memory only. This is shared private access, not multi-user login or per-user authorisation. Keep provider credentials separate from this token.
 
-**Option A — Vercel Cron (simplest)**  
-Add to `vercel.json`:
-```json
-{
-  "crons": [{
-    "path": "/api/digest",
-    "schedule": "0 7 * * *"
-  }]
-}
-```
-This calls `/api/digest` every day at 7am UTC (8am UK time).
+## Messaging and health checks
 
-**Option B — Make.com (free tier)**  
-1. Create a new scenario in Make.com
-2. Add HTTP module → GET `https://your-app.vercel.app/api/digest`
-3. Schedule: Daily at 7:00am
+- `GET /api/alert` and unauthenticated `GET /api/digest` only report configuration status. They send nothing.
+- `GET /api/listings?check=1` checks paid-feature configuration without consuming PropertyData credits.
+- To send an alert, POST JSON to `/api/alert` with `Authorization: Bearer <API_ACCESS_TOKEN>`.
+- To send a digest, POST to `/api/digest` with the same bearer header.
+- An authenticated GET to `/api/digest` is also supported for Vercel Cron, using `Authorization: Bearer <CRON_SECRET>` (or the private access token). Vercel supplies the CRON_SECRET header automatically when configured: https://vercel.com/docs/cron-jobs/manage-cron-jobs
+- No cron schedule is added automatically by this change.
 
-## Project Structure
+## Data limitations
 
-```
-property-intelligence/
-├── public/
-│   └── index.html          # Main dashboard frontend
-├── api/
-│   ├── insolvency.js       # The Gazette RSS feed (free)
-│   ├── planning.js         # Planning applications API
-│   ├── listings.js         # PropertyData listings + stats
-│   ├── companies.js        # Companies House API
-│   └── digest.js           # Morning email via Brevo
-├── vercel.json             # Vercel config
-└── package.json
-```
+- Flood warnings are current warning information, not a property flood-zone assessment. Flood zones remain unknown until checked against the exact address.
+- HMO licensing, Article 4 and ground/radon risk require address-level evidence; postcode-wide heuristics have been removed.
+- The old static sentiment score is unavailable until a verified current market dataset is connected. Public RSS news does not invoke paid AI.
+- Mortgage examples are historical and unverified, dated 13 April 2026. They are not current quotes. Regeneration and disposal directories are manually curated research references.
+- A postcode EPC result is not automatically the certificate for the property being analysed.
+- Pipeline and portfolio data are stored in this browser only. Use Export backup before clearing browser data or changing devices.
 
-## API Endpoints
-
-| Endpoint | Description |
-|---|---|
-| `GET /api/insolvency?region=leeds` | Live insolvency notices |
-| `GET /api/planning?region=leeds&postcode=LS7` | Planning applications |
-| `GET /api/listings?region=leeds&postcode=LS7&type=listings` | For-sale listings |
-| `GET /api/companies?type=insolvency&region=leeds` | Companies in liquidation |
-| `GET /api/digest` | Trigger morning digest email |
-
-## Regions Supported
-
-- `leeds` — LS1 through LS28
-- `bradford` — BD1 through BD18
-- `wakefield` — WF1 through WF17
-- `sheffield` — S1 through S21
-- `huddersfield` — HD1 through HD9
+See [AUDIT.md](AUDIT.md) for findings, fixes and deployment verification limits.

@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/mortgage.js - BTL Mortgage Rate Tracker
 // Curated lender rates — updated manually each quarter
 // Real-time scraping of lender sites is blocked by CORS so we maintain a curated dataset
@@ -26,14 +27,13 @@ const RATES = [
   { lender:'Fleet Mortgages', ltv:75, type:'5yr Fix', rate:5.44, fee:1995, maxLoan:5000000, notes:'Portfolio landlords specialist', updated: LAST_UPDATED },
 ];
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600');
 
   const ltv  = parseInt(req.query.ltv || '75');
   const type = (req.query.type || 'all').toLowerCase();
 
-  let filtered = RATES.filter(r => r.ltv <= ltv);
+  let filtered = RATES.filter(r => r.ltv >= ltv);
   if (type !== 'all') filtered = filtered.filter(r => r.type.toLowerCase().includes(type));
   filtered.sort((a,b) => a.rate - b.rate);
 
@@ -47,7 +47,9 @@ export default async function handler(req, res) {
   res.status(200).json({
     success:      true,
     lastUpdated:  LAST_UPDATED,
-    boeBaseRate:  4.5,
+    dataStatus: 'historical-unverified',
+    stale: true,
+    boeBaseRate: null,
     rates:        filtered,
     bestDeals: {
       twoYear:  best2yr,
@@ -68,7 +70,9 @@ export default async function handler(req, res) {
       'Yorkshire Building Society and Leeds BS both have local knowledge and competitive rates for Yorkshire properties.',
       'Always use a whole-of-market broker — they access products not available direct.',
     ],
-    disclaimer: 'Rates indicative — check lender websites for current offers. Rates change frequently.',
+    disclaimer: `Historical unverified examples dated ${LAST_UPDATED}. These are not current quotes. Obtain live lender or broker quotes.`,
     fetchedAt:  new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);

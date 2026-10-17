@@ -594,6 +594,8 @@ body {
 /* ── NAV JS ── */
 /* (toggleNav function shared inline) */
 </style>
+<script src="/vendor/purify.min.js"></script>
+<script src="/ui.js"></script>
 </head>
 <body>
 <nav class="topnav">
@@ -759,7 +761,7 @@ const API_CHECKS = [
   },
   {
     id:'listings', name:'PropertyData Listings', icon:'🏠',
-    url:'/api/listings?region=leeds&postcode=all&type=listings',
+    url:'/api/listings?check=1',
     check: d => {
       if (d.setupRequired) return { pass:'warn', msg:'PROPERTYDATA_API_KEY not set — optional paid feature (£28/mo)', fix:'Start free trial at propertydata.co.uk/free-trial → add key to Vercel' };
       if (!d.success) return { pass:false, msg: d.error || 'PropertyData API failed' };
@@ -785,7 +787,7 @@ const API_CHECKS = [
   },
   {
     id:'alert', name:'WhatsApp Alerts', icon:'📱',
-    url:'/api/alert?type=custom&message=Health+check',
+    url:'/api/alert',
     check: d => {
       if (d.setupRequired) return { pass:'warn', msg:'Twilio keys not set — optional WhatsApp alerts', fix:'Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, ALERT_PHONE_NUMBER to Vercel' };
       if (!d.success) return { pass:false, msg: d.error || 'Alert API failed' };
@@ -794,7 +796,7 @@ const API_CHECKS = [
   },
   {
     id:'companies', name:'Companies House', icon:'🏛️',
-    url:'/api/companies?query=test+company+leeds',
+    url:'/api/companies?q=test+company+leeds',
     check: d => {
       if (d.setupRequired) return { pass:'warn', msg:'COMPANIES_HOUSE_API_KEY not set', fix:'Get free key at developer.company-information.service.gov.uk → add as COMPANIES_HOUSE_API_KEY' };
       if (!d.success) return { pass:false, msg: d.error || 'Companies House API failed' };
@@ -1027,7 +1029,7 @@ function updateBanner() {
 // ══════════════════
 function renderSkeleton() {
   // APIs
-  document.getElementById('api-grid').innerHTML = API_CHECKS.map(c => `
+  setHTML(document.getElementById('api-grid'), API_CHECKS.map(c => `
     <div class="check-card" id="chk-${c.id}">
       <div class="check-indicator ci-checking">⟳</div>
       <div class="check-body">
@@ -1035,10 +1037,10 @@ function renderSkeleton() {
         <div class="check-msg">Checking...</div>
         <div class="check-ms"></div>
       </div>
-    </div>`).join('');
+    </div>`).join(''));
 
   // Pages
-  document.getElementById('pages-grid').innerHTML = PAGE_CHECKS.map((c,i) => `
+  setHTML(document.getElementById('pages-grid'), PAGE_CHECKS.map((c,i) => `
     <div class="check-card" id="page-${i}">
       <div class="check-indicator ci-checking">⟳</div>
       <div class="check-body">
@@ -1046,10 +1048,10 @@ function renderSkeleton() {
         <div class="check-msg">Checking ${c.url}...</div>
         <div class="check-ms"></div>
       </div>
-    </div>`).join('');
+    </div>`).join(''));
 
   // Env vars — we can't read server env from frontend, so show setup guide
-  document.getElementById('env-grid').innerHTML = ENV_VARS.map(v => `
+  setHTML(document.getElementById('env-grid'), ENV_VARS.map(v => `
     <div class="env-card">
       <div class="env-top">
         <div class="env-name">${v.name}</div>
@@ -1057,11 +1059,11 @@ function renderSkeleton() {
       </div>
       <div class="env-key">${v.key}</div>
       ${v.link ? `<a class="env-link" href="${v.link}" target="_blank">${v.linkText}</a>` : `<div class="env-link" style="color:var(--muted2)">${v.linkText}</div>`}
-    </div>`).join('');
+    </div>`).join(''));
   document.getElementById('env-count').textContent = `${ENV_VARS.filter(v=>v.required).length} required, ${ENV_VARS.filter(v=>!v.required).length} optional`;
 
   // External links
-  document.getElementById('ext-grid').innerHTML = EXT_LINKS.map(l => `
+  setHTML(document.getElementById('ext-grid'), EXT_LINKS.map(l => `
     <a class="ext-card" href="${l.url}" target="_blank" rel="noopener">
       <div class="ext-icon">${l.icon}</div>
       <div class="ext-body">
@@ -1069,10 +1071,10 @@ function renderSkeleton() {
         <div class="ext-url">${l.url.replace('https://','')}</div>
       </div>
       <div class="ext-status es-ok">↗</div>
-    </a>`).join('');
+    </a>`).join(''));
 
   // Summary
-  document.getElementById('summary-body').innerHTML = SUMMARY.map(s => {
+  setHTML(document.getElementById('summary-body'), SUMMARY.map(s => {
     const cls = s.status === 'live' ? 'td-green' : s.status === 'optional' ? 'td-amber' : 'td-muted';
     const label = s.status === 'live' ? '✓ Live' : s.status === 'optional' ? '⚙ Optional' : '○ Planned';
     return `<tr>
@@ -1082,7 +1084,7 @@ function renderSkeleton() {
       <td style="color:var(--muted)">${s.cost}</td>
       <td style="color:var(--muted2)">${s.notes}</td>
     </tr>`;
-  }).join('');
+  }).join(''));
 }
 
 async function runAll() {

@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/companies.js
 // Companies House free API — cross-reference businesses going insolvent
 // Get your free key at: https://developer.company-information.service.gov.uk/get-started
@@ -14,9 +15,7 @@ const REGION_AREA_CODES = {
   huddersfield: ['HD']
 };
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+async function handler(req, res) {
 
   const region     = (req.query.region || 'leeds').toLowerCase();
   const query      = req.query.q || '';        // company name search
@@ -75,7 +74,7 @@ export default async function handler(req, res) {
       for (const areaCode of areaCodes) {
         const url = `${CH_BASE}/advanced-search/companies?location=${areaCode}&company_status=liquidation&items_per_page=20`;
         const response = await fetch(url, { headers });
-        if (!response.ok) continue;
+        if (!response.ok) throw new Error('Companies House unavailable');
         const json = await response.json();
 
         const items = (json.items || []).map(c => ({
@@ -109,3 +108,5 @@ export default async function handler(req, res) {
     res.status(500).json({ success: false, error: err.message, data: [] });
   }
 }
+
+export default withApi(handler, ['GET']);

@@ -1,3 +1,4 @@
+import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 // api/auctions.js - Yorkshire Auction Calendar
 // Scrapes RSS / public pages from SDL, Auction House, Allsop, Pugh
 
@@ -78,8 +79,7 @@ async function fetchRSS(source) {
   } catch { return []; }
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600');
 
   const region = (req.query.region || 'yorkshire').toLowerCase();
@@ -94,7 +94,8 @@ export default async function handler(req, res) {
   res.status(200).json({
     success:   true,
     region,
-    upcomingEvents: UPCOMING_EVENTS,
+    upcomingEvents: UPCOMING_EVENTS.filter(event => event.date >= new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })),
+    calendarNote: 'Manually maintained dates. Confirm current dates with the auctioneer.',
     lots,
     lotCount:  lots.length,
     tips: [
@@ -108,3 +109,5 @@ export default async function handler(req, res) {
     fetchedAt: new Date().toISOString(),
   });
 }
+
+export default withApi(handler, ['GET']);
