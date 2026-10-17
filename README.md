@@ -28,7 +28,7 @@ Set these in Vercel for the environments where each feature is needed. Never put
 | `API_ACCESS_TOKEN` | A long random private access token required for AI analysis, paid PropertyData requests and manual message sends |
 | `ANTHROPIC_API_KEY` | AI property analysis |
 | `PROPERTYDATA_API_KEY` | PropertyData prices, rents, stats and listings |
-| `EPC_EMAIL`, `EPC_API_KEY` | EPC certificates |
+| `EPC_API_KEY` | Bearer token from https://get-energy-performance-data.communities.gov.uk (legacy EPC_EMAIL is no longer used) |
 | `COMPANIES_HOUSE_API_KEY` | Companies House searches |
 | `PLANNING_API_KEY` | Planning application counts |
 | `BREVO_API_KEY`, `DIGEST_EMAIL` | Email digest |
@@ -57,3 +57,11 @@ The browser asks for `API_ACCESS_TOKEN` when a private analysis or listings requ
 - Pipeline and portfolio data are stored in this browser only. Use Export backup before clearing browser data or changing devices.
 
 See [AUDIT.md](AUDIT.md) for findings, fixes and deployment verification limits.
+
+## EPC service migration
+
+Production verification found that the legacy Open Data Communities endpoint redirects to HTML. The adapter now uses the new GOV.UK API base, Bearer authorisation, efficiency_rating[] and page_size filters, camelCase search records and certificateNumber identifiers. Old LMK keys cannot be mapped to new certificate numbers.
+
+Sign in to https://get-energy-performance-data.communities.gov.uk with GOV.UK One Login, get the bearer token from My account, and replace EPC_API_KEY in Vercel. EPC_BEARER_TOKEN is also accepted as an override. A rejected old key now shows explicit setup guidance. Do not replace API_ACCESS_TOKEN: it is the separate private dashboard password.
+
+Reference: https://get-energy-performance-data.communities.gov.uk/api-technical-documentation/making-a-request

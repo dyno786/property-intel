@@ -28,7 +28,7 @@ Audited repository: `dyno786/property-intel`, starting at commit `0c459ae330fe1f
 
 ## Validation
 
-- 23 automated tests in total.
+- 26 automated tests in total, including EPC migration cases.
 - API regression tests use mocked providers, including failure responses, authentication checks and messaging spies. No real email, SMS, WhatsApp or paid AI request was made.
 - DOM tests execute all 19 pages with provider fixtures and exercise repaired controls, structured risk summaries and malicious HTML payloads. These are jsdom checks, not a real-browser rendering certification.
 - API and page syntax/script-boundary checks and production asset build are included in CI.
@@ -45,3 +45,9 @@ Before enabling the fixed private features, configure API_ACCESS_TOKEN and the a
 Verified address-level licensing/ground-risk datasets, current mortgage feeds and a sourced market-sentiment model are still needed for those assessments to be live. The existing GIAS and economic provider endpoints need live validation; failures now remain visible. Regeneration/disposal directories and calculator assumptions have not been independently revalidated as current legal or financial guidance. Multi-user login, distributed per-user rate limits and server-backed portfolio storage are separate unfinished capabilities.
 
 Technical references consulted: Environment Agency API reference (https://environment.data.gov.uk/flood-monitoring/doc/reference), Vercel Cron security (https://vercel.com/docs/cron-jobs/manage-cron-jobs).
+
+## Production verification follow-up
+
+PR #1 was merged as fdb71edfdeff870e2ecb881bb6629f1a0b0d0cd5 and deployed to production. Vercel access is restored. Production homepage, rates, outreach and shared renderer return 200; private analysis returns 401 without authentication; invalid comparable input returns 400. API_ACCESS_TOKEN is configured for Production. These checks do not certify a completed paid AI request.
+
+Runtime logs exposed an additional EPC migration: the retired API returns HTML. The follow-up adapter targets the official replacement API with Bearer authentication and the new search response fields. EPC_API_KEY must contain the replacement service's bearer token; legacy credentials are not automatically converted. Runtime logs also contain Node DEP0169 deprecation warnings; no project code calls url.parse().

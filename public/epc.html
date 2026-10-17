@@ -713,7 +713,7 @@ body {
     <div class="empty">
       <div class="empty-icon">⚡</div>
       <div style="font-size:14px;font-weight:600;color:var(--text2)">Select a postcode and search</div>
-      <div style="font-size:12px">Find properties with poor energy ratings — owners facing upgrade costs are motivated sellers</div>
+      <div style="font-size:12px">Find properties with poor energy ratings — verify upgrade needs and owner interest separately</div>
     </div>
   </div>
 </div>
@@ -757,9 +757,8 @@ async function search() {
           <div class="empty-icon">⚙️</div>
           <div style="font-size:14px;font-weight:600">EPC API Keys Required</div>
           <div style="font-size:12px;color:var(--muted);max-width:500px;line-height:1.7;margin-top:8px">
-            Add <strong>EPC_EMAIL</strong> and <strong>EPC_API_KEY</strong> to Vercel environment variables.<br>
-            Your email: <strong>ccpropertiesleeds@gmail.com</strong><br>
-            Get key from: <a href="https://epc.opendatacommunities.org" target="_blank" style="color:var(--purple)">epc.opendatacommunities.org</a>
+            ${escapeText(data.error || 'Add the new service bearer token to EPC_API_KEY in Vercel.')}<br>
+            <a href="https://get-energy-performance-data.communities.gov.uk" target="_blank" style="color:var(--purple)">Open the GOV.UK energy-data service →</a>
           </div>
         </div>`);
       btn.disabled = false; btn.textContent = '⚡ Find Properties';
@@ -797,7 +796,7 @@ function renderResults(data) {
   const ib = document.getElementById('insight-box');
   ib.style.display = 'block';
   document.getElementById('insight-title').textContent = '💡 ' + data.insight;
-  document.getElementById('insight-sub').textContent   = `${data.total} certificates found in ${pc} · ${data.domestic} domestic · ${data.commercial} commercial · Sorted by motivation score`;
+  document.getElementById('insight-sub').textContent   = `${data.total} certificates found in ${pc} · ${data.domestic} domestic · ${data.commercial} commercial · Sorted by energy screening score`;
 
   if (!allData.length) {
     setHTML(document.getElementById('results'), `
@@ -818,7 +817,7 @@ function renderGrid(items) {
     <div class="results-hdr">
       <div class="results-title">📋 ${items.length} Properties Found</div>
       <select class="sort-select" data-epc-sort="true">
-        <option value="motivation">Sort: Motivation Score</option>
+        <option value="motivation">Sort: Energy Screening Score</option>
         <option value="rating-worst">Sort: Rating (Worst First)</option>
         <option value="rating-best">Sort: Rating (Best First)</option>
         <option value="address">Sort: Address A-Z</option>
@@ -855,7 +854,7 @@ function renderCard(p) {
       </div>
 
       <div class="motivation-bar">
-        <div class="mot-label">Motivation</div>
+        <div class="mot-label">Screening</div>
         <div class="mot-track"><div class="mot-fill ${progClass}" style="width:${p.motivationScore}%"></div></div>
         <div class="mot-score">${p.motivationScore}/100</div>
       </div>
