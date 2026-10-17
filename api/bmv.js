@@ -70,7 +70,7 @@ export default async function handler(req, res) {
   const postcode    = (req.query.postcode || '').trim().toUpperCase();
   const askingPrice = parseInt(req.query.price || '0');
 
-  if (!postcode || postcode.length < 4) return res.status(400).json({ success:false, error:'Postcode required' });
+  if (!postcode || postcode.length < 2) return res.status(400).json({ success:false, error:'Postcode required (e.g. LS7, LS1 2AB)' });
 
   const lrData = await getLandRegistryAvg(postcode);
 
