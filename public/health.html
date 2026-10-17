@@ -688,7 +688,7 @@ const API_CHECKS = [
     id:'epc', name:'EPC Finder', icon:'⚡',
     url:'/api/epc?postcode=LS7&filter=poor',
     check: d => {
-      if (d.setupRequired) return { pass:'warn', msg:'EPC_API_KEY not set — register free at epc.opendatacommunities.org', fix:'Add EPC_EMAIL and EPC_API_KEY to Vercel environment variables' };
+      if (d.setupRequired) return { pass:'warn', msg:'EPC token setup required — sign in to the new GOV.UK energy-data service', fix:'Replace EPC_API_KEY with the bearer token from the new GOV.UK energy-data service' };
       if (!d.success) return { pass:false, msg: d.error || 'API failed' };
       return { pass:true, msg:`${d.count || 0} F/G rated properties found in LS7` };
     }
@@ -830,8 +830,8 @@ const PAGE_CHECKS = [
 // ══════════════════
 const ENV_VARS = [
   { key:'ANTHROPIC_API_KEY',       name:'Anthropic (Claude)',     required:true,  link:'https://console.anthropic.com',                                 linkText:'Get key →' },
-  { key:'EPC_EMAIL',               name:'EPC Register Email',     required:true,  link:'https://epc.opendatacommunities.org',                           linkText:'Register free →' },
-  { key:'EPC_API_KEY',             name:'EPC Register API Key',   required:true,  link:'https://epc.opendatacommunities.org',                           linkText:'Register free →' },
+  { key:'EPC_EMAIL',               name:'Legacy EPC Email (unused)',     required:false,  link:'https://get-energy-performance-data.communities.gov.uk',                           linkText:'Register free →' },
+  { key:'EPC_API_KEY',             name:'EPC Register API Key',   required:true,  link:'https://get-energy-performance-data.communities.gov.uk',                           linkText:'Register free →' },
   { key:'PLANNING_API_KEY',        name:'Planning API Key',       required:true,  link:'https://api.planning.org.uk/v1/generatekey',                    linkText:'Get free key →' },
   { key:'COMPANIES_HOUSE_API_KEY', name:'Companies House Key',    required:false, link:'https://developer.company-information.service.gov.uk',          linkText:'Get free key →' },
   { key:'PROPERTYDATA_API_KEY',    name:'PropertyData Key',       required:false, link:'https://propertydata.co.uk/free-trial/10',                      linkText:'£28/mo trial →' },
@@ -856,7 +856,7 @@ const EXT_LINKS = [
   { name:'Govt Property Finder',      url:'https://www.gov.uk/find-property',                            icon:'🇬🇧' },
   { name:'Aldi Disposal List',        url:'https://www.aldi.co.uk/corporate/property/sites-for-sale',    icon:'🛒' },
   { name:'Lidl Disposal List',        url:'https://www.realestate-lidl.co.uk/sites-for-sale-and-to-let', icon:'🛒' },
-  { name:'EPC Open Data',             url:'https://epc.opendatacommunities.org',                         icon:'⚡' },
+  { name:'EPC Open Data',             url:'https://get-energy-performance-data.communities.gov.uk',                         icon:'⚡' },
   { name:'Leeds Planning Portal',     url:'https://publicaccess.leeds.gov.uk/online-applications/',      icon:'📋' },
   { name:'Land Registry SPARQL',      url:'https://landregistry.data.gov.uk/landregistry/query',         icon:'📜' },
   { name:'Environment Agency Floods', url:'https://environment.data.gov.uk/flood-monitoring/',           icon:'🌊' },

@@ -97,10 +97,10 @@ test('licensing and ground risks remain unknown without address-level evidence',
   const h = await invoke(hmo, { query: { postcode: 'LS8 1AA' } }); assert.equal(h.body.selectiveLicensing, null); assert.equal(h.body.article4Direction, null);
   const s = await invoke(subsidence, { query: { postcode: 'LS8 1AA' } }); assert.equal(s.body.overallRisk, 'unknown'); assert.ok(s.body.checks.every(c => c.risk === 'unknown'));
 });
-test('EPC provider failure never becomes an all-clear', async t => {
+test('EPC rejected credentials show setup guidance', async t => {
   process.env.EPC_EMAIL = 'test@example.invalid'; process.env.EPC_API_KEY = 'test';
   t.mock.method(globalThis, 'fetch', async () => json({}, 401));
-  const r = await invoke(epc, { query: { postcode: 'LS7' } }); assert.equal(r.code, 502); assert.equal(r.body.success, false);
+  const r = await invoke(epc, { query: { postcode: 'LS7' } }); assert.equal(r.code, 503); assert.equal(r.body.success, false); assert.equal(r.body.setupRequired, true);
 });
 test('AI receives due-diligence context and invalid output returns an error', async t => {
   process.env.API_ACCESS_TOKEN = 'test-secret'; process.env.ANTHROPIC_API_KEY = 'test'; delete process.env.PROPERTYDATA_API_KEY;
@@ -109,3 +109,20 @@ test('AI receives due-diligence context and invalid output returns an error', as
   assert.equal(r.code, 502); assert.match(fetch.mock.calls[0].arguments[1].body, /Flood unknown/);
 });
 test('no fabricated sentiment score on missing evidence', async () => { const r = await invoke(sentiment); assert.equal(r.body.score, null); assert.equal(r.body.success, false); });
+
+ test('EPC migration uses official Bearer API and maps new certificate fields', async t => {
+  process.env.EPC_API_KEY = 'test-new-token';
+  const fetch = t.mock.method(globalThis, 'fetch', async () => json({ data: [{ certificateNumber: '1111-2222-3333-4444-5555', addressLine1: '10 Test Road', postTown: 'LEEDS', postcode: 'LS7 4EH', currentEnergyEfficiencyBand: 'F', registrationDate: '2026-10-01', uprn: 123 }], pagination: { totalRecords: 1 } }));
+  const r = await invoke(epc, { query: { postcode: 'LS7 4EH', size: '1', band: 'fg' } });
+  assert.equal(r.code, 200); assert.equal(r.body.total, 1); assert.equal(r.body.data[0].currentRating, 'F'); assert.equal(r.body.data[0].id, '1111-2222-3333-4444-5555'); assert.equal(r.body.data[0].estimatedUpgradeCost, null);
+  const [url, options] = fetch.mock.calls[0].arguments;
+  assert.equal(new URL(url).origin, 'https://api.get-energy-performance-data.communities.gov.uk'); assert.equal(new URL(url).searchParams.get('page_size'), '1'); assert.deepEqual(new URL(url).searchParams.getAll('efficiency_rating[]'), ['F', 'G']); assert.equal(options.headers.Authorization, 'Bearer test-new-token');
+});
+ test('new EPC service 404 is a genuine empty search', async t => {
+  process.env.EPC_API_KEY = 'test'; t.mock.method(globalThis, 'fetch', async () => json({}, 404));
+  const r = await invoke(epc, { query: { postcode: 'LS7 4EH' } }); assert.equal(r.body.success, true); assert.equal(r.body.total, 0);
+});
+ test('EPC HTML responses stay errors instead of empty certificate lists', async t => {
+  process.env.EPC_API_KEY = 'test'; t.mock.method(globalThis, 'fetch', async () => new Response('<html>login</html>', {headers:{'Content-Type':'text/html'}}));
+  const r = await invoke(epc, { query: { postcode: 'LS7 4EH' } }); assert.equal(r.code, 502); assert.equal(r.body.success, false);
+});

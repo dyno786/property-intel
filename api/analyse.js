@@ -1,3 +1,4 @@
+import { searchCertificates, epcToken } from '../lib/epc.js';
 import { withApi, fetchWithTimeout as fetch } from '../lib/http.js';
 import { requireToken, postcodeValue } from '../lib/http.js';
 // api/analyse.js
@@ -38,15 +39,9 @@ async function handler(req, res) {
     } catch(e) {}
   }
 
-  // 2. EPC data for the postcode
-  if (postcode && process.env.EPC_EMAIL && process.env.EPC_API_KEY) {
-    try {
-      const epcRes = await fetch(
-        `https://epc.opendatacommunities.org/api/v1/domestic/search?postcode=${encodeURIComponent(postcode)}&size=5`,
-        { headers: { 'Accept': 'application/json', 'Authorization': 'Basic ' + Buffer.from(`${process.env.EPC_EMAIL}:${process.env.EPC_API_KEY}`).toString('base64') } }
-      );
-      if (epcRes.ok) dataPoints.epc = await epcRes.json();
-    } catch(e) {}
+  // Postcode certificates are supporting context, never an address-level match.
+  if (postcode && epcToken()) {
+    try { dataPoints.epc = await searchCertificates({ postcode, size: 5 }); } catch {}
   }
 
   // Build context string for AI
